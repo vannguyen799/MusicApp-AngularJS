@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <base target="_top">
+</head>
+
+<body>
+  <a href="<?= url?>" target="_blank">
+    <?= url?>
+  </a>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+                    window.open("<?= url?>", '_blank');
+      google.script.host.close();
+})
+  </script>
+</body>
+
+</html>
+
+c

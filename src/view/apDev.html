@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>JS Player</title>
+        <link rel="stylesheet" href="jm.css" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
+        <style>
+            :root {
+                /* bg-color*/
+                --faded-blue: #dce0ee;
+                /* player bg color */
+                --snow: white;
+                /*text, icons */
+                --navy: #37415d;
+                --blue: #7d9aff;
+                /* tike stamp*/
+                --grey: #b4b4b4;
+            }
+            * {
+                box-sizing: border-box;
+                padding: 0;
+                margin: 0;
+            }
+            body {
+                height: 100vh;
+                width: 100vw;
+                user-select: none;
+                overflow: hidden;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-family: "Poppins", sans-serif;
+                background-color: var(--faded-blue);
+            }
+            h {
+                text-transform: capitalize;
+                font-weight: 600;
+                color: var(--navy);
+            }
+            h1 {
+                font-size: 0.7em;
+                font-weight: 600;
+                color: var(--navy);
+                text-transform: capitalize;
+            }
+            p {
+                color: var(--blue);
+                font-size: 0.8em;
+                font-weight: 500;
+            }
+            p1 {
+                color: var(--faded-blue);
+                font-size: 0.8em;
+                text-transform: capitalize;
+            }
+            .player-wrapper {
+                position: absolute;
+                max-height: 580px;
+                height: 580px;
+                width: 340px;
+                border-radius: 20px;
+                background-color: var(--snow);
+            }
+            .overlay {
+                position: absolute;
+                width: 0;
+                height: 100%;
+                z-index: 1;
+                top: 0;
+                left: 0;
+                border-top-left-radius: 20px;
+                border-bottom-left-radius: 20px;
+                overflow-x: hidden;
+                background: var(--blue);
+            }
+            .overlay span,
+            .overlay-content span {
+                color: black;
+                font-size: 30px;
+                font-weight: 500;
+                padding: 5px;
+            }
+            .overlay-content {
+                width: 100%;
+                padding: 10px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                color: var(--snow);
+            }
+            .overlay-content span {
+                font-size: 25px;
+            }
+            .row {
+                display: flex;
+                flex-direction: row;
+                justify-content: flex-start;
+                align-items: center;
+                font-size: 0.7em;
+                margin: 5px;
+                color: black;
+            }
+            .cover {
+                height: 50%;
+                width: 100%;
+                border-top-left-radius: 20px;
+                border-top-right-radius: 20px;
+                border-bottom-left-radius: 20px;
+                margin-bottom: 10px;
+                z-index: -1;
+                overflow: hidden;
+                background-image: url(https://thatgrapejuice.net/wp-content/uploads/2018/04/ariana-grande-no-tears-left-to-cry-thatgrapejuice-600x600.jpg);
+                background-position: center;
+                background-size: cover;
+                background-repeat: no-repeat;
+                box-shadow: -18px 18px 36px #9fa3a6, 18px -18px 36px #d7dde0;
+            }
+            .cover-nav {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+            }
+            .cover-nav span {
+                font-size: 23px;
+                padding: 15px;
+                color: var(--faded-blue);
+            }
+            .now-playing-banner {
+                animation: move 8s linear infinite;
+            }
+            @keyframes move {
+                0% {
+                    transform: translateX(0%);
+                }
+                50% {
+                    transform: translateX(50%);
+                }
+                100% {
+                    transform: translateX(100%);
+                }
+            }
+            .big-play-button {
+                z-index: 1;
+                position: absolute;
+                right: 3vw;
+                top: 250px;
+                height: 60px;
+                width: 60px;
+                border-radius: 50%;
+                z-index: 1;
+                background-color: var(--blue);
+                transition: all 0.2s;
+            }
+            .big-play-button:hover {
+                transform: scale(1.1);
+                cursor: pointer;
+            }
+            .big-play-button span {
+                padding: 13px;
+                font-size: 35px;
+                color: var(--snow);
+            }
+            .song-list {
+                width: 100%;
+                height: 50%;
+                padding: 20px;
+                display: flex;
+                flex-direction: column;
+            }
+            .song-row {
+                height: calc(50% -5);
+                width: 100%;
+                padding: 10px;
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+                border-bottom: 1px solid var(--faded-blue);
+                transition: all 0.2s;
+            }
+            .song-row:hover {
+                background-color: var(--faded-blue);
+            }
+            .song-row span {
+                color: var(--grey);
+                font-size: 0.6em;
+                font-weight: 600;
+            }
+            .song-row:nth-child(1),
+            .song-row:nth-child(6) {
+                border-bottom: none;
+            }
+            .song-row:nth-child(1):hover,
+            .song-row:nth-child(6):hover {
+                background-color: var(--snow);
+            }
+
+            .fixed-bottom {
+                width: 340px;
+                height: 20px;
+                bottom: 3%;
+                position: absolute;
+                text-align: center;
+                margin: 0 auto;
+                display: block;
+                cursor: pointer;
+            }
+            #expand {
+                font-size: 25px;
+                color: var(--blue);
+                display: block;
+            }
+            .now-playing-wrapper {
+                visibility: hidden;
+                height: 95%;
+                width: 100%;
+                padding: 20px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            }
+            .now-playing-img {
+                height: 50%;
+                width: 70%;
+                border-radius: 20px;
+                background-image: url(https://i.pinimg.com/736x/d5/22/c6/d522c65393e01a04895c652f1c7af1bd.jpg);
+                background-position: center;
+                background-size: cover;
+                background-repeat: no-repeat;
+                box-shadow: 0px 5px 15px 10px #bcbcbc;
+            }
+            .now-playing-title {
+                text-align: center;
+                width: 80%;
+                margin: 10px;
+                display: flex;
+                flex-direction: column;
+            }
+            .controls {
+                display: flex;
+                flex-direction: row;
+                justify-content: center;
+                margin: 10px;
+            }
+            .controls span {
+                color: var(--navy);
+                font-size: 30px;
+                padding: 10px;
+            }
+            .song-line {
+                height: 5px;
+                width: 90%;
+                margin: 10px;
+                animation: colorChange 2s ease infinite;
+                background: linear-gradient(to left, var(--navy), var(--blue), var(--faded-blue));
+            }
+
+            @keyframes colorChange {
+                0% {
+                    background: linear-gradient(to left, var(--navy), var(--blue), var(--faded-blue), var(--grey));
+                }
+                50% {
+                    background: linear-gradient(to right, var(--navy), var(--blue), var(--faded-blue), var(--grey));
+                }
+                100% {
+                    background: linear-gradient(to left, var(--navy), var(--blue), var(--faded-blue), var(--grey));
+                }
+            }
+            @media screen and (max-width: 600px) {
+                h {
+                    font-size: 1.2em;
+                }
+                p {
+                    font-size: 0.9em;
+                }
+                .player-wrapper,
+                .now-playing-wrapper {
+                    min-width: 100vw;
+                    min-height: 100vh;
+                }
+                .big-play-button {
+                    right: 20%;
+                    top: 45%;
+                }
+                .fixed-bottom {
+                    min-width: 100vw;
+                    margin-bottom: 10px;
+                }
+                .song-row {
+                    padding: 15px;
+                }
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="player-wrapper">
+            <!--overlay-->
+
+            <div class="overlay" id="nav">
+                <a href="javascript:void(0)" class="closeBtn" onclick="closeNav()">
+                    <span class="material-icons"> clear </span>
+                </a>
+                <div class="overlay-content">
+                    <div class="row"><span class="material-icons"> account_circle </span>account</div>
+                    <div class="row"><span class="material-icons"> settings </span>settings</div>
+                    <div class="row"><span class="material-icons"> save_alt </span>downloads</div>
+                    <div class="row"><span class="material-icons"> send </span>share</div>
+                </div>
+            </div>
+
+            <div class="cover">
+                <div class="cover-nav">
+                    <span class="material-icons" onclick="openNav()"> sort </span>
+                    <span class="material-icons"> info </span>
+                </div>
+                <div class="now-playing-banner">
+                    <p1><b>one last time</b>- Ariana Grande</p1>
+                </div>
+                <div class="big-play-button"><span class="material-icons"> play_arrow </span></div>
+            </div>
+            <div class="song-list">
+                <div class="song-row">
+                    <h>popular</h>
+                    <p>show all</p>
+                </div>
+                <div class="song-row">
+                    <h1>no tears left to cry</h1>
+                    <span>5:20</span>
+                </div>
+                <div class="song-row">
+                    <h1>imagine</h1>
+                    <span>3:20</span>
+                </div>
+                <div class="song-row">
+                    <h1>into you</h1>
+                    <span>4:12</span>
+                </div>
+                <div class="song-row">
+                    <h1>one last time</h1>
+                    <span>4:40</span>
+                </div>
+            </div>
+            <div class="fixed-bottom"><span class="material-icons" id="expand" onclick="hideShow()"> keyboard_arrow_up </span></div>
+            <div class="now-playing-wrapper">
+                <div class="now-playing-img"></div>
+                <div class="now-playing-title">
+                    <h>one last time</h>
+                    <p>ariana grande</p>
+                </div>
+                <div class="controls">
+                    <span class="material-icons"> skip_previous </span>
+                    <span class="material-icons" onclick="playAudio()"> play_circle_filled </span>
+                    <span class="material-icons" onclick="pauseAudio()"> pause_circle_filled </span>
+                    <span class="material-icons"> skip_next </span>
+                    <audio id="song">
+                        <source src="https://api.freeplaymusic.com/media/downloadable/files/link_samples/media/volume/tracks/Artful_Spaces_Volume_5/a/s/asteroid_belt.mp3" type="audio/mpeg" />
+                    </audio>
+                </div>
+                <div class="song-line"></div>
+            </div>
+        </div>
+        <script>
+            function hideShow() {
+                var cover = document.querySelector(".cover");
+                var list = document.querySelector(".song-list");
+                var nowPlaying = document.querySelector(".now-playing-wrapper");
+                if (cover.style.display === "none" && list.style.display === "none") {
+                    cover.style.display = "block";
+                    list.style.display = "block";
+                    nowPlaying.style.visibility = "none";
+                } else {
+                    cover.style.display = "none";
+                    list.style.display = "none";
+                    nowPlaying.style.visibility = "visible";
+                }
+            }
+            var song = document.getElementById("song");
+            function playAudio() {
+                song.play();
+            }
+            function pauseAudio() {
+                song.pause();
+            }
+            var overlay = document.getElementById("nav");
+            function openNav() {
+                overlay.style.width = "45%";
+            }
+            function closeNav() {
+                overlay.style.width = "0%";
+            }
+            /* inspired by https://dribbble.com/shots/6010742-Music-player */
+        </script>
+    </body>
+</html>

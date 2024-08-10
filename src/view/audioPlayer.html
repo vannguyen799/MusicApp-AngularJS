@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <base target="_top" />
+        <style>
+            body {
+                font-family: Arial, Helvetica, sans-serif;
+                font-size: small;
+                margin: 0;
+                padding: 0;
+            }
+
+            .maincontent {
+                display: block;
+            }
+
+            .toppp {
+                position: fixed;
+                /* Make the element fixed */
+                top: 0;
+                left: 0;
+                width: 100%;
+                background-color: #333;
+                color: white;
+                text-align: center;
+                align-items: center;
+                padding: 10px 0;
+                z-index: 1000;
+            }
+            .songImage {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .middd {
+                padding: 20px;
+            }
+            .tabledpl {
+                display: flex;
+            }
+            .songstable {
+                margin-left: 20px;
+                margin-right: 20px;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            th,
+            td {
+                border: 1px solid black;
+                padding: 8px;
+                text-align: left;
+            }
+            caption {
+                font-weight: bold;
+                margin: 10px 0;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="maincontent">
+            <div class="toppp" id="toppp">
+                <div class="audioplayer">
+                    <div class="songImage"><img id="coverImage" alt="Cover Image" style="display: none" width="150" height="auto" /></div>
+
+                    <div id="songName">
+                        <h3></h3>
+                    </div>
+                    <div id="chinese_songName">
+                        <h4></h4>
+                    </div>
+
+                    <audio id="audio" controls autoplay>
+                        <source src="" type="audio/flac" />
+                    </audio>
+                </div>
+            </div>
+            <div class="middd" id="middd">
+                <button type="button" onclick="selectTable(event)" value="songs">songList</button>
+                <button type="button" onclick="selectTable(event)" value="playlist">current playlist</button>
+
+                <div class="tabledpl">
+                    <div class="songstable" id="songs"></div>
+                    <div class="songstable" id="playlist"></div>
+                </div>
+            </div>
+        </div>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js" integrity="sha512-YsR46MmyChktsyMMou+Bs74oCa/CDdwft7rJ5wlnmDzMj1mzqncsfJamEEf99Nk7IB0JpTMo5hS8rxB49FUktQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script>
+            function fetchMetadata(url, onCompleted) {
+                fetch(url, { headers: { Range: "bytes=0-1000000" } })
+                    .then((response) => response.arrayBuffer())
+                    .then((buffer) => {
+                        jsmediatags.read(new Blob([buffer]), {
+                            onSuccess: function (tag) {
+                                const tags = tag.tags;
+                                const picture = tags.picture;
+                                if (picture) {
+                                    const base64String = arrayBufferToBase64(picture.data);
+                                    const base64 = "data:" + picture.format + ";base64," + base64String;
+                                    document.getElementById("coverImage").src = base64;
+                                    document.getElementById("coverImage").style.display = "block";
+                                } else {
+                                    // alert("No image found in the metadata");
+                                    document.getElementById("coverImage").src = "https://img.freepik.com/premium-vector/default-image-icon-vector-missing-picture-page-website-design-mobile-app-no-photo-available_87543-11093.jpg?w=100";
+                                }
+                                onCompleted();
+                            },
+                            onError: function (error) {
+                                console.error("Error reading metadata:", error);
+                                document.getElementById("coverImage").src = "https://img.freepik.com/premium-vector/default-image-icon-vector-missing-picture-page-website-design-mobile-app-no-photo-available_87543-11093.jpg?w=100";
+                                onCompleted();
+                            },
+                        });
+                    })
+                    .catch((error) => {
+                        console.error("Error fetching the file:", error);
+                    });
+            }
+
+            function arrayBufferToBase64(buffer) {
+                let binary = "";
+                const bytes = new Uint8Array(buffer);
+                const len = bytes.byteLength;
+                for (let i = 0; i < len; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
+                return window.btoa(binary);
+            }
+        </script>
+        <script>
+            var songsList = [];
+            let playlist = [];
+            let playFileId = "<?= fileId?>";
+            let sheet = "<?= sheet?>";
+            document.addEventListener("DOMContentLoaded", function () {
+                // init
+                var songsElement = document.getElementById("songs");
+                // fe design
+                formatcss();
+                // gentable
+                generateSongTable(songsElement);
+                // google.script.run
+                //     .withSuccessHandler((result) => {
+                //         this.
+
+                //     })
+                //     .selectDriveAPIKey();
+                var audio = document.getElementById("audio");
+                audio.addEventListener("ended", () => {
+                    playSong(playlist.pop());
+                });
+            });
+            function handlerPlayButton(event) {
+                playSong(event.target.value);
+            }
+            function playSong(fileId) {
+                google.script.run
+                    .withSuccessHandler((result) => {
+                        refreshAudio(result, fileId);
+                    })
+                    .selectDriveAPIKey();
+            }
+            function selectTable(event) {
+                try {
+                    let domId = event.target.value;
+                    if (domId == "songs") {
+                        document.getElementById("songs").hidden = false;
+                        document.getElementById("playlist").hidden = false;
+                    }
+                    if (domId == "playlist") {
+                        document.getElementById("playlist").hidden = false;
+                        document.getElementById("songs").hidden = true;
+                    }
+                } catch (e) {}
+            }
+            function refreshAudio(apiKey, fileId) {
+                var audio = document.getElementById("audio");
+                var vname = document.getElementById("songName");
+                var name = document.getElementById("chinese_songName");
+                audio.src = "https://www.googleapis.com/drive/v3/files/" + fileId + "?alt=media&key=" + apiKey;
+                audio.load();
+                songsList.forEach((s) => {
+                    if (s.fileId == fileId) {
+                        vname.innerHTML = `<h3>${s.vsinger} - ${s.vname}</h3>`;
+                        name.innerHTML = `<h4>${s.singer} - ${s.name} </h4>`;
+                    }
+                });
+                audio.play();
+                fetchMetadata(audio.src, formatcss);
+            }
+            function formatcss() {
+                var toppp = document.getElementById("toppp");
+                var middd = document.getElementById("middd");
+                var topppHeight = toppp.offsetHeight;
+                middd.style.marginTop = topppHeight + "px";
+            }
+            function generatePlayListTable(playliste = document.getElementById("playlist")) {
+                let innerSong = `<tr>
+                                    <th>song</th>
+                                    <th>singer</th>
+                                    <th>action</th>
+                                </tr>`;
+                for (const e of [...playlist].reverse()) {
+                    let s = songsList.find((x) => x.fileId == e);
+                    innerSong += `<tr>
+                                    <td>${s.vname}</td> <td>${s.vsinger}</td>
+                                    <td>
+                                        <button name="play" value="${s.fileId}" onclick="play_playlistBtnHandler(event)">play</button>
+                                        <button name="removefromplaylist" value="${playlist.findIndex((x) => s.fileId == x)}" onclick="removePlayListBtnHandle(event)" >removefromplaylist</button>
+                                    </td>
+                                </tr>`;
+                }
+                playliste.innerHTML = `<table  id="songs"> <caption> Playlist</caption> ${innerSong}</table>`;
+            }
+            function addToPlaylistBtnHandler(event) {
+                let fileId = event.target.value;
+                playlist = [fileId].concat(playlist);
+                generatePlayListTable();
+            }
+            function removePlayListBtnHandle(event) {
+                removePlaylist(event.target.value);
+            }
+            function removePlaylist(index) {
+                if (parseInt(index) > -1) {
+                    playlist.splice(index, 1);
+                }
+                generatePlayListTable();
+            }
+
+            function play_playlistBtnHandler(event) {
+                event.target.parentElement.querySelector('button[name="removefromplaylist"]').click();
+                // removePlaylist(e.target.value);
+                playSong(event.target.value);
+            }
+            function generateSongTable(songsElement = document.getElementById("songs")) {
+                google.script.run
+                    .withSuccessHandler((result) => {
+                        let _end = function () {};
+                        let innerSong = `<tr>
+                                            <th>song</th>
+                                            <th>singer</th>
+                                            <th>action</th>
+                                        </tr>`;
+                        for (const s of result) {
+                            innerSong += `<tr>
+                                            <td>${s.vname}</td> <td>${s.vsinger}</td>
+                                            <td>
+                                                <button name="play" value="${s.fileId}" onclick="handlerPlayButton(event)">play</button>
+                                                <button name="addtoplaylist" value="${s.fileId}" onclick="addToPlaylistBtnHandler(event)" >addtoplaylist</button>
+                                                <input type="checkbox" name="songcheckbox" value="${s.fileId}">
+                                            </td>
+                                        </tr>`;
+                            if (s.fileId == playFileId) {
+                                _end = function () {
+                                    let button = document.querySelector(`button[value="${s.fileId}"]`);
+                                    button?.click();
+                                };
+                            }
+                        }
+                        innerSong = `<table  id="songs"> <caption> Song List</caption>${innerSong}</table>`;
+
+                        songsElement.innerHTML = innerSong;
+
+                        songsList = result;
+                        _end();
+                    })
+                    .getAllSongAndId(sheet);
+            }
+        </script>
+    </body>
+</html>

@@ -6,7 +6,7 @@
 /**
  * @interface
  */
-class ICell  {
+class ICell {
   constructor() {
     /**
    * @type {number}
@@ -15,7 +15,7 @@ class ICell  {
     /**
      * @type {number}
      */
-    
+
     this.row;
     /**
      * @type {string | null}

@@ -77,6 +77,11 @@
                     <audio id="audio" controls autoplay>
                         <source src="" type="audio/flac" />
                     </audio>
+
+                    <div>
+                        <button id="nextSong" onclick="nextSongHandler()">Next</button>
+                        <input type="checkbox" id="randomCheckBox" checked /> randomPlay <input type="checkbox" aria-label="" id="playPlaylistCB" />Play PlayList
+                    </div>
                 </div>
             </div>
             <div class="middd" id="middd">
@@ -133,10 +138,31 @@
             }
         </script>
         <script>
+            function appsScriptRun({
+                funtionName,
+                input = [],
+                userObj,
+                onSuccess = (result) => {
+                    console.log("success" + result);
+                },
+                onError = (result) => {
+                    console.log("fail" + result);
+                },
+            }) {
+                let runner = google.script.run.withSuccessHandler(onSuccess).withFailureHandler(onError);
+                if (userObj) {
+                    runner.withUserObject(userObj);
+                }
+                runner[funtionName](...input);
+            }
             var songsList = [];
             let playlist = [];
-            let playFileId = "<?= fileId?>";
-            let sheet = "<?= sheet?>";
+            let playFileId = "<?= fileId?>".replace('"', "").replace('"', "");
+            let sheet = "<?= sheet?>".replace('"', "").replace('"', "");
+            let host = "<?= host?>".replace('"', "").replace('"', "");
+            let playedList = [];
+            let currentPlayed = "";
+            let play_SongList = [];
             document.addEventListener("DOMContentLoaded", function () {
                 // init
                 var songsElement = document.getElementById("songs");
@@ -150,11 +176,45 @@
 
                 //     })
                 //     .selectDriveAPIKey();
-                var audio = document.getElementById("audio");
-                audio.addEventListener("ended", () => {
-                    playSong(playlist.pop());
+                let audio = document.getElementById("audio");
+                // let audioContext;
+                // let source;
+                // let analyser;
+                // let bufferLength;
+                // let dataArray;
+
+                audio.addEventListener("ended", nextSongHandler);
+                audio.addEventListener("canplay", () => {
+                    // audio.getB;
+                    fetchMetadata(audio.src, formatcss);
                 });
             });
+            function nextSongHandler() {
+                let isRandom = document.getElementById("randomCheckBox");
+                let isPlaylist = document.getElementById("playPlaylistCB");
+                let songtoplay = "";
+                let songToPlayList = play_SongList;
+                if (isPlaylist.checked) {
+                    songToPlayList = playlist;
+                }
+                if (isRandom.checked) {
+                    songtoplay = popRandomElement(songToPlayList);
+                } else {
+                    songtoplay = songToPlayList.pop();
+                }
+                playSong(songtoplay);
+            }
+            function popRandomElement(arr) {
+                if (arr.length === 0) {
+                    return undefined; // Return undefined if the array is empty
+                }
+
+                const randomIndex = Math.floor(Math.random() * arr.length);
+                const [removedElement] = arr.splice(randomIndex, 1);
+
+                return removedElement;
+            }
+
             function handlerPlayButton(event) {
                 playSong(event.target.value);
             }
@@ -186,12 +246,13 @@
                 audio.load();
                 songsList.forEach((s) => {
                     if (s.fileId == fileId) {
-                        vname.innerHTML = `<h3>${s.vsinger} - ${s.vname}</h3>`;
+                        if (s.vsinger != "") {
+                            vname.innerHTML = `<h3>${s.vsinger} - ${s.vname}</h3>`;
+                        }
                         name.innerHTML = `<h4>${s.singer} - ${s.name} </h4>`;
                     }
                 });
                 audio.play();
-                fetchMetadata(audio.src, formatcss);
             }
             function formatcss() {
                 var toppp = document.getElementById("toppp");
@@ -208,7 +269,7 @@
                 for (const e of [...playlist].reverse()) {
                     let s = songsList.find((x) => x.fileId == e);
                     innerSong += `<tr>
-                                    <td>${s.vname}</td> <td>${s.vsinger}</td>
+                                    <td>${s.vname == "" ? s.name : s.vname}</td> <td>${s.vsinger == "" ? s.singer : s.vsinger}</td>
                                     <td>
                                         <button name="play" value="${s.fileId}" onclick="play_playlistBtnHandler(event)">play</button>
                                         <button name="removefromplaylist" value="${playlist.findIndex((x) => s.fileId == x)}" onclick="removePlayListBtnHandle(event)" >removefromplaylist</button>
@@ -248,7 +309,7 @@
                                         </tr>`;
                         for (const s of result) {
                             innerSong += `<tr>
-                                            <td>${s.vname}</td> <td>${s.vsinger}</td>
+                                    <td>${s.vname == "" ? s.name : s.vname}</td> <td>${s.vsinger == "" ? s.singer : s.vsinger}</td>
                                             <td>
                                                 <button name="play" value="${s.fileId}" onclick="handlerPlayButton(event)">play</button>
                                                 <button name="addtoplaylist" value="${s.fileId}" onclick="addToPlaylistBtnHandler(event)" >addtoplaylist</button>
@@ -267,6 +328,7 @@
                         songsElement.innerHTML = innerSong;
 
                         songsList = result;
+                        play_SongList = result.map((s) => s.fileId);
                         _end();
                     })
                     .getAllSongAndId(sheet);

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="myApp">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>AngularJS ng-repeat Example</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+        <style>
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            th,
+            td {
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: left;
+            }
+            th {
+                background-color: #4caf50; /* Green background */
+                color: white; /* White text */
+            }
+            tr:nth-child(even) {
+                background-color: #f2f2f2; /* Zebra stripes */
+            }
+        </style>
+    </head>
+    <body ng-controller="MainController">
+        <h1>Item List Example</h1>
+
+        <!-- Table to display items -->
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>File ID</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="item in items track by $index">
+                    <td>{{ $index + 1 }}</td>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.fileId }}</td>
+                    <td><button ng-click="handlerPlayButton(item.fileId)">Play</button></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Display the result -->
+        <p>Selected File ID: {{ selectedFileId }}</p>
+
+        <script>
+            // Define the AngularJS application
+            var app = angular.module("myApp", []);
+
+            // Define the main controller
+            app.controller("MainController", function ($scope) {
+                // Initialize items array
+                $scope.items = [
+                    { name: "Item 1", fileId: "123" },
+                    { name: "Item 2", fileId: "456" },
+                    { name: "Item 3", fileId: "789" },
+                ];
+
+                // Initialize selectedFileId
+                $scope.selectedFileId = "";
+
+                // Define the function to handle button click
+                $scope.handlerPlayButton = function (fileId) {
+                    $scope.selectedFileId = fileId;
+                };
+            });
+        </script>
+    </body>
+</html>

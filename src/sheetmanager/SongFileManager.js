@@ -1,20 +1,22 @@
 /** @extends {ISheetManager} */
-const SongFileManager = class SongFileManager extends SM.Sheet.SheetManager {
-  constructor(sheetName, folderId) {
+class SongFileManager extends SM.Sheet.SheetManager {
+  constructor(sheetName, folderId, mode) {
     super(sheetName)
     this.folderId = folderId != undefined ? folderId : this.Sheet.getRange('B1').getValue()
-
+    if (sheetName == 'vietnam') {
+      this.originalNameOnly = true
+    }
     if (this.folderId.length != 33) {
       throw new Error(' invalid folderId: got ' + this.folderId)
     }
     this.folder = DriveApp.getFolderById(this.folderId)
 
     this.tableHeader = {
-      'songName': 'name',
-      'singerName': 'singer',
-      'linkUp': 'link up',
-      'status': 'status',
-      'filename': 'filename',
+      songName: 'name',
+      singerName: 'singer',
+      linkUp: 'link up',
+      status: 'status',
+      filename: 'filename',
       vname: 'vname',
       vsigner: 'vsigner'
     }
@@ -45,7 +47,7 @@ const SongFileManager = class SongFileManager extends SM.Sheet.SheetManager {
   get vsingerColumn() {
     return this.getColumn(this.tableHeader.vsigner, null, false)
   }
-  process({ update } = { update: false }) {
+  process({ update }) {
     console.log('processing...')
     let filesIterator = this.folder.getFiles()
 
@@ -58,13 +60,15 @@ const SongFileManager = class SongFileManager extends SM.Sheet.SheetManager {
         let fileName = file.getName()
         let [_singer, _songName] = ['', fileName]
         let [_vsinger, _vname] = ['', '']
+
         console.log('check ' + fileName)
+
         let songNames = this.songNameColumn.getData()
-          let singerNames = this.singerNameColumn.getData()
+        let singerNames = this.singerNameColumn.getData()
         if (!this.isNameProcessed(fileName)) {
           [_singer, _songName] = this.getSongInfoFromPreName(fileName);
           for (const i in songNames) {
-            if (songNames[i] == _songName && singerNames[i] == _singer) {
+            if (songNames[i].trim() == _songName && singerNames[i].trim() == _singer) {
               let newName = this.processFileNameColumn.getData(i)
               if (newName && newName != '' && newName != null && newName != ' -  |  - ') {
                 file.setName(newName)
@@ -76,10 +80,14 @@ const SongFileManager = class SongFileManager extends SM.Sheet.SheetManager {
           }
         } else {
           // changeName
+          // console.log(fileName)
+
           [_singer, _songName, _vsinger, _vname] = this.getSongInfoFromProcessedName(fileName);
           // _singer = _singer.replace(',', '，')
+          console.log(_songName)
+
           for (const i in songNames) {
-            if (songNames[i] == _songName && singerNames[i] == _singer) {
+            if (songNames[i].trim() == _songName && singerNames[i].trim() == _singer) {
               let newName = this.processFileNameColumn.getData(i)
               if (newName && newName != '' && newName != null && newName != ' -  |  - ' && newName != fileName) {
                 file.setName(newName)
@@ -94,6 +102,7 @@ const SongFileManager = class SongFileManager extends SM.Sheet.SheetManager {
         if (!isProcessed) {
           console.log(`file unprocessed: ${file.getName()}`)
           if (update) {
+            console.log('updatinng  ' + update)
             this.addSong({
               songName: _songName,
               singerName: _singer,
@@ -124,11 +133,13 @@ const SongFileManager = class SongFileManager extends SM.Sheet.SheetManager {
         break
       }
     }
-    if (songNameCol.getData().length == 0) {
+    if (!row) {
       row = songNameCol.headerCell.row + 1
     }
 
     if (row) {
+      console.log(row)
+
       this.Sheet.getRange(row, songNameCol.headerCell.col).setValue(songName)
       // set singerName
       this.Sheet.getRange(row, this.singerNameColumn.headerCell.col).setValue(singerName)
@@ -141,8 +152,17 @@ const SongFileManager = class SongFileManager extends SM.Sheet.SheetManager {
       this.flush()
     }
   }
+  /**
+   * 
+   * @param {string} name 
+   * @returns 
+   */
   isNameProcessed(name) {
-    return name.includes(' | ') && name.includes('-')
+    if (this.originalNameOnly) {
+      return name.includes('-')
+    } else {
+      return name.includes(' | ') && name.includes('-')
+    }
   }
 
   getSongInfoFromPreName(preName) {
@@ -153,18 +173,26 @@ const SongFileManager = class SongFileManager extends SM.Sheet.SheetManager {
         return s.split('.')[0].split(p)
       }
     }
-    return test(' - ', preName) || test('+-+', preName) || test('-', preName) || [preName, '']
+    return test(' - ', preName) || test('+-+', preName) || [preName, '']
   }
 
   /** @param {string} processedName 
    * @return {[string, string, string, string]}
   */
   getSongInfoFromProcessedName(processedName) {
+
+    let [_vname, _vsinger, _name, _signer] = ['', '', '', '']
     processedName = processedName.split('.flac')[0].split('.mp3')[0]
-    let _vsinger = processedName.split('|')[0].split('-')[0].trim()
-    let _vname = processedName.split('|')[0].split('-')[1].trim()
-    let _signer = processedName.split('|')[1].split('-')[0].trim()
-    let _name = processedName.split('|')[1].split('-')[1].trim()
+    if (this.originalNameOnly) {
+      processedName = processedName.replace('-  |', '')
+      _signer = processedName.split('-')[0].trim()
+      _name = processedName.split('-')[1].trim()
+    } else {
+      _vsinger = processedName.split('|')[0].split('-')[0].trim()
+      _vname = processedName.split('|')[0].split('-')[1].trim()
+      _signer = processedName.split('|')[1].split('-')[0].trim()
+      _name = processedName.split('|')[1].split('-')[1].trim()
+    }
 
     return [_signer, _name, _vsinger, _vname]
   }
@@ -184,12 +212,14 @@ const SongFileManager = class SongFileManager extends SM.Sheet.SheetManager {
         vname: vnames[i],
         vsinger: vsingers[i]
       }
-      if (s.fileId !=null) {
+      if (s.fileId != null) {
         rs.push(s)
       }
     }
     return rs
   }
+
+
 }
 
 

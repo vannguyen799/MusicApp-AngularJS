@@ -48,9 +48,13 @@ class SongFileManager extends SM.Sheet.SheetManager {
     return this.getColumn(this.tableHeader.vsigner, null, false)
   }
   process({ update }) {
-    console.log('processing...')
-    let filesIterator = this.folder.getFiles()
+    console.log('processing... ')
+    console.log(update)
 
+    const filesIterator = this.folder.getFiles()
+    const songNames = this.songNameColumn.getData()
+    const singerNames = this.singerNameColumn.getData()
+    const processFilename = this.processFileNameColumn.getData()
     while (filesIterator.hasNext()) {
       let isProcessed = false
       let row = undefined
@@ -63,13 +67,12 @@ class SongFileManager extends SM.Sheet.SheetManager {
 
         console.log('check ' + fileName)
 
-        let songNames = this.songNameColumn.getData()
-        let singerNames = this.singerNameColumn.getData()
+
         if (!this.isNameProcessed(fileName)) {
           [_singer, _songName] = this.getSongInfoFromPreName(fileName);
           for (const i in songNames) {
             if (songNames[i].trim() == _songName && singerNames[i].trim() == _singer) {
-              let newName = this.processFileNameColumn.getData(i)
+              let newName = processFilename[i]
               if (newName && newName != '' && newName != null && newName != ' -  |  - ') {
                 file.setName(newName)
               }
@@ -84,11 +87,11 @@ class SongFileManager extends SM.Sheet.SheetManager {
 
           [_singer, _songName, _vsinger, _vname] = this.getSongInfoFromProcessedName(fileName);
           // _singer = _singer.replace(',', '，')
-          console.log(_songName)
+          // console.log(_songName)
 
           for (const i in songNames) {
             if (songNames[i].trim() == _songName && singerNames[i].trim() == _singer) {
-              let newName = this.processFileNameColumn.getData(i)
+              let newName = processFilename[i]
               if (newName && newName != '' && newName != null && newName != ' -  |  - ' && newName != fileName) {
                 file.setName(newName)
               }
@@ -102,7 +105,6 @@ class SongFileManager extends SM.Sheet.SheetManager {
         if (!isProcessed) {
           console.log(`file unprocessed: ${file.getName()}`)
           if (update) {
-            console.log('updatinng  ' + update)
             this.addSong({
               songName: _songName,
               singerName: _singer,
@@ -126,9 +128,10 @@ class SongFileManager extends SM.Sheet.SheetManager {
   }
   addSong({ songName, singerName, vname, vsinger, linkUp, status }) {
     const songNameCol = this.songNameColumn
+    const songNames = songNameCol.getData()
     let row = undefined
     for (let i = songNameCol.cells.length - 1; i >= 0; i--) {
-      if (songNameCol.getData(i) != '') {
+      if (songNames[i] != '') {
         row = songNameCol.cells[i].row + 1
         break
       }
@@ -138,7 +141,7 @@ class SongFileManager extends SM.Sheet.SheetManager {
     }
 
     if (row) {
-      console.log(row)
+      // console.log(row)
 
       this.Sheet.getRange(row, songNameCol.headerCell.col).setValue(songName)
       // set singerName
@@ -165,24 +168,49 @@ class SongFileManager extends SM.Sheet.SheetManager {
     }
   }
 
+  /**
+   * 
+   * @param {string} preName 
+   * @returns {[string, string]}
+   */
   getSongInfoFromPreName(preName) {
-    preName = preName.split('.flac')[0].split('.mp3')[0]
+    preName = this.removeExt(preName)
 
+    /**
+     * @param {*} p 
+     * @param {*} s 
+     * @returns {string[]}
+     */
     function test(p, s) {
       if (s.includes(p)) {
-        return s.split('.')[0].split(p)
+        return s.split(p)
+      }
+      return undefined
+    }
+    let res = test('+-+', preName)
+    if (!res) {
+      if (preName.indexOf('-') == preName.lastIndexOf('-')) {
+        res = test('-', preName)
       }
     }
-    return test(' - ', preName) || test('+-+', preName) || [preName, '']
+    res = res ?? [preName, '']
+    return res.map(m => m.replace('+', ' ').trim())
   }
 
+  removeExt(fileName) {
+    const fileExt = ['flac', 'wav', 'mp3', 'ape', 'm4a']
+
+    for (const ext of fileExt) {
+      fileName = fileName.split(`.${ext}`)[0]
+    }
+    return fileName
+  }
   /** @param {string} processedName 
    * @return {[string, string, string, string]}
   */
   getSongInfoFromProcessedName(processedName) {
-
+    processedName = this.removeExt(processedName)
     let [_vname, _vsinger, _name, _signer] = ['', '', '', '']
-    processedName = processedName.split('.flac')[0].split('.mp3')[0]
     if (this.originalNameOnly) {
       processedName = processedName.replace('-  |', '')
       _signer = processedName.split('-')[0].trim()

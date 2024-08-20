@@ -4,10 +4,10 @@ function t() {
   // console.log(a.getAllApiKey())
   // console.log(  ScriptApp.getIdentityToken().getUrl()
   // )
-  let b = new SongFileManager('vietnam')
-  // b.process({
-  //   update: true
-  // })
+  let b = new SongFileManager('chinese')
+  b.process({
+    update: false
+  })
   // b.addSong({
   //   songName: 's',
   //   singerName: 's',
@@ -16,7 +16,7 @@ function t() {
   //   ,linkUp:'ss'
   //   ,status:'s'
   // })
-  console.log(getAllSheetName())
+  // console.log(getAllSheetName())
   return { a: 'a' }
 }
 

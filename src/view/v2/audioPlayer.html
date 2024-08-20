@@ -43,6 +43,7 @@
                 margin-right: 10%;
                 margin-left: 10%;
                 margin-top: 20px;
+                margin-bottom: 8%;
             }
 
             .tabledpl {
@@ -56,6 +57,7 @@
 
             table {
                 width: 100%;
+                background-color: aliceblue;
                 border-collapse: collapse;
             }
 
@@ -121,7 +123,7 @@
                 <div>{{message}}</div>
                 <div class="tabledpl">
                     <div class="songstable" id="songs">
-                        <table border="1">
+                        <table>
                             <tr ng-repeat="s in songList">
                                 <!-- <td>{{i + 1}}</td> -->
                                 <td>{{s.vname == "" ? s.name : s.vname}}</td>
@@ -138,6 +140,32 @@
                     <div class="songstable" id="playlist"></div>
                 </div>
             </div>
+        </div>
+        <style>
+            .footer > button {
+                z-index: 11000;
+                position: fixed;
+                right: 1%;
+                left: auto;
+                bottom: 3%;
+            }
+        </style>
+        <div class="footer">
+            <button onclick="hideshowAudioPlayer(event)" id="hideshowPlayerBtn">ClosePlayer</button>
+            <script>
+                function hideshowAudioPlayer(event) {
+                    let pler = document.getElementById("bottom-audio-player");
+
+                    if (pler.style.display == "none") {
+                        pler.style.display = "";
+                        event.target.innerText = "ClosePlayer";
+                    } else {
+                        pler.style.display = "none";
+
+                        event.target.innerText = "OpenPlayer";
+                    }
+                }
+            </script>
         </div>
         <style>
             .audioplayer-bottom-fixed {
@@ -182,18 +210,27 @@
                 margin-top: 6px;
             }
             .audio-action {
-                display: flex;
+                display: inline;
                 width: auto;
-                margin-left: 20px;
+                margin-left: 5%;
                 align-items: center;
             }
-            .audio-action > button {
+            .wrap-audio-controls > button {
                 width: auto;
-                margin-left: 10px;
+                margin-top: 10px;
+                margin-right: 10px;
+                display: inline-flex;
+                min-width: 55px;
+                text-align: center;
+                justify-content: center;
+            }
+            .player-input {
+                margin-top: 5px;
                 display: flex;
+                align-items: center;
             }
         </style>
-        <div class="audioplayer-bottom-fixed">
+        <div class="audioplayer-bottom-fixed" id="bottom-audio-player">
             <div class="song-info">
                 <div><img ng-src="{{ songImageSrc }}" width="60" height="60" /></div>
                 <div class="song-player">
@@ -202,18 +239,44 @@
                 </div>
             </div>
             <div class="audio-player">
-                <audio id="audioPlayer" controls autoplay>
+                <audio id="audioPlayer" controls autoplay controlsList="nodownload">
                     <source ng-src="{{ playAudioUrl }}" type="audio/flac" />
                 </audio>
                 <div class="audio-action">
-                    <button ng-click="prevSongHandler()">Previous</button>
-                    <button ng-click="nextSongHandler()">Next</button>
-                    <!-- <button ng-click="">Play/Pause</button> -->
+                    <div class="wrap-audio-controls">
+                        <button onclick="audioPlayHandler(event)" id="playbtn">Play</button>
 
-                    <div><input type="checkbox" ng-model="isRandomPlay" checked /> randomPlay</div>
-                    <div>
-                        <input type="checkbox" ng-model="isLoopPlay" checked /> Loop
-                        <!-- <input style="width: 30px" type="number" ng-model="timeLoop" /> timeLoop -->
+                        <button ng-click="prevSongHandler()">Previous</button>
+                        <button ng-click="nextSongHandler()">Next</button>
+                        <button onclick="restartSongHandler(event)">Restart</button>
+
+                        <script>
+                            function audioPlayHandler(event) {
+                                if (audio.paused) {
+                                    audio.play();
+                                    event.target.innerText = "Pause";
+                                } else {
+                                    audio.pause();
+                                    event.target.innerText = "Play";
+                                }
+                            }
+                            function restartSongHandler(event) {
+                                audio.currentTime = 0;
+                                audio.play();
+                            }
+                        </script>
+                    </div>
+
+                    <div class="player-input">
+                        <div>
+                            <input type="checkbox" id="isRandomPlay" ng-model="isRandomPlay" class="ng-not-empty" checked />
+                            <label for="isRandomPlay"> Play random </label>
+                        </div>
+                        <div>
+                            <input type="checkbox" ng-model="isLoopPlay" id="isLoopPlay" />
+                            <label for="isLoopPlay"> Play loop </label>
+                            <!-- <input style="width: 30px" type="number" ng-model="timeLoop" /> timeLoop -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -222,13 +285,21 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js" integrity="sha512-YsR46MmyChktsyMMou+Bs74oCa/CDdwft7rJ5wlnmDzMj1mzqncsfJamEEf99Nk7IB0JpTMo5hS8rxB49FUktQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         <script>
             const audio = document.getElementById("audioPlayer");
-
+            audio.addEventListener("play", () => {
+                document.getElementById("playbtn").innerText = "Pause";
+            });
+        </script>
+        <script>
             var app = angular.module("songApp", ["ngSanitize"]);
 
             app.controller("MainController", function ($scope, $sce) {
                 $scope.fileId = "<?= fileId?>";
                 $scope.sheet = "<?= sheet?>";
                 $scope.host = "<?= host?>";
+                // $scope.$apply(function () {
+                //     $scope.songList = [{ fileId: "testfileId", vname: "testvname", vsinger: "testvsinger" }];
+
+                //             });
                 $scope.mainSongName = ``;
                 $scope.subSongName = ``;
                 const prevSongList = [];
@@ -246,11 +317,14 @@
                 }
 
                 function loadSongTable() {
+                    $scope.songList = [];
+                    $scope.message = `Loading song list of '${$scope.sheet}'`;
                     appsScriptRun({
                         funtionName: "getAllSongAndId",
                         input: [$scope.sheet],
                         onSuccess: (result) => {
                             $scope.$apply(function () {
+                                $scope.message = ``;
                                 $scope.songList = result;
                                 $scope.currentPlaylist = $scope.currentPlaylist ?? [...result].reverse();
                             });
@@ -283,6 +357,7 @@
 
                 $scope.selectSheetBtnHandler = function (name) {
                     $scope.sheet = name;
+                    $scope.currentPlaylist = undefined;
                     loadSongTable();
                 };
 
@@ -312,6 +387,7 @@
                 };
 
                 $scope.playSong = function (s) {
+                    document.getElementById("bottom-audio-player").style.display = "";
                     refreshAudio(s);
                 };
 
@@ -326,9 +402,11 @@
                     if ($scope.keyList) {
                         refreshAudio.lastKeyIdx = ((refreshAudio.lastAudioIndex ?? -1) + 1) % $scope.keyList.length;
                         audio.src = "https://www.googleapis.com/drive/v3/files/" + songInfo.fileId + "?alt=media&key=" + $scope.keyList[refreshAudio.lastKeyIdx];
-                        $scope.mainSongName = `${songInfo.singer} - ${songInfo.name}`;
-                        $scope.subSongName = songInfo.vname == "" ? "" : `${songInfo.vsinger} - ${songInfo.vname}`;
-                        $scope.songImageSrc = _emptyLogoUrl;
+                        $scope.$apply(function () {
+                            $scope.mainSongName = `${songInfo.singer} - ${songInfo.name}`;
+                            $scope.subSongName = songInfo.vname == "" ? "" : `${songInfo.vsinger} - ${songInfo.vname}`;
+                            $scope.songImageSrc = _emptyLogoUrl;
+                        });
                         audio.load();
                         audio.play();
                     }

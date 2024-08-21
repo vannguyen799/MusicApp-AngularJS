@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="songApp">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <style>
+            body {
+                font-family: Arial, Helvetica, sans-serif;
+                font-size: small;
+                margin: 0;
+                padding: 0;
+                background-color: rgb(201, 242, 255);
+            }
+
+            .maincontent {
+                display: block;
+            }
+
+            .toppp {
+                position: fixed;
+                /* Make the element fixed */
+                top: 0;
+                left: 0;
+                width: 100%;
+                color: white;
+                text-align: center;
+                align-items: center;
+                background-color: rgb(201, 242, 255);
+                border: 10px;
+                border-color: aliceblue;
+                /* padding: 10px 0; */
+                z-index: 1000;
+            }
+
+            .songImage {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .middd {
+                padding: 20px;
+                margin-right: 10%;
+                margin-left: 10%;
+                margin-top: 20px;
+                margin-bottom: 8%;
+            }
+
+            .tabledpl {
+                display: flex;
+            }
+
+            .songstable {
+                margin-left: 20px;
+                margin-right: 20px;
+            }
+
+            table {
+                width: 100%;
+                background-color: aliceblue;
+                border-collapse: collapse;
+            }
+
+            th,
+            td {
+                border: 1px solid black;
+                padding: 8px;
+                text-align: left;
+            }
+
+            caption {
+                font-weight: bold;
+                margin: 10px 0;
+            }
+
+            #navbar {
+                color: black;
+                font-weight: bold;
+                font-size: larger;
+                display: inline;
+            }
+
+            #navbar > button {
+                margin-right: 20px;
+            }
+        </style>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-sanitize.min.js"></script>
+        <!-- Include angular-sanitize -->
+        <script>
+            function appsScriptRun({
+                funtionName,
+                input = [],
+                userObj,
+                onSuccess = (result, userObj = undefined) => {
+                    console.log("success" + result);
+                },
+                onError = (result, userObj = undefined) => {
+                    console.log("fail" + result);
+                },
+            }) {
+                let runner = google.script.run.withSuccessHandler(onSuccess).withFailureHandler(onError);
+                if (userObj) {
+                    runner.withUserObject(userObj);
+                }
+                runner[funtionName](...input);
+            }
+        </script>
+    </head>
+    <body ng-controller="MainController">
+        <div class="toppp">
+            <div class="">
+                <div id="navbar" ng-repeat="name in sheetNames">
+                    <button name="workingSheet" ng-value="name" ng-bind-html="getButtonLabel(name)" ng-click="selectSheetBtnHandler(name)"></button>
+                </div>
+            </div>
+        </div>
+        <div class="middd" id="middd">
+            <div class="table">
+                <!-- <button type="button" onclick="selectTable(event)" value="songs">songList</button>
+                <button type="button" onclick="selectTable(event)" value="playlist">current playlist</button> -->
+                <div>{{message}}</div>
+                <div class="tabledpl">
+                    <div class="songstable" id="songs">
+                        <table>
+                            <tr ng-repeat="s in songList">
+                                <!-- <td>{{i + 1}}</td> -->
+                                <td>{{s.vname == "" ? s.name : s.vname}}</td>
+                                <td>{{s.vsinger == "" ? s.singer : s.vsinger}}</td>
+
+                                <td>
+                                    <button name="play" ng-value="s.fileId" ng-click="playSong(s)">play</button>
+                                    <button ng-click="setSongFavorite($event, s.fileId)">{{s.isFavorite ? 'Remove fav' : 'Add fav'}}</button>
+                                    <!-- <button name="addtoplaylist" ng-value="s.fileId" ng-click="addToPlaylistBtnHandler(event)">addPL</button>
+                                    <input type="checkbox" name="songcheckbox" ng-value="s.fileId" /> -->
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="songstable" id="playlist"></div>
+                </div>
+            </div>
+        </div>
+        <style>
+            .footer > button {
+                z-index: 11000;
+                position: fixed;
+                right: 1%;
+                left: auto;
+                bottom: 3%;
+            }
+        </style>
+        <div class="footer">
+            <button onclick="hideshowAudioPlayer(event)" id="hideshowPlayerBtn">ClosePlayer</button>
+            <script>
+                function hideshowAudioPlayer(event) {
+                    let pler = document.getElementById("bottom-audio-player");
+
+                    if (pler.style.display == "none") {
+                        pler.style.display = "";
+                        event.target.innerText = "ClosePlayer";
+                    } else {
+                        pler.style.display = "none";
+
+                        event.target.innerText = "OpenPlayer";
+                    }
+                }
+            </script>
+        </div>
+        <style>
+            .audioplayer-bottom-fixed {
+                display: flex;
+                position: fixed;
+                align-items: center;
+                left: 0;
+                bottom: 0;
+                width: 100%;
+                height: 8%;
+                background-color: #333;
+                color: beige;
+                text-align: left;
+                padding: 10px;
+                /* box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.3); */
+            }
+            .song-info {
+                display: flex;
+                margin-left: 3%;
+                width: 45%;
+                height: 100%;
+            }
+            .mainSongName {
+                margin-top: 6px;
+                font-size: large;
+                width: auto;
+            }
+            .subSongName {
+                margin-top: 6px;
+                font-size: small;
+                font-weight: normal;
+                width: auto;
+            }
+            .song-player {
+                margin-left: 5%;
+                display: inline;
+            }
+            .audio-player {
+                display: flex;
+                height: 100%;
+                width: 100%;
+                margin-top: 6px;
+            }
+            .audio-action {
+                display: inline;
+                width: auto;
+                margin-left: 5%;
+                align-items: center;
+            }
+            .wrap-audio-controls > button {
+                width: auto;
+                margin-top: 10px;
+                margin-right: 10px;
+                display: inline-flex;
+                min-width: 55px;
+                text-align: center;
+                justify-content: center;
+            }
+            .player-input {
+                margin-top: 5px;
+                display: flex;
+                align-items: center;
+            }
+        </style>
+        <div class="audioplayer-bottom-fixed" id="bottom-audio-player">
+            <div class="song-info">
+                <div><img ng-src="{{ songImageSrc }}" width="60" height="60" id="currentSongImg" /></div>
+                <div class="song-player">
+                    <div class="mainSongName">{{mainSongName}}</div>
+                    <div class="subSongName">{{subSongName}}</div>
+                </div>
+            </div>
+            <div class="audio-player">
+                <audio id="audioPlayer" controls autoplay controlsList="nodownload">
+                    <source ng-src="{{ playAudioUrl }}" type="audio/flac" />
+                </audio>
+                <div class="audio-action">
+                    <div class="wrap-audio-controls">
+                        <button onclick="audioPlayHandler(event)" id="playbtn">Play</button>
+
+                        <button ng-click="prevSongHandler()">Previous</button>
+                        <button ng-click="nextSongHandler()">Next</button>
+                        <button onclick="restartSongHandler(event)">Restart</button>
+                        <button ng-click="setSongFavorite($event)">{{ currentSong.isFavorite ? 'Remove fav' : 'Add fav' }}</button>
+                        <button ng-click="resetPlaylist()">Reset Playlist</button>
+                        <script>
+                            function audioPlayHandler(event) {
+                                if (audio.paused) {
+                                    audio.play();
+                                    event.target.innerText = "Pause";
+                                } else {
+                                    audio.pause();
+                                    event.target.innerText = "Play";
+                                }
+                            }
+                            function restartSongHandler(event) {
+                                audio.currentTime = 0;
+                                audio.play();
+                            }
+                        </script>
+                    </div>
+
+                    <div class="player-input">
+                        <div>
+                            <input type="checkbox" id="isRandomPlay" ng-model="isRandomPlay" checked />
+                            <label for="isRandomPlay"> Play random </label>
+                        </div>
+                        <div>
+                            <input type="checkbox" ng-model="isLoopPlay" id="isLoopPlay" />
+                            <label for="isLoopPlay"> Play loop </label>
+                            <!-- <input style="width: 30px" type="number" ng-model="timeLoop" /> timeLoop -->
+                        </div>
+                        <div>
+                            <input type="checkbox" ng-model="isFavoriteList" id="isFavoriteList" />
+                            <label for="isFavoriteList"> Play favorite </label>
+                            <!-- <input style="width: 30px" type="number" ng-model="timeLoop" /> timeLoop -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js" integrity="sha512-YsR46MmyChktsyMMou+Bs74oCa/CDdwft7rJ5wlnmDzMj1mzqncsfJamEEf99Nk7IB0JpTMo5hS8rxB49FUktQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script>
+            const audio = document.getElementById("audioPlayer");
+            audio.addEventListener("play", () => {
+                document.getElementById("playbtn").innerText = "Pause";
+            });
+        </script>
+        <script>
+            var app = angular.module("songApp", ["ngSanitize"]);
+
+            app.controller("MainController", function ($scope, $sce, $timeout) {
+                $scope.fileId = "<?= fileId?>";
+                $scope.sheet = "<?= sheet?>";
+                $scope.host = "<?= host?>";
+                // $scope.$apply(function () {
+                // $scope.songList = [{ fileId: "testfileId", vname: "testvname", vsinger: "testvsinger" }];
+
+                //             });
+                $scope.mainSongName = ``;
+                $scope.subSongName = ``;
+                $scope.isRandomPlay = true;
+                $scope.currentSong = undefined;
+                const prevSongList = [];
+
+                function isReady() {
+                    return prevSongList.length > 0 && $scope.songList;
+                }
+                const _emptyLogoUrl = "https://img.freepik.com/premium-vector/realistic-vinyl-disc-mockup-empty-blank-music-album-cover-isolated-white-background-retro-musical-long-play-white-template-paper-box-3d-vector-illustration_341509-1731.jpg";
+                // $scope.songList = [{ fileId: "testfileId", vname: "testvname", vsinger: "testvsinger" }];
+                function loadSongCategory() {
+                    appsScriptRun({
+                        funtionName: "getAllSheetName",
+                        onSuccess: (result) => {
+                            $scope.$apply(function () {
+                                $scope.sheetNames = result;
+                            });
+                        },
+                    });
+                }
+
+                function loadSongTable() {
+                    $scope.songList = [];
+                    $scope.message = `Loading song list of '${$scope.sheet}'`;
+                    appsScriptRun({
+                        funtionName: "getAllSongAndId",
+                        input: [$scope.sheet],
+                        onSuccess: (result) => {
+                            $scope.$apply(function () {
+                                $scope.message = ``;
+                                $scope.songList = result;
+                                setCurrentPlaylist(result);
+                            });
+                        },
+                    });
+                }
+
+                function setCurrentPlaylist(songs) {
+                    $scope.currentPlaylist = $scope.currentPlaylist ?? [...songs].reverse();
+                    $scope.favList = $scope.currentPlaylist.filter((m) => m.isFavorite);
+                    // $scope.$apply(function () {
+
+                    // });
+                }
+
+                $scope.resetPlaylist = function resetPlaylist() {
+                    setCurrentPlaylist($scope.songList);
+                    prevSongList = [];
+                };
+                function loadAllDrvAK() {
+                    appsScriptRun({
+                        funtionName: "getAllApiKey",
+                        onSuccess: (result) => {
+                            $scope.$apply(function () {
+                                $scope.keyList = result;
+                            });
+                        },
+                    });
+                }
+
+                loadSongTable();
+                loadSongCategory();
+                loadAllDrvAK();
+
+                $scope.getButtonLabel = function (name) {
+                    if (name == $scope.sheet) {
+                        return $sce.trustAsHtml("<u>" + name + "</u>"); // Use trusted HTML for rendering
+                    } else {
+                        return $sce.trustAsHtml(name);
+                    }
+                };
+
+                $scope.selectSheetBtnHandler = function (name) {
+                    $scope.sheet = name;
+                    $scope.currentPlaylist = undefined;
+                    loadSongTable();
+                };
+
+                $scope.nextSongHandler = function () {
+                    if ($scope.currentPlaylist && $scope.keyList) {
+                        let songIn42Play;
+                        let searchList = $scope.isFavoriteList ? $scope.favList : $scope.currentPlaylist;
+
+                        if ($scope.isLoopPlay) {
+                            audio.currentTime = 0;
+                            audio.play();
+                            return;
+                        }
+                        if ($scope.isRandomPlay) {
+                            songIn42Play = popRandomElement(searchList);
+                        } else {
+                            songIn42Play = searchList.pop();
+                        }
+                        if (songIn42Play) {
+                            refreshAudio(songIn42Play);
+                            prevSongList.push(songIn42Play);
+                        }
+                    }
+                };
+                $scope.prevSongHandler = function () {
+                    if (prevSongList.length > 0 && $scope.keyList) {
+                        refreshAudio(prevSongList.pop());
+                    }
+                };
+
+                $scope.playSong = function (s) {
+                    document.getElementById("bottom-audio-player").style.display = "";
+                    refreshAudio(s);
+                };
+
+                $scope.setSongFavorite = function ($event, fileId = $scope.currentSong.fileId) {
+                    if (fileId.length == 33) {
+                        let songInfo = $scope.songList.find((s) => s.fileId == fileId);
+                        let isFav = songInfo.isFavorite;
+
+                        appsScriptRun({
+                            funtionName: "setSongFavorite",
+                            input: [$scope.sheet, fileId, !isFav],
+                            onSuccess: (result) => {
+                                if (result) {
+                                    $scope.$apply(function () {
+                                        songInfo.isFavorite = !isFav;
+                                        if (fileId == $scope.currentSong?.fileId) {
+                                            $scope.currentSong = songInfo;
+                                        }
+                                    });
+                                }
+                            },
+                        });
+                    }
+                };
+
+                audio.addEventListener("ended", () => {
+                    $scope.nextSongHandler();
+                });
+                audio.addEventListener("canplay", () => {
+                    fetchMetadata(audio.src);
+                });
+                function setPlayerInfo(songInfo) {
+                    $timeout(function () {
+                        $scope.currentSong = songInfo;
+                        $scope.mainSongName = `${songInfo.singer} - ${songInfo.name}`;
+                        $scope.subSongName = songInfo.vname == "" ? "" : `${songInfo.vsinger} - ${songInfo.vname}`;
+                        $scope.songImageSrc = _emptyLogoUrl;
+                    }, 0);
+                }
+
+                function refreshAudio(songInfo) {
+                    if ($scope.keyList) {
+                        refreshAudio.lastKeyIdx = ((refreshAudio.lastAudioIndex ?? -1) + 1) % $scope.keyList.length;
+                        audio.src = "https://www.googleapis.com/drive/v3/files/" + songInfo.fileId + "?alt=media&key=" + $scope.keyList[refreshAudio.lastKeyIdx];
+                        // audio.src = "https://drive.usercontent.google.com/download?id=" + songInfo.fileId + "&export=download&key=" + $scope.keyList[refreshAudio.lastKeyIdx];
+                        setPlayerInfo(songInfo);
+                        showAndroidNotification(songInfo);
+                        audio.load();
+                        audio.play();
+                    }
+                }
+                function fetchMetadata(url, onCompleted = console.log) {
+                    fetch(url, { headers: { Range: "bytes=0-1000000" } })
+                        .then((response) => response.arrayBuffer())
+                        .then((buffer) => {
+                            jsmediatags.read(new Blob([buffer]), {
+                                onSuccess: function (tag) {
+                                    const tags = tag.tags;
+                                    const picture = tags.picture;
+                                    if (picture) {
+                                        const base64String = arrayBufferToBase64(picture.data);
+                                        const base64 = "data:" + picture.format + ";base64," + base64String;
+                                        $scope.$apply(function () {
+                                            $scope.songImageSrc = base64;
+                                        });
+                                    } else {
+                                        // alert("No image found in the metadata");
+                                    }
+                                    // onCompleted();
+                                },
+                                onError: function (error) {
+                                    // console.error("Error reading metadata:", error);
+                                    // $scope.songImageSrc = "https://img.freepik.com/premium-vector/realistic-vinyl-disc-mockup-empty-blank-music-album-cover-isolated-white-background-retro-musical-long-play-white-template-paper-box-3d-vector-illustration_341509-1731.jpg";
+                                    // onCompleted();
+                                },
+                            });
+                        })
+                        .catch((error) => {
+                            console.error("Error fetching the file:", error);
+                        });
+                }
+
+                function showAndroidNotification(songInfo) {
+                    // if ("mediaSession" in navigator) {
+                    //     navigator.mediaSession.metadata = new MediaMetadata({
+                    //         title: $scope.mainSongName,
+                    //         artist: $scope.currentSong.singer,
+                    //         // album: "Whenever You Need Somebody",
+                    //         artwork: [
+                    //             { src: $scope.songImageSrc, sizes: "96x96", type: "image/png" },
+                    //             // { src: "https://via.placeholder.com/128", sizes: "128x128", type: "image/png" },
+                    //             // { src: "https://via.placeholder.com/192", sizes: "192x192", type: "image/png" },
+                    //             // { src: "https://via.placeholder.com/256", sizes: "256x256", type: "image/png" },
+                    //             // { src: "https://via.placeholder.com/384", sizes: "384x384", type: "image/png" },
+                    //             // { src: "https://via.placeholder.com/512", sizes: "512x512", type: "image/png" },
+                    //         ],
+                    //     });
+                    //     // TODO: Update playback state.
+                    // }
+                }
+                function showIOSNotification(songInfo) {}
+            });
+        </script>
+        <script>
+            // utils
+            function popRandomElement(arr) {
+                if (arr.length === 0) {
+                    return undefined; // Return undefined if the array is empty
+                }
+
+                const randomIndex = Math.floor(Math.random() * arr.length);
+                const [removedElement] = arr.splice(randomIndex, 1);
+
+                return removedElement;
+            }
+            function arrayBufferToBase64(buffer) {
+                let binary = "";
+                const bytes = new Uint8Array(buffer);
+                const len = bytes.byteLength;
+                for (let i = 0; i < len; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
+                return window.btoa(binary);
+            }
+        </script>
+
+        <script></script>
+    </body>
+</html>

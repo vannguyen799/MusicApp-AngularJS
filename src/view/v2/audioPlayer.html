@@ -131,6 +131,7 @@
 
                                 <td>
                                     <button name="play" ng-value="s.fileId" ng-click="playSong(s)">play</button>
+                                    <button ng-click="setSongFavorite($event, s.fileId)">{{s.isFavorite ? 'Remove fav' : 'Add fav'}}</button>
                                     <!-- <button name="addtoplaylist" ng-value="s.fileId" ng-click="addToPlaylistBtnHandler(event)">addPL</button>
                                     <input type="checkbox" name="songcheckbox" ng-value="s.fileId" /> -->
                                 </td>
@@ -232,7 +233,7 @@
         </style>
         <div class="audioplayer-bottom-fixed" id="bottom-audio-player">
             <div class="song-info">
-                <div><img ng-src="{{ songImageSrc }}" width="60" height="60" /></div>
+                <div><img ng-src="{{ songImageSrc }}" width="60" height="60" id="currentSongImg" /></div>
                 <div class="song-player">
                     <div class="mainSongName">{{mainSongName}}</div>
                     <div class="subSongName">{{subSongName}}</div>
@@ -249,7 +250,8 @@
                         <button ng-click="prevSongHandler()">Previous</button>
                         <button ng-click="nextSongHandler()">Next</button>
                         <button onclick="restartSongHandler(event)">Restart</button>
-
+                        <button ng-click="setSongFavorite($event)">{{ currentSong.isFavorite ? 'Remove fav' : 'Add fav' }}</button>
+                        <button ng-click="resetPlaylist()">Reset Playlist</button>
                         <script>
                             function audioPlayHandler(event) {
                                 if (audio.paused) {
@@ -269,12 +271,17 @@
 
                     <div class="player-input">
                         <div>
-                            <input type="checkbox" id="isRandomPlay" ng-model="isRandomPlay" class="ng-not-empty" checked />
+                            <input type="checkbox" id="isRandomPlay" ng-model="isRandomPlay" checked />
                             <label for="isRandomPlay"> Play random </label>
                         </div>
                         <div>
                             <input type="checkbox" ng-model="isLoopPlay" id="isLoopPlay" />
                             <label for="isLoopPlay"> Play loop </label>
+                            <!-- <input style="width: 30px" type="number" ng-model="timeLoop" /> timeLoop -->
+                        </div>
+                        <div>
+                            <input type="checkbox" ng-model="isFavoriteList" id="isFavoriteList" />
+                            <label for="isFavoriteList"> Play favorite </label>
                             <!-- <input style="width: 30px" type="number" ng-model="timeLoop" /> timeLoop -->
                         </div>
                     </div>
@@ -302,7 +309,13 @@
                 //             });
                 $scope.mainSongName = ``;
                 $scope.subSongName = ``;
+                $scope.isRandomPlay = true;
+                $scope.currentSong = undefined;
                 const prevSongList = [];
+
+                function isReady() {
+                    return prevSongList.length > 0 && $scope.songList;
+                }
                 const _emptyLogoUrl = "https://img.freepik.com/premium-vector/realistic-vinyl-disc-mockup-empty-blank-music-album-cover-isolated-white-background-retro-musical-long-play-white-template-paper-box-3d-vector-illustration_341509-1731.jpg";
                 // $scope.songList = [{ fileId: "testfileId", vname: "testvname", vsinger: "testvsinger" }];
                 function loadSongCategory() {
@@ -326,12 +339,24 @@
                             $scope.$apply(function () {
                                 $scope.message = ``;
                                 $scope.songList = result;
-                                $scope.currentPlaylist = $scope.currentPlaylist ?? [...result].reverse();
+                                setCurrentPlaylist(result);
                             });
                         },
                     });
                 }
 
+                function setCurrentPlaylist(songs) {
+                    $scope.currentPlaylist = $scope.currentPlaylist ?? [...songs].reverse();
+                    $scope.favList = $scope.currentPlaylist.filter((m) => m.isFavorite);
+                    // $scope.$apply(function () {
+
+                    // });
+                }
+
+                $scope.resetPlaylist = function resetPlaylist() {
+                    setCurrentPlaylist($scope.songList);
+                    prevSongList = [];
+                };
                 function loadAllDrvAK() {
                     appsScriptRun({
                         funtionName: "getAllApiKey",
@@ -364,15 +389,17 @@
                 $scope.nextSongHandler = function () {
                     if ($scope.currentPlaylist && $scope.keyList) {
                         let songIn42Play;
+                        let searchList = $scope.isFavoriteList ? $scope.favList : $scope.currentPlaylist;
+
                         if ($scope.isLoopPlay) {
                             audio.currentTime = 0;
                             audio.play();
                             return;
                         }
                         if ($scope.isRandomPlay) {
-                            songIn42Play = popRandomElement($scope.currentPlaylist);
+                            songIn42Play = popRandomElement(searchList);
                         } else {
-                            songIn42Play = $scope.currentPlaylist.pop();
+                            songIn42Play = searchList.pop();
                         }
                         if (songIn42Play) {
                             refreshAudio(songIn42Play);
@@ -391,22 +418,50 @@
                     refreshAudio(s);
                 };
 
+                $scope.setSongFavorite = function ($event, fileId = $scope.currentSong.fileId) {
+                    if (fileId.length == 33) {
+                        let songInfo = $scope.songList.find((s) => s.fileId == fileId);
+                        let isFav = songInfo.isFavorite;
+
+                        appsScriptRun({
+                            funtionName: "setSongFavorite",
+                            input: [$scope.sheet, fileId, !isFav],
+                            onSuccess: (result) => {
+                                if (result) {
+                                    $scope.$apply(function () {
+                                        songInfo.isFavorite = !isFav;
+                                        if (fileId == $scope.currentSong?.fileId) {
+                                            $scope.currentSong = songInfo;
+                                        }
+                                    });
+                                }
+                            },
+                        });
+                    }
+                };
+
                 audio.addEventListener("ended", () => {
                     $scope.nextSongHandler();
                 });
                 audio.addEventListener("canplay", () => {
                     fetchMetadata(audio.src);
                 });
+                function setPlayerInfo(songInfo) {
+                    $timeout(function () {
+                        $scope.currentSong = songInfo;
+                        $scope.mainSongName = `${songInfo.singer} - ${songInfo.name}`;
+                        $scope.subSongName = songInfo.vname == "" ? "" : `${songInfo.vsinger} - ${songInfo.vname}`;
+                        $scope.songImageSrc = _emptyLogoUrl;
+                    }, 0);
+                }
 
                 function refreshAudio(songInfo) {
                     if ($scope.keyList) {
                         refreshAudio.lastKeyIdx = ((refreshAudio.lastAudioIndex ?? -1) + 1) % $scope.keyList.length;
                         audio.src = "https://www.googleapis.com/drive/v3/files/" + songInfo.fileId + "?alt=media&key=" + $scope.keyList[refreshAudio.lastKeyIdx];
-                        $scope.$apply(function () {
-                            $scope.mainSongName = `${songInfo.singer} - ${songInfo.name}`;
-                            $scope.subSongName = songInfo.vname == "" ? "" : `${songInfo.vsinger} - ${songInfo.vname}`;
-                            $scope.songImageSrc = _emptyLogoUrl;
-                        });
+                        // audio.src = "https://drive.usercontent.google.com/download?id=" + songInfo.fileId + "&export=download&key=" + $scope.keyList[refreshAudio.lastKeyIdx];
+                        setPlayerInfo(songInfo);
+                        showAndroidNotification(songInfo);
                         audio.load();
                         audio.play();
                     }
@@ -441,6 +496,26 @@
                             console.error("Error fetching the file:", error);
                         });
                 }
+
+                function showAndroidNotification(songInfo) {
+                    // if ("mediaSession" in navigator) {
+                    //     navigator.mediaSession.metadata = new MediaMetadata({
+                    //         title: $scope.mainSongName,
+                    //         artist: $scope.currentSong.singer,
+                    //         // album: "Whenever You Need Somebody",
+                    //         artwork: [
+                    //             { src: $scope.songImageSrc, sizes: "96x96", type: "image/png" },
+                    //             // { src: "https://via.placeholder.com/128", sizes: "128x128", type: "image/png" },
+                    //             // { src: "https://via.placeholder.com/192", sizes: "192x192", type: "image/png" },
+                    //             // { src: "https://via.placeholder.com/256", sizes: "256x256", type: "image/png" },
+                    //             // { src: "https://via.placeholder.com/384", sizes: "384x384", type: "image/png" },
+                    //             // { src: "https://via.placeholder.com/512", sizes: "512x512", type: "image/png" },
+                    //         ],
+                    //     });
+                    //     // TODO: Update playback state.
+                    // }
+                }
+                function showIOSNotification(songInfo) {}
             });
         </script>
         <script>
@@ -465,5 +540,7 @@
                 return window.btoa(binary);
             }
         </script>
+
+        <script></script>
     </body>
 </html>

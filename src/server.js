@@ -5,7 +5,7 @@ WebApp.registerControllerPath({
 WebApp.useService({
   htmlService: HtmlService,
   scriptApp: ScriptApp,
-  propertyScope: PropertiesService.getScriptProperties()
+  propertyScope: PropertyScope
 })
 
 WebApp.templatePath(
@@ -28,7 +28,6 @@ function getAllApiKey() {
 }
 
 function getAllSongAndId(sheet) {
-  console.log(sheet)
   sheet = sheet.replace('"', '').replace('"', '')
 
   const manager = new SongFileManager(sheet ?? SpreadsheetApp.getActiveSheet().getName())
@@ -49,5 +48,13 @@ function getAllSheetName() {
     // }
     name.push(sheet.getName())
   }
-  return name.filter(n => !['singer'].includes(n))
+  return name.filter(n => !n.startsWith('_'))
+}
+
+function setSongFavorite(sheet, fileId, status) {
+  let b = new SongFileManager(sheet)
+
+  if (b.validateClass()) {
+    return b.setSongFavorite(fileId, status)
+  } return false
 }

@@ -1,4 +1,5 @@
 var testUrl = 'https://script.google.com/macros/s/AKfycbw8Sepw517-HfqQSFAXO7cG3n39cRXpgHQf7D-DzvVw/dev'
+var lanxinYU = "https://script.google.com/macros/s/AKfycbw8Sepw517-HfqQSFAXO7cG3n39cRXpgHQf7D-DzvVw/dev?sheet=LanXinyu"
 var testDevUrl = 'https://script.google.com/macros/s/AKfycbw8Sepw517-HfqQSFAXO7cG3n39cRXpgHQf7D-DzvVw/dev?mode=dev'
 var executions = 'https://script.google.com/u/0/home/projects/1L6ZG92DR-p3c9NkCAFTBku6X4yfTDQqHHRpxzqKW9OKhTU4wcEDT4ymU/executions'
 var _sheet_ = 'https://docs.google.com/spreadsheets/d/1cCdjDAcSi1VIxYVY8Qiab5DVvy69m9wjBRl8DSCQgcw/edit?gid=643801577#gid=643801577'
@@ -19,7 +20,7 @@ function process() {
 function playSidebar() {
   return SpreadsheetApp.getUi().showSidebar(
     new HomeController().index({
-      parameter: {}
+      parameter: { mode: 'dev' }
     })
   )
 }
@@ -27,7 +28,7 @@ function playSidebar() {
 function playWeb() {
 
   return SpreadsheetApp.getUi().showModalDialog(WebApp.renderTemplate('newTab', {
-    url: `${testDevUrl}&sheet=${SpreadsheetApp.getActiveSheet().getName()}`
+    url: `${testUrl}&sheet=${SpreadsheetApp.getActiveSheet().getName()}`
   }), 'playWeb')
 }
 
@@ -37,6 +38,7 @@ function onOpen() {
 
   ui.createMenu('AppsciptMenu')
     .addItem('process', process.name)
+    .addItem('processtest', t.name)
     .addItem('play', playSidebar.name)
     .addItem('openWeb', playWeb.name)
     .addToUi()

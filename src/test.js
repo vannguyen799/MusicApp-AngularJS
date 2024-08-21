@@ -29,3 +29,10 @@ function testFetchApi() {
 function t2() {
   console.log(ScriptApp.getOAuthToken())
 }
+
+function testAddFavSong() {
+  const fileId = extractFileId('https://drive.google.com/file/d/1-t-YjL6JoAGF8Du4tfp44x2NGmb_0EXM/view?usp=drivesdk')
+  let b = new SongFileManager('LanXinYu')
+  console.log(b.setSongFavorite(fileId)
+  )
+}

@@ -75,7 +75,8 @@ class IColumn {
   /**
    * @param {ICell} headerCell
    */
-  setHeaderCell(headerCell) { }
+  setHeaderCell(headerCell) {
+  }
 
   /**
    * @param {number | null} index

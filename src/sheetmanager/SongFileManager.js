@@ -18,7 +18,8 @@ class SongFileManager extends SM.Sheet.SheetManager {
       status: 'status',
       filename: 'filename',
       vname: 'vname',
-      vsigner: 'vsigner'
+      vsigner: 'vsigner',
+      isFavorite: 'isFavorite'
     }
     this.ignoreFile = [SpreadsheetApp.getActiveSpreadsheet().getName()]
   }
@@ -46,6 +47,9 @@ class SongFileManager extends SM.Sheet.SheetManager {
   }
   get vsingerColumn() {
     return this.getColumn(this.tableHeader.vsigner, null, false)
+  }
+  get isFavoriteColumn() {
+    return this.getColumn(this.tableHeader.isFavorite, null, false)
   }
   process({ update }) {
     console.log('processing... ')
@@ -162,19 +166,20 @@ class SongFileManager extends SM.Sheet.SheetManager {
    */
   isNameProcessed(name) {
     if (this.originalNameOnly) {
-      return name.includes('-')
+      return name.includes(' - ')
     } else {
-      return name.includes(' | ') && name.includes('-')
+      return name.includes(' | ') && name.includes(' - ')
     }
   }
 
   /**
    * 
-   * @param {string} preName 
+   * @param {string} _preName 
    * @returns {[string, string]}
    */
   getSongInfoFromPreName(preName) {
-    preName = this.removeExt(preName)
+    let _preName = this.removeExt(preName)
+
 
     /**
      * @param {*} p 
@@ -187,13 +192,14 @@ class SongFileManager extends SM.Sheet.SheetManager {
       }
       return undefined
     }
-    let res = test('+-+', preName)
+    let res = test('+-+', _preName)
     if (!res) {
-      if (preName.indexOf('-') == preName.lastIndexOf('-')) {
-        res = test('-', preName)
+      if (_preName.indexOf('-') == _preName.lastIndexOf('-')) {
+        res = test('-', _preName)
       }
     }
-    res = res ?? [preName, '']
+    res = res ?? [_preName, '']
+
     return res.map(m => m.replace('+', ' ').trim())
   }
 
@@ -213,13 +219,13 @@ class SongFileManager extends SM.Sheet.SheetManager {
     let [_vname, _vsinger, _name, _signer] = ['', '', '', '']
     if (this.originalNameOnly) {
       processedName = processedName.replace('-  |', '')
-      _signer = processedName.split('-')[0].trim()
-      _name = processedName.split('-')[1].trim()
+      _signer = processedName.split(' - ')[0].trim()
+      _name = processedName.split(' - ')[1].trim()
     } else {
-      _vsinger = processedName.split('|')[0].split('-')[0].trim()
-      _vname = processedName.split('|')[0].split('-')[1].trim()
-      _signer = processedName.split('|')[1].split('-')[0].trim()
-      _name = processedName.split('|')[1].split('-')[1].trim()
+      _vsinger = processedName.split('|')[0].split(' - ')[0].trim()
+      _vname = processedName.split('|')[0].split(' - ')[1].trim()
+      _signer = processedName.split('|')[1].split(' - ')[0].trim()
+      _name = processedName.split('|')[1].split(' - ')[1].trim()
     }
 
     return [_signer, _name, _vsinger, _vname]
@@ -230,6 +236,7 @@ class SongFileManager extends SM.Sheet.SheetManager {
     const linkUp = this.linkUpColum.getData()
     const names = this.songNameColumn.getData()
     const singers = this.singerNameColumn.getData()
+    const isFav = this.isFavoriteColumn.getData()
     let rs = []
     for (const i in vnames) {
       /** @type {SongInfo} */
@@ -238,7 +245,8 @@ class SongFileManager extends SM.Sheet.SheetManager {
         singer: singers[i],
         fileId: extractFileId(linkUp[i]),
         vname: vnames[i],
-        vsinger: vsingers[i]
+        vsinger: vsingers[i],
+        isFavorite: isFav[i] != ''
       }
       if (s.fileId != null) {
         rs.push(s)
@@ -247,18 +255,40 @@ class SongFileManager extends SM.Sheet.SheetManager {
     return rs
   }
 
-
-}
-
-
-class SongInfo {
-  constructor() {
-    this.vname = ''
-    this.name = ''
-    this.singer = ''
-    this.vsigner = ''
-    this.linkUp = ''
-    this.fileId = ''
-    this.filename = ''
+  /**
+   * 
+   * @param {string} fileId 
+   * @param {boolean} status 
+   */
+  setSongFavorite(fileId, status = true) {
+    const linkUp = this.linkUpColum
+    const isFav = this.isFavoriteColumn
+    for (const [i, fileUrl] of this.linkUpColum.getData().entries()) {
+      if (extractFileId(fileUrl) == fileId) {
+        let statusRange = this.Sheet.getRange(linkUp.headerCell.row + i + 1, isFav.headerCell.col)
+        if (status) {
+          statusRange.setValue(status)
+        } else {
+          statusRange.setValue('')
+        }
+        return true
+      }
+    }
+    return false
   }
 }
+
+/**
+ * @typedef {Object} SongInfo
+ * @property {string} vname - The virtual name of the song.
+ * @property {string} name - The name of the song.
+ * @property {string} singer - The name of the singer.
+ * @property {string} vsigner - The virtual name of the singer.
+ * @property {string} linkUp - The link to the song.
+ * @property {string} fileId - The ID of the file.
+ * @property {string} filename - The name of the file.
+ * @property {boolean} isFavorite
+ */
+
+
+

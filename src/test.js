@@ -27,7 +27,19 @@ function testFetchApi() {
 }
 
 function t2() {
-  console.log(ScriptApp.getOAuthToken())
+  // console.log(ScriptApp.getOAuthToken())
+  //   let a = SpreadsheetApp.getActiveSheet().getRange('a33')
+  //   console.log(  a.getFormula() === ''
+  // )
+  //   console.log(a.getValue())
+
+  for (const name of getAllSheetName()) {
+    let b = new SongFileManager(name)
+    if (b.validateClass()) {
+      b.trimText()
+    }
+  }
+
 }
 
 function testAddFavSong() {

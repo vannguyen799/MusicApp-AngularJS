@@ -177,6 +177,9 @@
                 }
                 runner[funtionName](...input);
             }
+
+            const isAppsScript = window.location.host.endsWith("-script.googleusercontent.com");
+            const isiOS = ["iPad Simulator", "iPhone Simulator", "iPod Simulator", "iPad", "iPhone", "iPod"].includes(navigator.platform) || (navigator.userAgent.includes("Mac") && "ontouchend" in document);
         </script>
     </head>
     <body ng-controller="MusicAppController as ctrl">
@@ -205,6 +208,11 @@
                                     <button ng-click="ctrl.setSongFavorite($event, s.fileId)">{{s.isFavorite ? 'Remove fav' : 'Add fav'}}</button>
                                     <!-- <button name="addtoplaylist" ng-value="s.fileId" ng-click="addToPlaylistBtnHandler(event)">addPL</button>
                                     <input type="checkbox" name="songcheckbox" ng-value="s.fileId" /> -->
+                                    <div ng-if="ctrl.isiOS" hidden>
+                                        <audio preload="auto">
+                                            <source src="" />
+                                        </audio>
+                                    </div>
                                 </td>
                             </tr>
                         </table>
@@ -225,7 +233,6 @@
                         event.target.innerText = "ClosePlayer";
                     } else {
                         pler.style.display = "none";
-
                         event.target.innerText = "OpenPlayer";
                     }
                 }
@@ -234,7 +241,7 @@
 
         <div class="audioplayer-bottom-fixed" id="bottom-audio-player">
             <div class="song-info">
-                <div><img ng-src="{{ ctrl.player.coverImgUrl }}" width="60" height="60" id="currentSongImg" /></div>
+                <div><img ng-src="{{ ctrl.player.coverImgUrl ?  ctrl.player.coverImgUrl : ctrl.player.defaultCoverImgUrl }}" width="60" height="60" id="currentSongImg" /></div>
                 <div class="song-player">
                     <div class="mainSongName">{{ctrl.player.mainSongName}}</div>
                     <div class="subSongName">{{ctrl.player.subSongName}}</div>
@@ -253,7 +260,6 @@
                         <button ng-click="ctrl.player.restart()">Restart</button>
                         <button ng-click="ctrl.setSongFavorite($event, ctrl.player.songInfo.fileId)">{{ ctrl.player.songInfo.isFavorite ? 'Remove fav' : 'Add fav' }}</button>
                         <button ng-click="ctrl.player.resetPlaylist()">Reset Playlist</button>
-                        <script></script>
                     </div>
 
                     <div class="player-input">
@@ -286,8 +292,9 @@
         </script>
         <script>
             class MusicAppController {
-                constructor($scope, $sce, $timeout) {
+                constructor($scope, $sce, $timeout, DataService) {
                     const ctrl = this;
+                    this.DataService = DataService;
                     this.$timeout = $timeout;
                     this.$scope = $scope;
                     this.$sce = $sce;
@@ -297,20 +304,39 @@
                     this.message = "hello";
                     this.keyList = [];
                     this.songList = [{ fileId: "testfileId", vname: "testvname", vsinger: "testvsinger" }];
+
+                    audio.addEventListener("ended", () => {
+                        ctrl.player.next();
+                        try {
+                            ctrl.$scope.$apply();
+                        } catch (e) {
+                            console.log(e);
+                        }
+                    });
+                    audio.addEventListener("canplay", () => {
+                        ctrl.player.fetchMetadata(audio.src);
+                        try {
+                            ctrl.$scope.$apply();
+                        } catch (e) {
+                            console.log(e);
+                        }
+                    });
+
                     this.loadSongTable();
                     this.loadSongCategory();
                     this.loadAllDrvAK();
-
+                    // this.isiOS = isiOS;
                     // music player controll
                     this.player = {
                         _playlist: [],
+                        _favList: [],
                         playList: [],
                         prevPlaylist: [],
                         favList: [],
                         // audio element
                         audio: audio,
                         // current song playing info
-                        songInfo: { name: "", singer: "", vname: "", vsinger: "", isFavorite: "", fileId: "", sheet: "" },
+                        songInfo: { name: "", singer: "", vname: "", vsinger: "", isFavorite: false, fileId: "", sheet: "" },
                         coverImgSrc: "",
                         defaultCoverImgUrl: "https://img.freepik.com/premium-vector/realistic-vinyl-disc-mockup-empty-blank-music-album-cover-isolated-white-background-retro-musical-long-play-white-template-paper-box-3d-vector-illustration_341509-1731.jpg",
                         isRandomPlay: true,
@@ -321,12 +347,14 @@
                             //set playlist
                             this.playList = songList;
                             this.prevPlaylist = [];
-                            this.favList = songList.filter((s) => s.isFavorite);
+                            this._favList = songList.filter((s) => s.isFavorite);
+                            this.favList = this._favList;
                         },
                         next: function () {
                             if (this.playList.length > 0) {
                                 let songIn42Play;
-
+                                // console.log(this.isRandomPlay + " " + this.isLoopPlay);
+                                // console.log(this.playList);
                                 if (this.isLoopPlay) {
                                     this.audio.currentTime = 0;
                                     this.audio.play();
@@ -359,12 +387,14 @@
                         },
                         // reset playlist
                         resetPlaylist: function () {
-                            this.playList = [...this.prevPlaylist, ...this.playList];
+                            this.playList = this._playlist;
+                            this.favList = this._favList;
                             this.prevPlaylist = [];
                         },
                         // set songinfo and play
                         refresh: function (songInfo) {
                             if (ctrl.isReady()) {
+                                console.log(songInfo);
                                 this.songInfo = songInfo;
                                 this.coverImgSrc = "";
                                 this.audio.load();
@@ -380,7 +410,7 @@
                                 event.target.innerText = "Play";
                             }
                         },
-                        fetchMetadata: function (url = this.audioSrc, onCompleted = console.log) {
+                        fetchMetadata: function (url, onCompleted = console.log) {
                             const ins = this;
                             fetch(url, { headers: { Range: "bytes=0-1000000" } })
                                 .then((response) => response.arrayBuffer())
@@ -404,7 +434,7 @@
                                 });
                         },
                         get mainSongName() {
-                            return `${this.songInfo.singer} - ${this.songInfo.name}`;
+                            return this.songInfo.vname == "" ? "" : `${this.songInfo.singer} - ${this.songInfo.name}`;
                         },
                         get subSongName() {
                             return this.songInfo.vname == "" ? "" : `${this.songInfo.vsinger} - ${this.songInfo.vname}`;
@@ -415,12 +445,6 @@
                         },
                     };
 
-                    audio.addEventListener("ended", () => {
-                        this.player.next();
-                    });
-                    audio.addEventListener("canplay", () => {
-                        this.player.fetchMetadata();
-                    });
                     $scope.player = this.player;
                 }
 
@@ -430,38 +454,50 @@
                     }
                     return false;
                 }
-
+                load() {}
                 loadSongCategory() {
-                    appsScriptRun({
-                        funtionName: "getAllSheetName",
-                        onSuccess: (result) => {
-                            this.sheetNames = result;
-                            this.$scope.$apply();
-                        },
+                    this.DataService.getAllCategory().then((result) => {
+                        this.sheetNames = result;
+                        this.$scope.$apply();
                     });
+                    // appsScriptRun({
+                    //     funtionName: "getAllSheetName",
+                    //     onSuccess: (result) => {
+                    //         this.sheetNames = result;
+                    //         this.$scope.$apply();
+                    //     },
+                    // });
                 }
                 loadSongTable() {
                     this.songList = [];
                     this.message = `Loading song list of '${this.sheet}'`;
-                    appsScriptRun({
-                        funtionName: "getAllSongAndId",
-                        input: [this.sheet],
-                        onSuccess: (result) => {
-                            this.message = ``;
-                            this.songList = result;
-                            this.player.playList = result;
-                            this.$scope.$apply();
-                        },
+                    this.DataService.getSongsByCategory(this.sheet).then((result) => {
+                        this.message = ``;
+                        this.songList = result;
+                        this.player.playList = result;
+                        this.$scope.$apply();
                     });
+                    // appsScriptRun({
+                    //     funtionName: "getAllSongAndId",
+                    //     input: [this.sheet],
+                    //     onSuccess: (result) => {
+                    //         this.message = ``;
+                    //         this.songList = result;
+                    //         this.player.playList = result;
+                    //         this.$scope.$apply();
+                    //     },
+                    // });
                 }
-
                 loadAllDrvAK() {
-                    appsScriptRun({
-                        funtionName: "getAllApiKey",
-                        onSuccess: (result) => {
-                            this.keyList = result;
-                        },
+                    this.DataService.getAllKeys().then((result) => {
+                        this.keyList = result;
                     });
+                    // appsScriptRun({
+                    //     funtionName: "getAllApiKey",
+                    //     onSuccess: (result) => {
+                    //         this.keyList = result;
+                    //     },
+                    // });
                 }
                 getButtonLabel(name) {
                     if (name == this.sheet) {
@@ -476,24 +512,35 @@
                     this.loadSongTable();
                 }
 
-                setSongFavorite($event, fileId) {
+                setFavoriteSong($event, fileId) {
                     if (fileId.length == 33) {
+                        // console.log(fileId);
                         let songInfo = this.songList.find((s) => s.fileId == fileId);
                         let isFav = songInfo.isFavorite;
 
-                        appsScriptRun({
-                            funtionName: "setSongFavorite",
-                            input: [this.sheet, fileId, !isFav],
-                            onSuccess: (result) => {
-                                if (result) {
-                                    songInfo.isFavorite = !isFav;
-                                    if (fileId == this.player.songInfo.fileId) {
-                                        this.player.songInfo = songInfo;
-                                    }
-                                    this.$scope.$apply();
+                        this.DataService.setFavoriteSong().then((result) => {
+                            if (result) {
+                                songInfo.isFavorite = !isFav;
+                                if (fileId == this.player.songInfo.fileId) {
+                                    this.player.songInfo = songInfo;
                                 }
-                            },
+                                this.$scope.$apply();
+                            }
                         });
+
+                        // appsScriptRun({
+                        //     funtionName: "setSongFavorite",
+                        //     input: [this.sheet, fileId, !isFav],
+                        //     onSuccess: (result) => {
+                        //         if (result) {
+                        //             songInfo.isFavorite = !isFav;
+                        //             if (fileId == this.player.songInfo.fileId) {
+                        //                 this.player.songInfo = songInfo;
+                        //             }
+                        //             this.$scope.$apply();
+                        //         }
+                        //     },
+                        // });
                     }
                 }
 
@@ -505,29 +552,86 @@
                 }
 
                 showAndroidNotification(songInfo) {
-                    // if ("mediaSession" in navigator) {
-                    //     navigator.mediaSession.metadata = new MediaMetadata({
-                    //         title: this.mainSongName,
-                    //         artist: this.currentSong.singer,
-                    //         // album: "Whenever You Need Somebody",
-                    //         artwork: [
-                    //             { src: this.songImageSrc, sizes: "96x96", type: "image/png" },
-                    //             // { src: "https://via.placeholder.com/128", sizes: "128x128", type: "image/png" },
-                    //             // { src: "https://via.placeholder.com/192", sizes: "192x192", type: "image/png" },
-                    //             // { src: "https://via.placeholder.com/256", sizes: "256x256", type: "image/png" },
-                    //             // { src: "https://via.placeholder.com/384", sizes: "384x384", type: "image/png" },
-                    //             // { src: "https://via.placeholder.com/512", sizes: "512x512", type: "image/png" },
-                    //         ],
-                    //     });
-                    //     // TODO: Update playback state.
-                    // }
+                    // NOT WORK ON SCRIPT.GOOGLE.COM IFRAME
                 }
-                showIOSNotification(songInfo) {}
+                showIOSNotification(songInfo) {
+                    // NOT WORK ON SCRIPT.GOOGLE.COM IFRAME
+                }
+            }
+
+            // SERVICE
+            class DataService {
+                constructor($http) {
+                    this.$http = $http;
+                    this.apiServer = "";
+                }
+                getSongsByCategory(categoryName) {
+                    if (isAppsScript) {
+                        return appsScriptRunAsync("getAllSongAndId", [categoryName])
+                            .then((res) => {
+                                return res;
+                            })
+                            .catch((err) => {
+                                console.log(err, categoryName);
+                            });
+                    }
+                }
+
+                getAllCategory() {
+                    if (isAppsScript) {
+                        return appsScriptRunAsync("getAllSheetName", [])
+                            .then((res) => {
+                                return res;
+                            })
+                            .catch((err) => {
+                                console.log(err, categoryName);
+                            });
+                    } else {
+                        // impl api fetch
+                    }
+                }
+
+                getAllKeys(param) {
+                    if (isAppsScript) {
+                        return appsScriptRunAsync("getAllApiKey", [])
+                            .then((res) => {
+                                return res;
+                            })
+                            .catch((err) => {
+                                console.log(err, categoryName);
+                            });
+                    } else {
+                        // impl api fetch
+                    }
+                }
+
+                setFavoriteSong(categoryName, fileId, isFav) {
+                    if (isAppsScript) {
+                        return appsScriptRunAsync("setSongFavorite", [categoryName, fileId, isFav])
+                            .then((res) => {
+                                return res;
+                            })
+                            .catch((err) => {
+                                console.log(err, categoryName);
+                            });
+                    } else {
+                        // impl api fetch
+                    }
+                }
             }
             var app = angular.module("musicApp", ["ngSanitize"]);
-            app.controller("MusicAppController", ["$scope", "$sce", "$timeout", MusicAppController]);
+            app.service("DataService", ["$http", DataService]);
+            app.controller("MusicAppController", ["$scope", "$sce", "$timeout", "DataService", MusicAppController]);
         </script>
         <script>
+            async function appsScriptRunAsync(functionName, args) {
+                return new Promise((resolve, reject) => {
+                    google.script.run
+                        .withSuccessHandler(resolve)
+                        .withFailureHandler(reject)
+                        [functionName](...args);
+                });
+            }
             // utils
             function popRandomElement(arr) {
                 if (arr.length === 0) {

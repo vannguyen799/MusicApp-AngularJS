@@ -2,6 +2,7 @@
 class SongFileManager extends SM.Sheet.SheetManager {
   constructor(sheetName, folderId, mode) {
     super(sheetName)
+    this.sheetName = sheetName
     this.folderId = folderId != undefined ? folderId : this.Sheet.getRange('B1').getValue()
     if (sheetName == 'vietnam') {
       this.originalNameOnly = true
@@ -51,6 +52,19 @@ class SongFileManager extends SM.Sheet.SheetManager {
   get isFavoriteColumn() {
     return this.getColumn(this.tableHeader.isFavorite, null, false)
   }
+
+  /**
+ * @typedef {Object} SongInfo
+ * @property {string} vname - The virtual name of the song.
+ * @property {string} name - The name of the song.
+ * @property {string} singer - The name of the singer.
+ * @property {string} vsigner - The virtual name of the singer.
+ * @property {string} linkUp - The link to the song.
+ * @property {string} fileId - The ID of the file.
+ * @property {string} filename - The name of the file.
+ * @property {boolean} isFavorite
+ */
+
   process({ update }) {
     console.log('processing... ')
     console.log(update)
@@ -58,7 +72,10 @@ class SongFileManager extends SM.Sheet.SheetManager {
     const filesIterator = this.folder.getFiles()
     const songNames = this.songNameColumn.getData()
     const singerNames = this.singerNameColumn.getData()
-    const processFilename = this.processFileNameColumn.getData()
+    const vsongNames = this.vnameColumn.getData()
+    const vsingerNames = this.vsingerColumn.getData()
+
+    // const processFilename = this.processFileNameColumn.getData()
     while (filesIterator.hasNext()) {
       let isProcessed = false
       let row = undefined
@@ -66,41 +83,48 @@ class SongFileManager extends SM.Sheet.SheetManager {
       if (!this.ignoreFile.includes(file.getName())) {
         //process
         let fileName = file.getName()
-        let [_singer, _songName] = ['', fileName]
-        let [_vsinger, _vname] = ['', '']
+        let _singer, _songName, _vsinger, _vname;
 
         console.log('check ' + fileName)
 
+
+        let formatedName = fileName
 
         if (!this.isNameProcessed(fileName)) {
           [_singer, _songName] = this.getSongInfoFromPreName(fileName);
           for (const i in songNames) {
             if (songNames[i].trim() == _songName && singerNames[i].trim() == _singer) {
-              let newName = processFilename[i]
-              if (newName && newName != '' && newName != null && newName != ' -  |  - ') {
-                file.setName(newName)
+              if (this.originalNameOnly) {
+                formatedName = `${singerNames[i]} - ${songNames[i]}`
+              } else {
+                formatedName = `${vsingerNames[i]} - ${vsongNames[i]} | ${singerNames[i]} - ${songNames[i]}`
               }
-              isProcessed = true
+              if (formatedName && formatedName != '' && formatedName != null && formatedName != ' -  |  - ') {
+                file.setName(formatedName)
+              }
+              isProcessed = true // ?? is needed
               row = i
               break
             }
           }
         } else {
           // changeName
-          // console.log(fileName)
 
           [_singer, _songName, _vsinger, _vname] = this.getSongInfoFromProcessedName(fileName);
-          // _singer = _singer.replace(',', '，')
-          // console.log(_songName)
 
           for (const i in songNames) {
             if (songNames[i].trim() == _songName && singerNames[i].trim() == _singer) {
-              let newName = processFilename[i]
-              if (newName && newName != '' && newName != null && newName != ' -  |  - ' && newName != fileName) {
-                file.setName(newName)
+              if (this.originalNameOnly) {
+                formatedName = `${singerNames[i]} - ${songNames[i]}`
+              } else {
+                formatedName = `${vsingerNames[i]} - ${vsongNames[i]} | ${singerNames[i]} - ${songNames[i]}`
+              }
+
+              if (formatedName && formatedName != '' && formatedName != null && formatedName != ' -  |  - ' && formatedName != fileName) {
+                file.setName(formatedName)
               }
               row = i
-              isProcessed = true
+              isProcessed = true // ?? is needed
               break
             }
           }
@@ -246,7 +270,8 @@ class SongFileManager extends SM.Sheet.SheetManager {
         fileId: extractFileId(linkUp[i]),
         vname: vnames[i],
         vsinger: vsingers[i],
-        isFavorite: isFav[i] != ''
+        isFavorite: isFav[i] != '',
+        sheet: this.sheetName
       }
       if (s.fileId != null) {
         rs.push(s)
@@ -278,17 +303,6 @@ class SongFileManager extends SM.Sheet.SheetManager {
   }
 }
 
-/**
- * @typedef {Object} SongInfo
- * @property {string} vname - The virtual name of the song.
- * @property {string} name - The name of the song.
- * @property {string} singer - The name of the singer.
- * @property {string} vsigner - The virtual name of the singer.
- * @property {string} linkUp - The link to the song.
- * @property {string} fileId - The ID of the file.
- * @property {string} filename - The name of the file.
- * @property {boolean} isFavorite
- */
 
 
 

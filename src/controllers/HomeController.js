@@ -3,8 +3,8 @@
 class HomeController extends WebApp.Controller {
   constructor() {
     super()
-    // const post = WebApp.Method("POST")
-
+    const post = WebApp.Method("POST")
+    post(HomeController.prototype.setSongFavorite)
     // post(HomeController.prototype.getAllApiKey)
     // post(HomeController.prototype.getAllSongs)
   }
@@ -43,4 +43,11 @@ class HomeController extends WebApp.Controller {
   //   const manager = new SongFileManager(request.parameter.sheet ?? SpreadsheetApp.getActiveSheet().getName())
   //   return WebApp.jsonResponse(manager.getAllSongs())
   // }
+
+  setSongFavorite(sheet, fileId, status) {
+    return setSongFavorite(sheet, fileId, status)
+  }
+  getAllSongAndId(sheet) { getAllSongAndId(sheet) }
+
+  getAllSheetName() { return getAllSheetName() }
 }

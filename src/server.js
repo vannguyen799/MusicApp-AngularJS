@@ -12,14 +12,36 @@ WebApp.templatePath(
   'src/view',
   'src/view/v2',
   'src/view/v1',
-
 )
+
+var JSONRPCServer = new WebApp.JSONRPCServer({
+  'getAllSongAndId': getAllSongAndId,
+  'getAllApiKey': getAllApiKey,
+  'getAllSheetName': getAllSheetName,
+  'setSongFavorite': setSongFavorite,
+  'hello': function () {
+    return { "hello": 'hello' }
+  }
+})
+
 
 function doGet(e) {
   return WebApp.doGet(e)
 }
 
 function doPost(e) {
+  // console.log(JSON.stringify(JSONRPCServer))
+  // console.log(e)
+  let postData = JSON.parse(e.postData.contents)
+  if (postData.jsonrpc) {
+    return JSONRPCServer.execute(postData)
+  }
+  // try {
+
+  // } catch (err) {
+  //   return WebApp.jsonResponse({ e: err, er_r: 'err' })
+  // }
+  // console.log(JSON.stringify(JSONRPCServer))
   return WebApp.doPost(e)
 }
 

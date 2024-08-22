@@ -563,46 +563,49 @@
             class DataService {
                 constructor($http) {
                     this.$http = $http;
-                    this.apiServer = "";
+                    this.rpcServer = "https://script.google.com/macros/s/AKfycbz1FHLLdtpW5hba-4NlD0l-tqqBpdZ4EbvYuRAC2GfTU5g_RR6pHgti3trJ0nWkwoVOFA/exec";
                 }
-                getSongsByCategory(categoryName) {
+
+                query(methodName, params) {
                     if (isAppsScript) {
-                        return appsScriptRunAsync("getAllSongAndId", [categoryName])
+                        return appsScriptRunAsync(methodName, params)
                             .then((res) => {
                                 return res;
                             })
                             .catch((err) => {
                                 console.log(err, categoryName);
                             });
+                    } else {
+                        return this.$http
+                            .post(this.rpcServer, {
+                                jsonrpc: "2.0",
+                                method: methodName,
+                                params: params,
+                            })
+                            .then((response) => response.json())
+                            .then((data) => {
+                                if ("result" in data) {
+                                    return data.result;
+                                }
+                                if ("error" in data) {
+                                    console.log("jsonrpc err" + data.error);
+                                }
+                            })
+                            .catch((e) => {
+                                console.log("post err" + e);
+                            });
                     }
+                }
+                getSongsByCategory(categoryName) {
+                    return this.query("getAllSongAndId", [categoryName]);
                 }
 
                 getAllCategory() {
-                    if (isAppsScript) {
-                        return appsScriptRunAsync("getAllSheetName", [])
-                            .then((res) => {
-                                return res;
-                            })
-                            .catch((err) => {
-                                console.log(err, categoryName);
-                            });
-                    } else {
-                        // impl api fetch
-                    }
+                    return this.query("getAllSheetName", []);
                 }
 
                 getAllKeys(param) {
-                    if (isAppsScript) {
-                        return appsScriptRunAsync("getAllApiKey", [])
-                            .then((res) => {
-                                return res;
-                            })
-                            .catch((err) => {
-                                console.log(err, categoryName);
-                            });
-                    } else {
-                        // impl api fetch
-                    }
+                    return this.query("getAllApiKey", []);
                 }
 
                 setFavoriteSong(categoryName, fileId, isFav) {

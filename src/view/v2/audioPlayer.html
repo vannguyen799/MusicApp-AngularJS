@@ -9,7 +9,7 @@
                 font-size: small;
                 margin: 0;
                 padding: 0;
-                background-color: rgb(201, 242, 255);
+                background-color: aliceblue;
             }
 
             .maincontent {
@@ -25,7 +25,9 @@
                 color: white;
                 text-align: center;
                 align-items: center;
-                background-color: rgb(201, 242, 255);
+                background-color: #333;
+
+                /* background-color: rgb(201, 242, 255); */
                 border: 10px;
                 border-color: aliceblue;
                 /* padding: 10px 0; */
@@ -39,31 +41,55 @@
             }
 
             .middd {
-                padding: 20px;
-                margin-right: 10%;
-                margin-left: 10%;
-                margin-top: 20px;
+                padding: 10px;
+                margin-right: 3%;
+                margin-left: 3%;
+                margin-top: 30px;
                 margin-bottom: 8%;
-            }
-
-            .tabledpl {
                 display: flex;
+                /* width: 150%; */
             }
-
+            .table {
+                flex: 2;
+            }
+            .playlist-container {
+                flex: 1;
+                background-color: aliceblue;
+                /* width: 20%; */
+                padding: 10px;
+                right: 0;
+                /* align-self:; */
+                /* margin: 20px; */
+            }
+            .managePlaylistForm {
+                /* border: 10px thick red; */
+            }
+            .managePlaylistForm > div {
+                margin: 7px;
+            }
+            .tabledpl {
+                background-color: aliceblue;
+                /* flex: 7; */
+                display: flex;
+                /* width: 100%; */
+                /* min-width: 1000p; */
+            }
             .songstable {
                 margin-left: 20px;
                 margin-right: 20px;
             }
 
             table {
-                width: 100%;
-                background-color: aliceblue;
-                border-collapse: collapse;
+                /* width: 100%; */
+                /* background-color: aliceblue; */
+                /* border-collapse: collapse; */
+                /* border: 2px solid #333; */
             }
 
             th,
             td {
-                border: 1px solid black;
+                /* border: 1px solid black; */
+                border-bottom: 1px solid black;
                 padding: 8px;
                 text-align: left;
             }
@@ -81,7 +107,13 @@
             }
 
             #navbar > button {
-                margin-right: 20px;
+                margin-right: 10px;
+                margin-top: 10px;
+                margin-left: 10px;
+                margin-bottom: 10px;
+            }
+            .table-action {
+                margin: 5px;
             }
         </style>
         <style>
@@ -177,7 +209,14 @@
                 }
                 runner[funtionName](...input);
             }
-
+            async function appsScriptRunAsync(functionName, args) {
+                return new Promise((resolve, reject) => {
+                    google.script.run
+                        .withSuccessHandler(resolve)
+                        .withFailureHandler(reject)
+                        [functionName](...args);
+                });
+            }
             const isAppsScript = window.location.host.endsWith("-script.googleusercontent.com");
             const isiOS = ["iPad Simulator", "iPhone Simulator", "iPod Simulator", "iPad", "iPhone", "iPod"].includes(navigator.platform) || (navigator.userAgent.includes("Mac") && "ontouchend" in document);
         </script>
@@ -185,11 +224,15 @@
     <body ng-controller="MusicAppController as ctrl">
         <div class="toppp">
             <div class="">
-                <div id="navbar" ng-repeat="name in ctrl.sheetNames">
-                    <button name="workingSheet" ng-value="name" ng-bind-html="ctrl.getButtonLabel(name)" ng-click="ctrl.selectSheetBtnHandler(name)"></button>
+                <div id="navbar">
+                    <button name="customPlaylist" ng-value="customPlaylist" ng-click="ctrl.customPlaylistBtnHandler(name)">Playlist</button>
+                    <button name="all" ng-value="all" ng-click="ctrl.selectSheetBtnHandler('')">All Song</button>
+                    |
+                    <button name="workingSheet" ng-repeat="name in ctrl.sheetNames" ng-value="name" ng-bind-html="ctrl.getButtonLabel(name)" ng-click="ctrl.selectSheetBtnHandler(name)"></button>
                 </div>
             </div>
         </div>
+
         <div class="middd" id="middd">
             <div class="table">
                 <!-- <button type="button" onclick="selectTable(event)" value="songs">songList</button>
@@ -197,27 +240,89 @@
                 <div>{{ctrl.message}}</div>
                 <div class="tabledpl">
                     <div class="songstable" id="songs">
+                        <div class="table-action">
+                            <label> search: <input name="" placeholder="search" ng-model="ctrl.searchValue" /> </label>
+                        </div>
                         <table>
+                            <tr>
+                                <th>Name</th>
+                                <th>Singer</th>
+                                <th>Action</th>
+                            </tr>
                             <tr ng-repeat="s in ctrl.songList">
                                 <!-- <td>{{i + 1}}</td> -->
                                 <td>{{s.vname == "" ? s.name : s.vname}}</td>
                                 <td>{{s.vsinger == "" ? s.singer : s.vsinger}}</td>
 
                                 <td>
-                                    <button name="play" ng-value="s.fileId" ng-click="ctrl.player.play(s)">play</button>
-                                    <button ng-click="ctrl.setSongFavorite($event, s.fileId)">{{s.isFavorite ? 'Remove fav' : 'Add fav'}}</button>
+                                    <button ng-click="ctrl.player.play(s)">play</button>
+                                    <div ng-if="ctrl.form.managePlaylist.isOpen">
+                                        <button ng-if="!ctrl.form.managePlaylist.isAdded(s)" ng-click="ctrl.form.managePlaylist.add(s)">Add to playlist</button>
+                                        <button ng-if="ctrl.form.managePlaylist.isAdded(s)" ng-click="ctrl.form.managePlaylist.remove(s)">Remove from playlist</button>
+                                    </div>
+                                    <button ng-click="ctrl.setSongFavorite($event, s)">{{s.isFavorite ? 'Remove fav' : 'Add fav'}}</button>
                                     <!-- <button name="addtoplaylist" ng-value="s.fileId" ng-click="addToPlaylistBtnHandler(event)">addPL</button>
                                     <input type="checkbox" name="songcheckbox" ng-value="s.fileId" /> -->
-                                    <div ng-if="ctrl.isiOS" hidden>
-                                        <audio preload="auto">
-                                            <source src="" />
-                                        </audio>
-                                    </div>
                                 </td>
                             </tr>
                         </table>
                     </div>
                     <div class="songstable" id="playlist"></div>
+                </div>
+            </div>
+            <div class="playlist-container">
+                <div class="managePlaylistForm" ng-if="ctrl.form.managePlaylist.isOpen">
+                    <h3>{{ctrl.form.managePlaylist.id ? 'Update' : 'Create'}} Playlist</h3>
+                    <div>
+                        <label> Playlist name: <input ng-model="ctrl.form.managePlaylist.name" type="text" required /></label> <br />
+                        <label> Creator: <input ng-model="ctrl.form.managePlaylist.creator" type="text" required /></label>
+                    </div>
+                    <div>
+                        <table>
+                            <h4>Songs</h4>
+                            <tr>
+                                <th>Name</th>
+                                <th>Singer</th>
+                                <th>Action</th>
+                            </tr>
+                            <tr ng-repeat="s in ctrl.form.managePlaylist.songList">
+                                <!-- <td>{{i + 1}}</td> -->
+                                <td>{{s.vname == "" ? s.name : s.vname}}</td>
+                                <td>{{s.vsinger == "" ? s.singer : s.vsinger}}</td>
+
+                                <td>
+                                    <button name="play" ng-click="ctrl.player.play(s)">play</button>
+                                    <button ng-click="ctrl.setSongFavorite($event, s)">{{s.isFavorite ? 'Remove fav' : 'Add fav'}}</button>
+                                    <button ng-click="ctrl.form.managePlaylist.remove(s)">remove</button>
+                                    <!-- <input type="checkbox" name="songcheckbox" ng-value="s.fileId" /> -->
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <button ng-click="ctrl.form.managePlaylist.push()">{{ctrl.form.managePlaylist.id ? 'Update' : 'Create'}}</button>
+                </div>
+                <div class="listPlaylist">
+                    <h4>Playlist</h4>
+                    <button ng-click="ctrl.showCreatePlaylistForm()">{{ctrl.form.managePlaylist.isOpen ? 'CloseForm' : 'Create'}}</button>
+                    <table>
+                        <tr>
+                            <th>Name</th>
+                            <th>Creator</th>
+                            <th>CountSong</th>
+                            <th>Action</th>
+                        </tr>
+                        <tr ng-repeat="p in ctrl.playlist">
+                            <!-- <td>{{i + 1}}</td> -->
+                            <td>{{p.name}}</td>
+                            <td>{{p.creator}}</td>
+                            <td>{{p.songList.length}}</td>
+                            <td>
+                                <button ng-click="ctrl.playPlaylistHandler(p)">Play</button>
+                                <button ng-click="ctrl.selectPlaylistBtnHandler(p)">Select</button>
+                                <button ng-click="">?Remove</button>
+                            </td>
+                        </tr>
+                    </table>
                 </div>
             </div>
         </div>
@@ -258,7 +363,7 @@
                         <button ng-click="ctrl.player.prev()">Previous</button>
                         <button ng-click="ctrl.player.next()">Next</button>
                         <button ng-click="ctrl.player.restart()">Restart</button>
-                        <button ng-click="ctrl.setSongFavorite($event, ctrl.player.songInfo.fileId)">{{ ctrl.player.songInfo.isFavorite ? 'Remove fav' : 'Add fav' }}</button>
+                        <button ng-click="ctrl.setSongFavorite($event, ctrl.player.songInfo)">{{ ctrl.player.songInfo.isFavorite ? 'Remove fav' : 'Add fav' }}</button>
                         <button ng-click="ctrl.player.resetPlaylist()">Reset Playlist</button>
                     </div>
 
@@ -267,6 +372,7 @@
                             <input type="checkbox" ng-model="ctrl.player.isRandomPlay" checked />
                             <label for="isRandomPlay"> Play random </label>
                         </div>
+
                         <div>
                             <input type="checkbox" ng-model="ctrl.player.isLoopPlay" />
                             <label for="isLoopPlay"> Play loop </label>
@@ -281,6 +387,7 @@
                 </div>
             </div>
         </div>
+        <!-- Create Playlist Form -->
 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js" integrity="sha512-YsR46MmyChktsyMMou+Bs74oCa/CDdwft7rJ5wlnmDzMj1mzqncsfJamEEf99Nk7IB0JpTMo5hS8rxB49FUktQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         <script>
@@ -298,13 +405,25 @@
                     this.$timeout = $timeout;
                     this.$scope = $scope;
                     this.$sce = $sce;
+
                     // this.fileId = "<?= fileId?>";
                     this.sheet = "<?= sheet?>";
                     // this.host = "<?= host?>";
-                    this.message = "hello";
+                    this.message = "";
                     this.keyList = [];
-                    this.songList = [{ fileId: "testfileId", vname: "testvname", vsinger: "testvsinger" }];
-
+                    // this.songList = [{ fileId: "testfileId", vname: "testvname", vsinger: "testvsinger" }];
+                    this.songList = [
+                        // test
+                        { name: "星星躲在云海", singer: "蓝心羽", fileId: "1lc54-cqJ7Wu-irOf3N648IuKuCtpc5fT", vname: "Những Ngôi Sao Ẩn Trong Biển Mây", vsinger: "Lam Tâm Vũ", isFavorite: true, sheet: "LanXinyu" },
+                        { name: "寂寞背包", singer: "蓝心羽", fileId: "1upnBMaZeXGuuGNhNIkIIOCyFkiyEUIpa", vname: "?Ba lô cô đơn", vsinger: "Lam Tâm Vũ", isFavorite: false, sheet: "LanXinyu" },
+                        { name: "荆棘里的歌", singer: "蓝心羽", fileId: "14NIlZMUSETlchQIJqZc6eXdErko-d2gk", vname: "?Bài hát trong Gai", vsinger: "Lam Tâm Vũ", isFavorite: false, sheet: "LanXinyu" },
+                        { name: "贩卖日落", singer: "蓝心羽", fileId: "1u2uttC2IbqxKvxJycFybdASszapm0Z86", vname: "?Bán hoàng hôn", vsinger: "Lam Tâm Vũ", isFavorite: true, sheet: "LanXinyu" },
+                        { name: "半茶", singer: "蓝心羽", fileId: "1oMW9vr26Rk_INobNZRKMFYJmg_tXYeBd", vname: "?Bán Trà", vsinger: "Lam Tâm Vũ", isFavorite: false, sheet: "LanXinyu" },
+                        { name: "似有万语千言在耳边", singer: "蓝心羽", fileId: "1LCOhT5u6HK1a_nRUh-H6yPYfscSMToRK", vname: "?Dường như có hàng ngàn lời nói bên tai tôi", vsinger: "Lam Tâm Vũ", isFavorite: false, sheet: "LanXinyu" },
+                        { name: "这一晚，列车开往银河", singer: "蓝心羽", fileId: "1J3U3JMyS6YR3KJZwr8Y29ky-qcGeC-_m", vname: "?Đêm đó, tàu khởi hành đi Dải Ngân Hà", vsinger: "Lam Tâm Vũ", isFavorite: false, sheet: "LanXinyu" },
+                        { name: "来我身边", singer: "蓝心羽，KEYI", fileId: "1-t-YjL6JoAGF8Du4tfp44x2NGmb_0EXM", vname: "?Đến bên cạnh tôi", vsinger: "Lam Tâm Vũ, KEYI", isFavorite: false, sheet: "LanXinyu" },
+                        { name: "别怕，有光", singer: "蓝心羽", fileId: "1dPz9mJrIf7NR-PhMZNq0AeAbUFf5-Nba", vname: "?Đừng sợ, có ánh sáng", vsinger: "Lam Tâm Vũ", isFavorite: false, sheet: "LanXinyu" },
+                    ];
                     audio.addEventListener("ended", () => {
                         ctrl.player.next();
                         try {
@@ -321,10 +440,12 @@
                             console.log(e);
                         }
                     });
-
-                    this.loadSongTable();
                     this.loadSongCategory();
                     this.loadAllDrvAK();
+                    this.loadPlaylist();
+                    if (!this.sheet.startsWith("<") && !this.sheet.endsWith(">")) {
+                        this.loadSongTable();
+                    }
                     // this.isiOS = isiOS;
                     // music player controll
                     this.player = {
@@ -341,20 +462,32 @@
                         defaultCoverImgUrl: "https://img.freepik.com/premium-vector/realistic-vinyl-disc-mockup-empty-blank-music-album-cover-isolated-white-background-retro-musical-long-play-white-template-paper-box-3d-vector-illustration_341509-1731.jpg",
                         isRandomPlay: true,
                         isLoopPlay: false,
+                        isFavoriteList: false,
                         // set player song list
                         setPlaylist: function (songList) {
                             this._playlist = songList;
                             //set playlist
+
                             this.playList = songList;
                             this.prevPlaylist = [];
                             this._favList = songList.filter((s) => s.isFavorite);
-                            this.favList = this._favList;
+                            this.favList = [...this._favList];
+                            this.isOpen = true;
+                            this.audio.pause();
                         },
                         next: function () {
                             if (this.playList.length > 0) {
                                 let songIn42Play;
                                 // console.log(this.isRandomPlay + " " + this.isLoopPlay);
                                 // console.log(this.playList);
+                                if (this.isFavoriteList && this.playList !== this.favList) {
+                                    this.favList = [...this._favList];
+                                    this.playList = this.favList;
+                                } else {
+                                    if (this.playList === this.favList) {
+                                        this.playList = [...this._playlist];
+                                    }
+                                }
                                 if (this.isLoopPlay) {
                                     this.audio.currentTime = 0;
                                     this.audio.play();
@@ -373,7 +506,7 @@
                         },
                         prev: function () {
                             if (this.prevPlaylist.length > 0) {
-                                this.refresh(this.prevSongList.pop());
+                                this.refresh(this.prevPlaylist.pop());
                             }
                         },
                         // play button handler
@@ -394,7 +527,7 @@
                         // set songinfo and play
                         refresh: function (songInfo) {
                             if (ctrl.isReady()) {
-                                console.log(songInfo);
+                                // console.log(songInfo);
                                 this.songInfo = songInfo;
                                 this.coverImgSrc = "";
                                 this.audio.load();
@@ -418,6 +551,7 @@
                                     jsmediatags.read(new Blob([buffer]), {
                                         onSuccess: function (tag) {
                                             const tags = tag.tags;
+                                            console.log(tags);
                                             const picture = tags.picture;
                                             if (picture) {
                                                 const base64String = arrayBufferToBase64(picture.data);
@@ -434,7 +568,7 @@
                                 });
                         },
                         get mainSongName() {
-                            return this.songInfo.vname == "" ? "" : `${this.songInfo.singer} - ${this.songInfo.name}`;
+                            return this.songInfo.name == "" ? "" : `${this.songInfo.singer} - ${this.songInfo.name}`;
                         },
                         get subSongName() {
                             return this.songInfo.vname == "" ? "" : `${this.songInfo.vsinger} - ${this.songInfo.vname}`;
@@ -443,9 +577,116 @@
                             if (this.songInfo.fileId == "") return "";
                             return "https://www.googleapis.com/drive/v3/files/" + this.songInfo.fileId + "?alt=media&key=" + ctrl.selectKeyA_();
                         },
+                        // showAndroidNotification() {
+                        //     // NOT WORK ON SCRIPT.GOOGLE.COM IFRAME
+
+                        //     const player = this;
+                        //     // Register the Service Worker
+                        //     if ("serviceWorker" in navigator) {
+                        //         navigator.serviceWorker
+                        //             .register("sw.js")
+                        //             .then(function (reg) {
+                        //                 console.log("Service Worker Registered!", reg);
+                        //             })
+                        //             .catch(function (err) {
+                        //                 console.log("Service Worker registration failed: ", err);
+                        //             });
+                        //     }
+                        //     function showMediaNotification() {
+                        //         navigator.serviceWorker.ready.then(function (registration) {
+                        //             registration.showNotification("Now Playing", {
+                        //                 body: player.mainSongName,
+                        //                 icon: player.coverImgSrc,
+                        //                 actions: [
+                        //                     { action: "prev", title: "Previous" },
+                        //                     { action: "next", title: "Next" },
+                        //                 ],
+                        //             });
+                        //         });
+                        //     }
+                        //     if (Notification.permission === "granted") {
+                        //         showMediaNotification();
+                        //     } else {
+                        //         Notification.requestPermission().then(function (permission) {
+                        //             if (permission === "granted") {
+                        //                 showMediaNotification();
+                        //             }
+                        //         });
+                        //     }
+                        // },
+                    };
+                    this.form = {};
+                    const managePlaylist = {
+                        isOpen: false,
+                        id: undefined,
+                        name: "",
+                        creator: "guest",
+                        songList: [],
+                        remove: function (s) {
+                            this.songList = this.songList.filter((x) => x.fileId != s.fileId);
+                        },
+                        add: function (s) {
+                            this.songList.push(s);
+                        },
+                        getPlaylist() {
+                            return {
+                                id: this.id,
+                                name: this.name,
+                                creator: this.creator,
+                                songList: this.songList,
+                            };
+                        },
+                        push: function () {
+                            console.log(this);
+                            if (this.id == undefined) {
+                                console.log("add");
+
+                                ctrl.DataService.addPlaylist(this.getPlaylist()).then((result) => {});
+                                return;
+                            }
+
+                            ctrl.DataService.updatePlaylist(this.getPlaylist()).then((result) => {});
+                        },
+                        isAdded(s) {
+                            if (this.songList.find((m) => m.fileId == s.fileId)) {
+                                return true;
+                            } else return false;
+                        },
+                        setPlaylist: function (_playlist) {
+                            this.id = _playlist.id;
+                            this.name = _playlist.name;
+                            this.songList = angular.copy(_playlist.songList);
+                            this.creator = _playlist.creator;
+                            this.isOpen = true;
+                        },
+                        default: function () {
+                            this.id = undefined;
+                            this.name = "";
+                            this.songList = [];
+                            this.creator = "guest";
+                        },
                     };
 
+                    this.form.managePlaylist = managePlaylist;
+
                     $scope.player = this.player;
+                    $scope.$watch(
+                        function () {
+                            return ctrl.searchValue;
+                        },
+                        function (newValue, oldValue) {
+                            if (newValue !== oldValue) {
+                                ctrl.songList = ctrl._songList.filter((s) => {
+                                    for (const key of newValue.toLowerCase().split(" ")) {
+                                        if (!removeVietnameseTones(`${s.vsinger} - ${s.vname} |  ${s.singer} - ${s.name}`).toLowerCase().includes(key)) {
+                                            return false;
+                                        }
+                                    }
+                                    return true;
+                                });
+                            }
+                        },
+                    );
                 }
 
                 isReady() {
@@ -454,50 +695,49 @@
                     }
                     return false;
                 }
-                load() {}
+
+                #tryApply() {
+                    try {
+                        this.$scope.$apply();
+                    } catch (e) {
+                        console.log("apply err " + e);
+                    }
+                }
+                loadPlaylist() {
+                    this.DataService.getAllPlaylist().then((result) => {
+                        this.playlist = result;
+                        this.#tryApply();
+                    });
+                }
+
                 loadSongCategory() {
                     this.DataService.getAllCategory().then((result) => {
                         this.sheetNames = result;
-                        this.$scope.$apply();
+                        // this.$scope.$apply();
+                        this.#tryApply();
                     });
-                    // appsScriptRun({
-                    //     funtionName: "getAllSheetName",
-                    //     onSuccess: (result) => {
-                    //         this.sheetNames = result;
-                    //         this.$scope.$apply();
-                    //     },
-                    // });
                 }
                 loadSongTable() {
                     this.songList = [];
+
                     this.message = `Loading song list of '${this.sheet}'`;
-                    this.DataService.getSongsByCategory(this.sheet).then((result) => {
+                    let __w = this.sheet;
+                    this.DataService.getSongsByCategory(__w).then((result) => {
                         this.message = ``;
-                        this.songList = result;
-                        this.player.playList = result;
-                        this.$scope.$apply();
+                        if (__w == this.sheet) {
+                            this._songList = result;
+                            this.songList = result;
+
+                            this.player.setPlaylist(result);
+                            // this.$scope.$apply();
+                            this.#tryApply();
+                        }
                     });
-                    // appsScriptRun({
-                    //     funtionName: "getAllSongAndId",
-                    //     input: [this.sheet],
-                    //     onSuccess: (result) => {
-                    //         this.message = ``;
-                    //         this.songList = result;
-                    //         this.player.playList = result;
-                    //         this.$scope.$apply();
-                    //     },
-                    // });
                 }
                 loadAllDrvAK() {
                     this.DataService.getAllKeys().then((result) => {
                         this.keyList = result;
                     });
-                    // appsScriptRun({
-                    //     funtionName: "getAllApiKey",
-                    //     onSuccess: (result) => {
-                    //         this.keyList = result;
-                    //     },
-                    // });
                 }
                 getButtonLabel(name) {
                     if (name == this.sheet) {
@@ -506,41 +746,38 @@
                         return this.$sce.trustAsHtml(name);
                     }
                 }
-
                 selectSheetBtnHandler(name) {
                     this.sheet = name;
+                    // console.log(name);
                     this.loadSongTable();
                 }
 
-                setFavoriteSong($event, fileId) {
-                    if (fileId.length == 33) {
-                        // console.log(fileId);
-                        let songInfo = this.songList.find((s) => s.fileId == fileId);
-                        let isFav = songInfo.isFavorite;
+                playPlaylistHandler(p) {
+                    // impl slect view playlIST
+                    this.form.managePlaylist.setPlaylist(p);
+                    this.player.setPlaylist(p.songList);
+                    this.player.next();
+                }
+                showCreatePlaylistForm() {
+                    this.form.managePlaylist.isOpen = !this.form.managePlaylist.isOpen;
+                    this.form.managePlaylist.default();
+                }
 
-                        this.DataService.setFavoriteSong().then((result) => {
+                selectPlaylistBtnHandler(p) {
+                    this.form.managePlaylist.setPlaylist(p);
+                }
+
+                setSongFavorite($event, song) {
+                    if (song.fileId.length == 33) {
+                        this.DataService.setFavoriteSong(song).then((result) => {
                             if (result) {
-                                songInfo.isFavorite = !isFav;
-                                if (fileId == this.player.songInfo.fileId) {
-                                    this.player.songInfo = songInfo;
+                                song.isFavorite = !song.isFavorite;
+                                if (song.fileId == this.player.songInfo.fileId) {
+                                    this.player.songInfo = song;
                                 }
                                 this.$scope.$apply();
                             }
                         });
-
-                        // appsScriptRun({
-                        //     funtionName: "setSongFavorite",
-                        //     input: [this.sheet, fileId, !isFav],
-                        //     onSuccess: (result) => {
-                        //         if (result) {
-                        //             songInfo.isFavorite = !isFav;
-                        //             if (fileId == this.player.songInfo.fileId) {
-                        //                 this.player.songInfo = songInfo;
-                        //             }
-                        //             this.$scope.$apply();
-                        //         }
-                        //     },
-                        // });
                     }
                 }
 
@@ -551,9 +788,6 @@
                     }
                 }
 
-                showAndroidNotification(songInfo) {
-                    // NOT WORK ON SCRIPT.GOOGLE.COM IFRAME
-                }
                 showIOSNotification(songInfo) {
                     // NOT WORK ON SCRIPT.GOOGLE.COM IFRAME
                 }
@@ -573,7 +807,7 @@
                                 return res;
                             })
                             .catch((err) => {
-                                console.log(err, categoryName);
+                                console.log(err, methodName);
                             });
                     } else {
                         return this.$http
@@ -582,8 +816,9 @@
                                 method: methodName,
                                 params: params,
                             })
-                            .then((response) => response.json())
+                            .then((response) => response.data)
                             .then((data) => {
+                                // console.log(data);
                                 if ("result" in data) {
                                     return data.result;
                                 }
@@ -608,18 +843,27 @@
                     return this.query("getAllApiKey", []);
                 }
 
-                setFavoriteSong(categoryName, fileId, isFav) {
-                    if (isAppsScript) {
-                        return appsScriptRunAsync("setSongFavorite", [categoryName, fileId, isFav])
-                            .then((res) => {
-                                return res;
-                            })
-                            .catch((err) => {
-                                console.log(err, categoryName);
-                            });
-                    } else {
-                        // impl api fetch
+                setFavoriteSong(song) {
+                    return this.query("setSongFavorite", [song.sheet, song.fileId, !song.isFavorite]);
+                }
+
+                getAllPlaylist() {
+                    return this.query("getAllPlaylist", []);
+                }
+                addPlaylist(playlist) {
+                    if (!isNaN(parseInt(playlist.id))) {
+                        throw Error("add err: got " + playlist);
                     }
+                    return this.query("addPlaylist", [playlist]);
+                }
+                removePlaylist(id) {
+                    return this.query("removePlaylist", [id]);
+                }
+                updatePlaylist(playlist) {
+                    if (isNaN(parseInt(playlist.id))) {
+                        throw Error("update err: got " + playlist);
+                    }
+                    return this.query("updatePlaylist", [playlist]);
                 }
             }
             var app = angular.module("musicApp", ["ngSanitize"]);
@@ -627,14 +871,6 @@
             app.controller("MusicAppController", ["$scope", "$sce", "$timeout", "DataService", MusicAppController]);
         </script>
         <script>
-            async function appsScriptRunAsync(functionName, args) {
-                return new Promise((resolve, reject) => {
-                    google.script.run
-                        .withSuccessHandler(resolve)
-                        .withFailureHandler(reject)
-                        [functionName](...args);
-                });
-            }
             // utils
             function popRandomElement(arr) {
                 if (arr.length === 0) {
@@ -654,6 +890,11 @@
                     binary += String.fromCharCode(bytes[i]);
                 }
                 return window.btoa(binary);
+            }
+            function removeVietnameseTones(str) {
+                str = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                str = str.replace(/đ/g, "d").replace(/Đ/g, "D");
+                return str;
             }
         </script>
 

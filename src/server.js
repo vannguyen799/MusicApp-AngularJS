@@ -7,7 +7,6 @@ WebApp.useService({
   scriptApp: ScriptApp,
   propertyScope: PropertyScope
 })
-
 WebApp.templatePath(
   'src/view',
   'src/view/v2',
@@ -19,9 +18,10 @@ var JSONRPCServer = new WebApp.JSONRPCServer({
   'getAllApiKey': getAllApiKey,
   'getAllSheetName': getAllSheetName,
   'setSongFavorite': setSongFavorite,
-  'hello': function () {
-    return { "hello": 'hello' }
-  }
+  'getAllPlaylist': getAllPlaylist,
+  'addPlaylist': addPlaylist,
+  'removePlaylist': removePlaylist,
+  'updatePlaylist': updatePlaylist
 })
 
 
@@ -50,10 +50,17 @@ function getAllApiKey() {
 }
 
 function getAllSongAndId(sheet) {
-  sheet = sheet.replace('"', '').replace('"', '')
-
-  const manager = new SongFileManager(sheet ?? SpreadsheetApp.getActiveSheet().getName())
-  return manager.getAllSongs()
+  if (sheet || sheet != '') {
+    const manager = new SongFileManager(sheet)
+    if (manager.validateClass()) { return manager.getAllSongs() } else { return [] }
+  } else {
+    let sheets = getAllSheetName()
+    let res = []
+    for (const sheet of sheets) {
+      res = res.concat(getAllSongAndId(sheet))
+    }
+    return res
+  }
 }
 
 function getAllSheetName() {
@@ -79,4 +86,16 @@ function setSongFavorite(sheet, fileId, status) {
   if (b.validateClass()) {
     return b.setSongFavorite(fileId, status)
   } return false
+}
+function addPlaylist(playlist) {
+  return PlaylistService.instance.createPlaylist(playlist)
+}
+function removePlaylist(id) {
+  return PlaylistService.instance.removePlaylist(id)
+}
+function updatePlaylist(playlist) {
+  return PlaylistService.instance.updatePlaylist(playlist)
+}
+function getAllPlaylist() {
+  return PlaylistService.instance.getAllPlaylist()
 }

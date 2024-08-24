@@ -4,10 +4,10 @@ function t() {
   // console.log(a.getAllApiKey())
   // console.log(  ScriptApp.getIdentityToken().getUrl()
   // )
-  let b = new SongFileManager('chinese')
-  b.process({
-    update: false
-  })
+  // let b = new SongFileManager('chinese')
+  // b.process({
+  //   update: false
+  // })
   // b.addSong({
   //   songName: 's',
   //   singerName: 's',
@@ -17,6 +17,9 @@ function t() {
   //   ,status:'s'
   // })
   // console.log(getAllSheetName())
+  Logger.log(PlaylistService.instance.file.getUrl()
+  )
+  // return folder = file.getParents().next();
   return { a: 'a' }
 }
 

@@ -22,6 +22,7 @@ class HomeController extends WebApp.Controller {
     }
 
     return WebApp.renderTemplate(mode != 'dev' ? 'audioPlayer' : 'apDev', {
+      title: 'MusicApp',
       fileId: id == null ? '' : id,
       sheet: manager.Sheet.getName(),
       host: ScriptApp.getService().getUrl(),

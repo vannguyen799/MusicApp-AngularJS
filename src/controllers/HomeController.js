@@ -12,21 +12,26 @@ class HomeController extends WebApp.Controller {
      * @param {HTTPRequest} request
      */
   index(request) {
-    const { mode, sheet } = request.parameter
+    let { mode, sheet } = request.parameter
 
-    let manager = new SongFileManager(sheet ?? SpreadsheetApp.getActiveSheet().getName())
-    if (manager.validateClass()) {
-      const row = manager.Sheet.getActiveCell().getRow()
-      const linkUp = manager.Sheet.getRange(row, manager.linkUpColum.headerCell.col).getValue()
-      var id = extractFileId(linkUp)
-    }
+    try {
+      if (sheet && sheet != '') {
+        let manager = new SongFileManager(sheet)
+        if (manager.validateClass()) {
+          const row = manager.Sheet.getActiveCell().getRow()
+          const linkUp = manager.Sheet.getRange(row, manager.linkUpColum.headerCell.col).getValue()
+          var id = extractFileId(linkUp)
+        }
+      }
+    } catch (e) { sheet = '' }
 
-    return WebApp.renderTemplate(mode != 'dev' ? 'audioPlayer' : 'apDev', {
-      title: 'MusicApp',
+    // return WebApp.renderTemplate(mode != 'dev' ? 'audioPlayer' : 'apDev', {
+    return WebApp.renderTemplate('audioPlayer', {
+      title: 'Music App',
       fileId: id == null ? '' : id,
-      sheet: manager.Sheet.getName(),
-      host: ScriptApp.getService().getUrl(),
-      parameter: request.parameter
+      sheet: sheet ?? '',
+      // host: ScriptApp.getService().getUrl(),
+      // parameter: request.parameter
       // token: ScriptApp.getOAuthToken()
     })
   }

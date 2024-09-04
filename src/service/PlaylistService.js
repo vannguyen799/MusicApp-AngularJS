@@ -3,6 +3,7 @@
  * @property {number} id - The unique identifier for the playlist.
  * @property {string} name - The name of the playlist.
  * @property {string} creator - The creator of the playlist.
+ * @property {boolean} hidden - The creator of the playlist.
  * @property {SongInfo[]} songList - An array of songs in the playlist.
  */
 class PlaylistService {
@@ -44,9 +45,15 @@ class PlaylistService {
          *  
          */
     change(__data) {
-        this.file.setContent(JSON.stringify(__data))
+        if (this.checkPlaylist(...__data)) {
+            this.file.setContent(JSON.stringify(__data))
+        } else {
+            throw new Error('playlist invalid: got ' + JSON.stringify(__data))
+        }
     }
-
+    reset() {
+        this.file.setContent('[]')
+    }
     /**
      * 
      * @returns {Playlist[]}
@@ -60,7 +67,9 @@ class PlaylistService {
      */
     getAllPlaylist() {
         let data = this.getJson()
-        return data
+        if (this.checkPlaylist(...data)) {
+            return data.filter(p => p.hidden == undefined || p.hidden == false)
+        }
     }
     /**
      * 
@@ -68,7 +77,9 @@ class PlaylistService {
      */
     createPlaylist(playlist) {
         console.log(playlist)
-
+        if (!Array.isArray(playlist.songList)) {
+            throw new Error('invalid playlist' + playlist)
+        }
         let data = this.getJson()
         let maxid = 0
         for (const p of data) {
@@ -78,13 +89,19 @@ class PlaylistService {
         data.push(playlist)
         console.log(data)
         this.change(data)
+        return playlist
     }
     /**
      * 
      * @param {Number} id 
      */
-    removePlaylist(id) {
-        let data = this.getJson().filter(p => p.id != id)
+    removePlaylist(playlist) {
+        let data = this.getJson().map(d => {
+            if (d.id == playlist.id) {
+                d.hidden == true
+            }
+            return d
+        })
         this.change(data)
     }
     /**
@@ -92,13 +109,27 @@ class PlaylistService {
      * @param {Playlist} playlist 
      */
     updatePlaylist(playlist) {
-        console.log(playlist)
         let data = this.getJson().map(d => {
             if (d.id == playlist.id) {
                 d = playlist
             }
+            return d
         })
+        // console.log(data)
 
         this.change(data)
+
+        return playlist
+    }
+
+    checkPlaylist(...pls) {
+        for (const pl of pls) {
+            if (!pl.name || pl.name == '') { return false }
+            if (!pl.songList || !Array.isArray(pl.songList)) { return false }
+            if (!pl.creator || pl.creator == '') { return false }
+            delete pl["$$hashKey"]
+            delete pl["'$$hashKey'"]
+        }
+        return true
     }
 }

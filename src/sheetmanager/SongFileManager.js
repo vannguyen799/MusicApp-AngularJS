@@ -13,14 +13,18 @@ class SongFileManager extends SM.Sheet.SheetManager {
     this.folder = DriveApp.getFolderById(this.folderId)
 
     this.tableHeader = {
-      songName: 'name',
-      singerName: 'singer',
+      name: 'name',
+      singer: 'singer',
       linkUp: 'link up',
       status: 'status',
       filename: 'filename',
       vname: 'vname',
-      vsigner: 'vsigner',
-      isFavorite: 'isFavorite'
+      vsinger: 'vsinger',
+      isFavorite: 'isFavorite',
+      'listens': 'listens',
+      lyric: 'lyric',
+      lyric_vn: 'lyric_vn',
+      lyric_en: 'lyric_en'
     }
     this.ignoreFile = [SpreadsheetApp.getActiveSpreadsheet().getName()]
   }
@@ -29,10 +33,10 @@ class SongFileManager extends SM.Sheet.SheetManager {
     return this.forderId != ''
   }
   get songNameColumn() {
-    return this.getColumn(this.tableHeader.songName, null, false)
+    return this.getColumn(this.tableHeader.name, null, false)
   }
   get singerNameColumn() {
-    return this.getColumn(this.tableHeader.singerName, null, false)
+    return this.getColumn(this.tableHeader.singer, null, false)
   }
   get processFileNameColumn() {
     return this.getColumn(this.tableHeader.filename, null, false)
@@ -47,12 +51,24 @@ class SongFileManager extends SM.Sheet.SheetManager {
     return this.getColumn(this.tableHeader.vname, null, false)
   }
   get vsingerColumn() {
-    return this.getColumn(this.tableHeader.vsigner, null, false)
+    return this.getColumn(this.tableHeader.vsinger, null, false)
   }
   get isFavoriteColumn() {
     return this.getColumn(this.tableHeader.isFavorite, null, false)
   }
+  get listensColumn() {
+    return this.getColumn(this.tableHeader.listens, null, false)
+  }
+  get lyricColumn() {
+    return this.getColumn(this.tableHeader.lyric, null, false)
+  }
+  get vnlyricColumn() {
+    return this.getColumn(this.tableHeader.lyric_vn, null, false)
+  }
+  get enlyricColumn() {
+    return this.getColumn(this.tableHeader.lyric_en, null, false)
 
+  }
   /**
  * @typedef {Object} SongInfo
  * @property {string} vname - The virtual name of the song.
@@ -114,6 +130,7 @@ class SongFileManager extends SM.Sheet.SheetManager {
 
           for (const i in songNames) {
             if (songNames[i].trim() == _songName && singerNames[i].trim() == _singer) {
+
               if (this.originalNameOnly) {
                 formatedName = `${singerNames[i]} - ${songNames[i]}`
               } else {
@@ -154,6 +171,18 @@ class SongFileManager extends SM.Sheet.SheetManager {
       }
     }
   }
+
+  /** @returns {string} */
+  toFomartedName(singer, name, vsinger, vname) {
+
+    if (this.originalNameOnly) {
+      return `${singer} - ${name}`
+    } else {
+      return `${vsinger} - ${vname} | ${singer} - ${name}`
+    }
+
+  }
+
   addSong({ songName, singerName, vname, vsinger, linkUp, status }) {
     const songNameCol = this.songNameColumn
     const songNames = songNameCol.getData()
@@ -261,6 +290,11 @@ class SongFileManager extends SM.Sheet.SheetManager {
     const names = this.songNameColumn.getData()
     const singers = this.singerNameColumn.getData()
     const isFav = this.isFavoriteColumn.getData()
+    const listenss = this.listensColumn.getData()
+    const lrc = this.lyricColumn.getData()
+    const lrc_vn = this.vnlyricColumn.getData()
+    const lrc_en = this.enlyricColumn.getData()
+
     let rs = []
     for (const i in vnames) {
       /** @type {SongInfo} */
@@ -271,7 +305,11 @@ class SongFileManager extends SM.Sheet.SheetManager {
         vname: vnames[i],
         vsinger: vsingers[i],
         isFavorite: isFav[i] != '',
-        sheet: this.sheetName
+        listens: isNaN(parseInt(listenss[i])) ? 0 : listenss[i],
+        sheet: this.sheetName,
+        lyric: lrc[i],
+        lyric_vn: lrc_vn[i],
+        lyric_en: lrc_en[i]
       }
       if (s.fileId != null) {
         rs.push(s)
@@ -300,6 +338,56 @@ class SongFileManager extends SM.Sheet.SheetManager {
       }
     }
     return false
+  }
+
+  addListens(songInfo) {
+    const linkUp = this.linkUpColum
+    const listenss = this.listensColumn
+    for (const [i, fileUrl] of this.linkUpColum.getData().entries()) {
+      if (extractFileId(fileUrl) == songInfo.fileId) {
+        let listens = this.Sheet.getRange(linkUp.headerCell.row + i + 1, listenss.headerCell.col)
+        let valLs = parseInt(listens.getValue())
+        if (isNaN(valLs)) {
+          listens.setValue(1)
+        } else {
+          listens.setValue(valLs + 1)
+        }
+        songInfo.listens += 1
+      }
+    }
+    return songInfo
+  }
+  updateSong(songInfo) {
+    const linkUp = this.linkUpColum
+    for (const [i, fileUrl] of linkUp.getData().entries()) {
+      if (extractFileId(fileUrl) == songInfo.fileId) {
+        // console.log(i)
+
+        let rename = false
+        for (const [k, v] of Object.entries(songInfo)) {
+          // console.log(k, v, 'update')
+          if (typeof this.tableHeader[k] !== 'string') {
+            continue
+          }
+          let column = this.getColumn(this.tableHeader[k], null, false)
+          console.log(column.cells[i].value, v, k)
+          if (column != null && column.cells[i].value != v) {
+            console.log(k, 'update')
+
+            if (['name', 'singer', 'vname', 'vsinger'].find(n => n == k)) {
+              rename = true
+            }
+            // console.log(k, 'update')
+            this.Sheet.getRange(column.headerCell.row + i + 1, column.headerCell.col).setValue(v)
+          }
+        }
+        if (rename) {
+          let formatedName = this.toFomartedName(songInfo.singer, songInfo.name, songInfo.vsinger, songInfo.vname)
+          DriveApp.getFileById(songInfo.fileId).setName(formatedName)
+        }
+        return songInfo
+      }
+    }
   }
 }
 

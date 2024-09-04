@@ -1,7 +1,6 @@
 WebApp.registerControllerPath({
   "": HomeController
 })
-
 WebApp.useService({
   htmlService: HtmlService,
   scriptApp: ScriptApp,
@@ -17,13 +16,22 @@ var JSONRPCServer = new WebApp.JSONRPCServer({
   'getAllSongAndId': getAllSongAndId,
   'getAllApiKey': getAllApiKey,
   'getAllSheetName': getAllSheetName,
-  'setSongFavorite': setSongFavorite,
+  'setSongFavorite': WebApp.requireAuthToken(setSongFavorite),
   'getAllPlaylist': getAllPlaylist,
   'addPlaylist': addPlaylist,
-  'removePlaylist': removePlaylist,
-  'updatePlaylist': updatePlaylist
-})
-
+  'removePlaylist': WebApp.requireAuthToken(removePlaylist),
+  'updatePlaylist': WebApp.requireAuthToken(updatePlaylist),
+  'auth': function auth(user) {
+    return AuthService.instance.auth(user)
+  },
+  'addListens': addListens,
+  'updateSong': WebApp.requireAuthToken(function (s) {
+    return new SongFileManager(s.sheet).updateSong(s)
+  }),
+  verifyAuthToken: (token) => {
+    return AuthService.verifyAuthToken(token)
+  }
+});
 
 function doGet(e) {
   return WebApp.doGet(e)
@@ -92,6 +100,7 @@ function addPlaylist(playlist) {
 }
 function removePlaylist(id) {
   return PlaylistService.instance.removePlaylist(id)
+
 }
 function updatePlaylist(playlist) {
   return PlaylistService.instance.updatePlaylist(playlist)
@@ -99,3 +108,19 @@ function updatePlaylist(playlist) {
 function getAllPlaylist() {
   return PlaylistService.instance.getAllPlaylist()
 }
+function addListens(songInfo) {
+  return new SongFileManager(songInfo.sheet).addListens(songInfo)
+}
+
+function simulateJSONRpcCall(method, params, authToken) {
+  // ContentService.createTextOutput().getContent()
+  let req = {
+    contentLength: 1,
+    'postData': {
+      contents: JSON.stringify({ method, params, jsonrpc: '2.0', authToken })
+    }
+  }
+  console.log(req.postData.contents)
+  return JSON.parse(doPost(req).getContent())
+}
+

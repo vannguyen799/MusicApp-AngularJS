@@ -45,3 +45,10 @@ function onOpen() {
 }
 
 
+function requireAdmin(fn) {
+  let admin = ["nguyenbavan799@gmail.com", "waterbasement77@gmail.com"]
+  if (admin.find(x => x == Session.getActiveUser().getEmail()) == undefined) {
+    throw new Error('not authorized' + Session.getActiveUser().getEmail())
+  }
+  return fn
+}

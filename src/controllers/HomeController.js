@@ -14,16 +14,20 @@ class HomeController extends WebApp.Controller {
   index(request) {
     let { mode, sheet } = request.parameter
 
-    try {
-      if (sheet && sheet != '') {
-        let manager = new SongFileManager(sheet)
-        if (manager.validateClass()) {
-          const row = manager.Sheet.getActiveCell().getRow()
-          const linkUp = manager.Sheet.getRange(row, manager.linkUpColum.headerCell.col).getValue()
-          var id = extractFileId(linkUp)
+    if (getAllSheetName().find(n => n == sheet)) {
+      try {
+        if (sheet && sheet != '') {
+          let manager = new SongFileManager(sheet)
+          if (manager.validateClass()) {
+            const row = manager.Sheet.getActiveCell().getRow()
+            const linkUp = manager.Sheet.getRange(row, manager.linkUpColum.headerCell.col).getValue()
+            var id = extractFileId(linkUp)
+          }
         }
-      }
-    } catch (e) { sheet = '' }
+      } catch (e) { sheet = '' }
+    } else {
+      sheet = ''
+    }
 
     // return WebApp.renderTemplate(mode != 'dev' ? 'audioPlayer' : 'apDev', {
     return WebApp.renderTemplate('audioPlayer', {
@@ -55,5 +59,6 @@ class HomeController extends WebApp.Controller {
   }
   getAllSongAndId(sheet) { getAllSongAndId(sheet) }
 
+  /** @returns {string[]} */
   getAllSheetName() { return getAllSheetName() }
 }

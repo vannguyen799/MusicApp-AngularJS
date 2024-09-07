@@ -22,111 +22,53 @@ function selectDriveAPIKey() {
   return driveApiKey[i] ?? driveApiKey[0]
 }
 
-
-/*
-  @fliptopbox
-	
-  LZW Compression/Decompression for Strings
-  Implementation of LZW algorithms from:
-  http://rosettacode.org/wiki/LZW_compression#JavaScript
-
-  Usage:
-  var a = 'a very very long string to be squashed';
-  var b = a.compress(); // 'a veryāăąlong striċ to bečquashed'
-  var c = b.uncompress(); // 'a very very long string to be squashed'
-  console.log(a === c); // True
-
-  var d = a.compress(true); // return as Array
-  console.log(d); // [97, 32, 118 .... 101, 100] an Array of ASCII codes
-
-*/
-
-String.prototype.compress = function (asArray) {
-  "use strict";
-  // Build the dictionary.
-  asArray = (asArray === true);
-  var i,
-    dictionary = {},
-    uncompressed = this,
-    c,
-    wc,
-    w = "",
-    result = [],
-    ASCII = '',
-    dictSize = 256;
-  for (i = 0; i < 256; i += 1) {
-    dictionary[String.fromCharCode(i)] = i;
+function lyricFrom(url = '') {
+  console.log(url)
+  if (url.startsWith('https://www.kugeci.com/song/')) {
+    let html = UrlFetchApp.fetch(url).getContentText()
+    const $ = Cheerio.load(html);
+    let lyric = $("#lyricsContainer").html().replace('<br/>', '<br>').split('<br>')
+    return [`[src:${url}]`, '', ...lyric].map(s => s.trim()).join('\n').trim()
   }
+  return ''
+}
 
-  for (i = 0; i < uncompressed.length; i += 1) {
-    c = uncompressed.charAt(i);
-    wc = w + c;
-    //Do not use dictionary[wc] because javascript arrays
-    //will return values for array['pop'], array['push'] etc
-    // if (dictionary[wc]) {
-    if (dictionary.hasOwnProperty(wc)) {
-      w = wc;
-    } else {
-      result.push(dictionary[w]);
-      ASCII += String.fromCharCode(dictionary[w]);
-      // Add wc to the dictionary.
-      dictionary[wc] = dictSize++;
-      w = String(c);
-    }
-  }
+function lyric(url) {
+  return lyricFrom(url)
+}
 
-  // Output the code for w.
-  if (w !== "") {
-    result.push(dictionary[w]);
-    ASCII += String.fromCharCode(dictionary[w]);
-  }
-  return asArray ? result : ASCII;
-};
+function searchLyric(name, singer) {
+  console.log(name, singer)
+  // kugeci.com
+  let html = UrlFetchApp.fetch(`https://www.kugeci.com/search?q=${name.trim()}`).getContentText()
+  let $ = Cheerio.load(html)
+  let songs = []
+  $("#tablesort tbody tr").each((i, tr) => {
+    console.log($(tr).text())
+    let td = $(tr).find('td')
 
-String.prototype.decompress = function () {
-  "use strict";
-  // Build the dictionary.
-  var i, tmp = [],
-    dictionary = [],
-    compressed = this,
-    w,
-    result,
-    k,
-    entry = "",
-    dictSize = 256;
-  for (i = 0; i < 256; i += 1) {
-    dictionary[i] = String.fromCharCode(i);
-  }
+    songs.push({
+      name: td.eq(1).find('a').text().trim(),
+      singer: td.eq(2).find('a').text().trim(),
+      url: td.eq(1).find('a').attr('href').trim()
+    })
 
-  if (compressed && typeof compressed === 'string') {
-    // convert string into Array.
-    for (i = 0; i < compressed.length; i += 1) {
-      tmp.push(compressed[i].charCodeAt(0));
-    }
-    compressed = tmp;
-    tmp = null;
-  }
 
-  w = String.fromCharCode(compressed[0]);
-  result = w;
-  for (i = 1; i < compressed.length; i += 1) {
-    k = compressed[i];
-    if (dictionary[k]) {
-      entry = dictionary[k];
-    } else {
-      if (k === dictSize) {
-        entry = w + w.charAt(0);
-      } else {
-        return null;
+  })
+  function compareSinger(s1, s2 = '') {
+    let _s1 = s1.replace('，', ',').split(',')
+    for (const s of _s1) {
+      if (!s2.includes(s.trim())) {
+        return false
       }
     }
-
-    result += entry;
-
-    // Add w+entry[0] to the dictionary.
-    dictionary[dictSize++] = w + entry.charAt(0);
-
-    w = entry;
+    return true
   }
-  return result;
-};
+  for (const s of songs) {
+    console.log(s)
+    if (s.name == name && compareSinger(singer, s.singer)) {
+      return lyricFrom(s.url)
+    }
+  }
+  return ''
+}

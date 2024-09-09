@@ -29,7 +29,14 @@ var JSONRPCServer = new WebApp.JSONRPCServer({
     return new SongFileManager(s.sheet).updateSong(s)
   }),
   verifyAuthToken: (token) => {
-    return AuthService.verifyAuthToken(token)
+    return AuthService.instance.verifyAuthToken(token)
+  },
+  getAudio(fileid) {
+    const file = DriveApp.getFileById(fileid)
+    if (file.getMimeType().startsWith("audio/")) {
+      return Utilities.base64Encode(file.getBlob().getBytes())
+    }
+    return false
   }
 });
 

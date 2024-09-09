@@ -11,7 +11,6 @@ class SongFileManager extends SM.Sheet.SheetManager {
       throw new Error(' invalid folderId: got ' + this.folderId)
     }
     this.folder = DriveApp.getFolderById(this.folderId)
-
     this.tableHeader = {
       name: 'name',
       singer: 'singer',
@@ -316,6 +315,7 @@ class SongFileManager extends SM.Sheet.SheetManager {
       }
     }
     return rs
+
   }
 
   /**

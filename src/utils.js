@@ -38,23 +38,6 @@ function lyric(url) {
 }
 
 function searchLyric(name, singer) {
-  console.log(name, singer)
-  // kugeci.com
-  let html = UrlFetchApp.fetch(`https://www.kugeci.com/search?q=${name.trim()}`).getContentText()
-  let $ = Cheerio.load(html)
-  let songs = []
-  $("#tablesort tbody tr").each((i, tr) => {
-    console.log($(tr).text())
-    let td = $(tr).find('td')
-
-    songs.push({
-      name: td.eq(1).find('a').text().trim(),
-      singer: td.eq(2).find('a').text().trim(),
-      url: td.eq(1).find('a').attr('href').trim()
-    })
-
-
-  })
   function compareSinger(s1, s2 = '') {
     let _s1 = s1.replace('，', ',').split(',')
     for (const s of _s1) {
@@ -64,11 +47,42 @@ function searchLyric(name, singer) {
     }
     return true
   }
+  console.log(name, singer)
+  // kugeci.com
+  let html = UrlFetchApp.fetch(`https://www.kugeci.com/search?q=${name.trim()}`).getContentText()
+  let $ = Cheerio.load(html)
+  let songs = []
+  $("#tablesort tbody tr").each((i, tr) => {
+    console.log($(tr).text())
+    let td = $(tr).find('td')
+    songs.push({
+      name: td.eq(1).find('a').text().trim(),
+      singer: td.eq(2).find('a').text().trim(),
+      url: td.eq(1).find('a').attr('href').trim()
+    })
+  })
+
   for (const s of songs) {
     console.log(s)
     if (s.name == name && compareSinger(singer, s.singer)) {
       return lyricFrom(s.url)
     }
   }
+
+
   return ''
+  // LRCGET not trusted
+  const lrclibApi = "https://lrclib.net/api"
+  let res = JSON.parse(UrlFetchApp.fetch(lrclibApi + `/search?q=${name}`).getContentText())
+  try {
+    for (const r of res) {
+      if (r.trackName == name && compareSinger(singer, r.artistName) && r.syncedLyrics != null) {
+        return [`[src:${lrclibApi}]`, '', r.syncedLyrics.split('\n')].map(s => s.trim()).join('\n').trim()
+      }
+    }
+  } catch (e) {
+
+  }
+
 }
+

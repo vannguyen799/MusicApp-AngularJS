@@ -34,7 +34,14 @@ function t() {
   // }
   // console.log(doPost(exreq).getContent())
   // return folder = file.getParents().next();
-  console.log(lyricFrom('https://www.kugeci.com/song/AnhlMmwk'))
+  // console.log(lyricFrom('https://www.kugeci.com/song/AnhlMmwk'))
+  const f = DriveApp.getFileById('1-t-YjL6JoAGF8Du4tfp44x2NGmb_0EXM')
+  const ps = f.getParents()
+
+  while (ps.hasNext()) {
+    console.log(f.getMimeType())
+    console.log(ps.next().getName())
+  }
   return { a: 'a' }
 }
 

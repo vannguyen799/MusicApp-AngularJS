@@ -1,10 +1,17 @@
-class AuthService {
-    constructor() { }
+class AuthService extends WebApp.BaseAuthService {
+    constructor() {
+        super(secretKey)
+        this.db = new WebApp.MongoDBAtlasCollection({
+            ...env.db,
+            collection: 'Users'
+        })
+    }
+
     static get instance() {
         return new AuthService()
     }
 
-    auth({
+    auth_({
         username, password
     }) {
         const users = this.getUsers()
@@ -15,9 +22,21 @@ class AuthService {
         }
     }
 
-    getUsers() {
-        // simulate
-        return admins
+    getUser(user) {
+        return this.db.findOne({
+            username: user.username
+        })
+    }
+
+    register(user) {
+        let _user = this.db.findOne({
+            username: user.username
+        })
+        if (_user == null) {
+            this.db.insertOne({ ...user, role: WebApp.Role.USER })
+        } else {
+            throw new Error('Register Failed ' + user.username)
+        }
     }
 
     static generateAuthToken(username) {

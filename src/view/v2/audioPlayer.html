@@ -12,7 +12,6 @@
                 --header-h: 40px;
                 --line-color: #1a73e8;
             }
-
             body,
             html {
                 font-family: Open Sans, sans-serif;
@@ -25,21 +24,18 @@
                 background-color: var(--bg-color);
                 overflow: hidden;
             }
-
             .text-truncate {
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
                 max-width: 200px;
             }
-
             th,
             td {
                 border-bottom: 1px solid rgba(231, 231, 231, 0.504);
                 padding: 8px;
                 text-align: left;
             }
-
             .header {
                 position: sticky;
                 top: 0;
@@ -50,7 +46,6 @@
                 background-color: #333;
                 height: var(--header-h);
             }
-
             .playlist-container {
                 flex: 1;
                 width: 100%;
@@ -61,24 +56,20 @@
                 overflow-y: auto;
                 max-height: 82vh;
             }
-
             .playlist-container::-webkit-scrollbar {
                 width: 0;
                 /* Ẩn thanh cuộn ngang */
                 height: 0;
                 /* Ẩn thanh cuộn dọc */
             }
-
             .playlist-container::-webkit-scrollbar-thumb {
                 background: transparent;
                 /* Ẩn phần tay cầm của thanh cuộn */
             }
-
             .playlist-container::-webkit-scrollbar-track {
                 background: transparent;
                 /* Ẩn phần nền của thanh cuộn */
             }
-
             .playlist-top {
                 position: sticky;
                 top: 0;
@@ -87,36 +78,30 @@
                 /* Đảm bảo tiêu đề nằm trên nội dung */
                 fill: inherit;
             }
-
             .song-table {
                 overflow-x: hidden;
                 overflow-y: auto;
                 max-height: 300px;
             }
-
             .song-table::-webkit-scrollbar {
                 width: 10px;
                 /* Chiều rộng thanh cuộn */
             }
-
             .song-table::-webkit-scrollbar-track {
                 background-color: #909090;
                 /* Màu nền của track thanh cuộn */
                 border-radius: 10px;
                 /* Bo góc track thanh cuộn */
             }
-
             .song-table::-webkit-scrollbar-thumb {
                 background-color: #464646;
                 /* Màu của thanh cuộn */
                 border-radius: 10px;
                 /* Bo góc thanh cuộn */
             }
-
             /* .song-table::-webkit-scrollbar-thumb:hover {
                 background-color: #a0a0a0; 
             } */
-
             .song-table th {
                 position: sticky;
                 top: 0;
@@ -124,30 +109,24 @@
                 fill: inherit;
                 background-color: var(--bg-color);
             }
-
             .song-table tr:hover {
                 background-color: #90909040;
             }
-
             .managePlaylistForm {
                 border: 1px solid #444444;
                 padding: 10px;
             }
-
             .managePlaylistForm > div {
                 margin: 7px;
             }
-
             .table-action {
                 margin: 5px;
                 width: 100%;
                 display: flex;
             }
-
             .table-action * {
                 margin-right: 20px;
             }
-
             .table-action select {
                 justify-self: end;
                 margin-left: auto;
@@ -178,7 +157,6 @@
                 background-position: center;
                 filter: invert(0.9) sepia(0.1) saturate(2) hue-rotate(180deg) brightness(1.2);
             }
-
             /* Individual icons */
             .icon-play {
                 background-image: url("https://www.svgrepo.com/download/246478/play-button.svg");
@@ -371,9 +349,9 @@
                                         <!-- <td>{{i + 1}}</td> -->
                                         <td>
                                             {{s.vname == "" ? s.name : s.vname}}
-                                            <div class="badge rounded-pill text-bg-secondary" ng-if=" syncedLyricRegex.test(s.lyric)">L</div>
-                                            <div class="badge rounded-pill text-bg-secondary" ng-if="syncedLyricRegex.test(s.lyric_vn)">VS</div>
-                                            <div class="badge rounded-pill text-bg-secondary" ng-if="syncedLyricRegex.test(s.lyric_en)">ES</div>
+                                            <div class="badge rounded-pill text-bg-secondary" ng-if="syncedLyricRegex.test(s.lyric)">Lyric</div>
+                                            <div class="badge rounded-pill text-bg-secondary" ng-if="syncedLyricRegex.test(s.lyric_vn)">Vietsub</div>
+                                            <div class="badge rounded-pill text-bg-secondary" ng-if="syncedLyricRegex.test(s.lyric_en)">Engsub</div>
                                         </td>
                                         <td>{{s.vsinger == "" ? s.singer : s.vsinger}}</td>
                                         <td>{{s.listens}}</td>
@@ -383,25 +361,25 @@
                                                     ng-click="ctrl.form.managePlaylist.addHandler(s)"
                                                     ng-if="ctrl.form.managePlaylist.isOpen"
                                                     ng-class="{
-                                'icon icon-add': !ctrl.form.managePlaylist.isAdded(s),
-                                'icon icon-remove': ctrl.form.managePlaylist.isAdded(s)
-                                }"
+                                                        'icon icon-add': !ctrl.form.managePlaylist.isAdded(s),
+                                                        'icon icon-remove': ctrl.form.managePlaylist.isAdded(s)
+                                                    }"
                                                     title="PlayList"
                                                 ></button>
                                                 <button
                                                     ng-click="ctrl.player.playHandler(s, ctrl.songList)"
                                                     ng-class="{
-                                    'icon icon-play': s.fileId != ctrl.player.songInfo.fileId || (s.fileId == ctrl.player.songInfo.fileId && ctrl.player.audio.paused),
-                                    'icon icon-pause': s.fileId == ctrl.player.songInfo.fileId && !ctrl.player.audio.paused
-                                  }"
+                                                        'icon icon-play': s.fileId != ctrl.player.songInfo.fileId || (s.fileId == ctrl.player.songInfo.fileId && ctrl.player.audio.paused),
+                                                        'icon icon-pause': s.fileId == ctrl.player.songInfo.fileId && !ctrl.player.audio.paused
+                                                    }"
                                                     title="Play"
                                                 ></button>
                                                 <button
                                                     ng-click="ctrl.setSongFavorite(s)"
                                                     ng-class="{
-                                                    'icon icon-fav': !s.isFavorite && !s.isLoadingFav,
-                                                    'icon icon-unfav': s.isFavorite && !s.isLoadingFav,
-                                                    'icon icon-loading': s.isLoadingFav,
+                                                        'icon icon-fav': !s.isFavorite && !s.isLoadingFav,
+                                                        'icon icon-unfav': s.isFavorite && !s.isLoadingFav,
+                                                        'icon icon-loading': s.isLoadingFav,
                                                     }"
                                                     title="Favorite"
                                                 ></button>
@@ -703,9 +681,9 @@
                             </div>
                             <div class="mx-1">{{ secToMin(ctrl.player.in4.duration) }}</div>
                         </div>
-                        <div class="d-flex align-items-center justify-content-center">
+                        <!-- <div class="d-flex align-items-center justify-content-center">
                             <div class="" style="font-size: smaller">[No Lyrics]</div>
-                        </div>
+                        </div> -->
                     </div>
                     <div class="col-sm-4 text-white d-inline-flex flex-row-reverse align-items-center">
                         <div class="ml-2 mx-1"><button class="player-icon i-player-setting" id="settingBtn"></button></div>
@@ -765,13 +743,13 @@
                     </div>
                 </div>
                 <div class="col-sm-8 position-relative p-4">
-                    <div class="row d-inline-flex justify-content-end" style="height: 10%"><button class="icon icon-remove" ng-click="ctrl.player.hideFc()" title="Close"></button></div>
+                    <div class="row d-inline-flex justify-content-end w-100" style="height: 10%"><button class="icon icon-remove" ng-click="ctrl.player.hideFc()" title="Close"></button></div>
                     <div class="row h-65">
                         <div class="col-12" style="font-weight: normal">
-                            <div class="row justify-content-center align-content-center" id="lyric"></div>
-                            <div class="row justify-content-center align-content-center" id="supLyric"></div>
-                            <div class="row justify-content-center align-content-center" id="vnLyric"></div>
-                            <div class="row justify-content-center align-content-center" id="enLyric"></div>
+                            <div class="row justify-content-center align-content-center pb-1 fs-3" id="lyric"></div>
+                            <div class="row justify-content-center align-content-center pb-2 fs-4" id="supLyric"></div>
+                            <div class="row justify-content-center align-content-center pb-2 fs-3" id="vnLyric"></div>
+                            <div class="row justify-content-center align-content-center py-0 fs-3" id="enLyric"></div>
                         </div>
                     </div>
                     <div class="row h-auto position-absolute bottom-0 p-4">
@@ -987,6 +965,7 @@
             class LyricLRC {
                 constructor(lyricString) {
                     // console.log("updatelrc");
+                    this.lyricsString = lyricString;
                     const lines = lyricString.split("\n");
                     const lineRegex = /\[(\d{1,2}):(\d{1,2})(?:\.(\d{2,3}))?\]\s?(.*)/;
                     const offsetRegex = /\[offset:(.*?)\]/;
@@ -1026,29 +1005,33 @@
                 }
 
                 getLyrics(timeAt) {
-                    const data = this.lyrics.data;
+                    const { data, offset } = this.lyrics;
                     if (data.length == 0) {
-                        return undefined;
+                        return false;
                     }
-
-                    timeAt = parseFloat(timeAt) + this.lyrics.offset;
+                    timeAt = parseFloat(timeAt) + offset;
 
                     let lyric = data[this.getLyrics_nextIndex % data.length];
-                    if (timeAt > lyric.startTime && timeAt < data[data.length - 1].startTime) {
+
+                    if (timeAt > lyric.startTime && timeAt < lyric.endTime) {
+                        console.log(this.getLyrics_nextIndex, timeAt, lyric.startTime, lyric.text);
                         this.getLyrics_nextIndex++;
-                        // console.log(this.getLyrics_nextIndex, timeAt, lyric.startTime, lyric.text);
                         return lyric.text;
                     }
 
                     try {
-                        if (timeAt < data[(this.getLyrics_nextIndex % data.length) - 1].startTime) {
+                        const prevLyric = data[(this.getLyrics_nextIndex - 1) % data.length];
+                        const nextLyric = data[(this.getLyrics_nextIndex + 1) % data.length];
+                        if (timeAt < prevLyric.startTime || timeAt > nextLyric.endTime) {
                             let r = data.findIndex((l) => l.startTime < timeAt && l.endTime > timeAt);
                             if (r) {
                                 this.getLyrics_nextIndex = r + 1;
                                 return data[r].text;
                             }
                         }
-                    } catch (e) {}
+                    } catch (e) {
+                        // console.log(e);
+                    }
                 }
             }
         </script>
@@ -1061,6 +1044,7 @@
                     this.$sce = $sce;
                     this.$timeout = $timeout;
                     this.$http = $http;
+                    this.MSService = new MusicSourceService($http);
                     this.DataService = DataService;
                     this.AuthService = AuthService;
 
@@ -1128,11 +1112,11 @@
                             const audioTimeRangefc = document.querySelector("#audioTimeRange-fc");
 
                             audioTimeRange.addEventListener("change", (event) => {
-                                console.log(player.in4.currentTime, ">", event.target.value);
+                                console.log(player.in4.current, ">", event.target.value);
                                 player.audio.currentTime = event.target.value;
                             });
                             audioTimeRangefc.addEventListener("change", (event) => {
-                                console.log(player.in4.currentTime, ">", event.target.value);
+                                console.log(player.in4.current, ">", event.target.value);
                                 player.audio.currentTime = event.target.value;
                             });
                         },
@@ -1161,7 +1145,6 @@
                             }
                         },
                         isPlaying: false,
-
                         audioEvent: function () {
                             this.setSpeakerValue(this.in4.volume.value);
                             const audio = this.audio;
@@ -1196,7 +1179,6 @@
                                         };
                                     }
                                 }
-
                                 audioLog.count += audio.currentTime - audioLog.lastT;
                                 audioLog.lastT = audio.currentTime;
                                 if (!audioLog.done && audio.duration / 2 < audioLog.count) {
@@ -1253,6 +1235,7 @@
                             // this.audio.pause();
                         },
                         next: function () {
+                            this._clearLyric();
                             if (this.playlist.length > 0) {
                                 let rns = this._cache._rns;
                                 if (rns.songInfo && this.isRandomPlay == rns.random && this.playlist.find((x) => x.fileId == rns.songInfo.fileId)) {
@@ -1293,6 +1276,12 @@
                                 this.refresh(this.prevPlaylist.pop());
                             }
                         },
+                        _clearLyric() {
+                            document.getElementById("lyric").innerText = "";
+                            document.getElementById("supLyric").innerText = "";
+                            document.getElementById("vnLyric").innerText = "";
+                            document.getElementById("enLyric").innerText = "";
+                        },
                         // play button handler
                         play(s) {
                             this.refresh(s);
@@ -1302,32 +1291,42 @@
                             this.audio.play();
                         },
                         updateLyric(timeAt = 0) {
-                            timeAt = timeAt + 0.1;
+                            timeAt = parseFloat(timeAt) + 0.25;
                             const { origin, es, vs } = this.lyricLRCs;
                             try {
                                 let sub;
-                                if (vs && (sub = vs.getLyrics(timeAt))) {
-                                    document.getElementById("vnLyric").innerText = sub;
-                                }
                                 if (origin && (sub = origin.getLyrics(timeAt))) {
                                     document.getElementById("lyric").innerText = sub;
                                     try {
-                                        document.getElementById("supLyric").innerHTML = pinyin
-                                            .pinyin(sub, {
-                                                segment: true, // 启用分词
-                                                group: true, // 启用词组
+                                        document.getElementById("supLyric").innerHTML = sub
+                                            .split(".")
+                                            .map((s) => {
+                                                return s
+                                                    .split(",")
+                                                    .map((_s) => {
+                                                        return pinyin
+                                                            .pinyin(_s, {
+                                                                segment: true, // 启用分词
+                                                                group: true, // 启用词组
+                                                            })
+                                                            .map((p) => p[0])
+                                                            .join(" ");
+                                                    })
+                                                    .join(", ")
+                                                    .trim();
                                             })
-                                            .map((p) => p[0])
-                                            .join(" ");
+                                            .join(". ")
+                                            .trim();
                                     } catch (e) {
                                         console.log(e);
                                     }
                                 }
+                                if (vs && (sub = vs.getLyrics(timeAt))) {
+                                    document.getElementById("vnLyric").innerText = sub;
+                                }
                             } catch (e) {
-                                document.getElementById("lyric").innerText = "";
-                                document.getElementById("vnLyric").innerText = "";
-
-                                // console.log("update lyric err", e);
+                                // this._clearLyric
+                                console.log("update lyric err", e);
                             }
                         },
                         // reset playlist
@@ -1374,24 +1373,27 @@
                                     // console.log("ppfor ", songIn42Play);
                                     /// ready
                                     this._cache.clearRns();
-                                    let url = "https://www.googleapis.com/drive/v3/files/" + songIn42Play.fileId;
-                                    return fetch(url + "?alt=media&key=" + ctrl.selectKeyA_())
-                                        .then((response) => response.blob())
-                                        .then((blob) => {
-                                            // console.log("rdn");
-                                            let url = URL.createObjectURL(blob);
-                                            let audio = new Audio(url);
-                                            return (this._cache._rns = {
-                                                songInfo: songIn42Play,
-                                                audio: audio,
-                                                url: url,
-                                                blob: blob,
-                                                random: this.isRandomPlay,
-                                            });
-                                        })
-                                        .catch((err) => {
-                                            this._cache._rnsWk = false;
-                                        });
+                                    return (
+                                        ctrl.MSService.getAudioSource(songIn42Play.fileId)
+                                            // // let url = "https://www.googleapis.com/drive/v3/files/" + songIn42Play.fileId;
+                                            // return fetch(url + "?alt=media&key=" + ctrl.selectKeyA_())
+                                            //     .then((response) => response.blob())
+                                            .then((blob) => {
+                                                // console.log("rdn");
+                                                let url = URL.createObjectURL(blob);
+                                                let audio = new Audio(url);
+                                                return (this._cache._rns = {
+                                                    songInfo: songIn42Play,
+                                                    audio: audio,
+                                                    url: url,
+                                                    blob: blob,
+                                                    random: this.isRandomPlay,
+                                                });
+                                            })
+                                            .catch((err) => {
+                                                this._cache._rnsWk = false;
+                                            })
+                                    );
                                 }
                             }
                         },
@@ -1404,9 +1406,8 @@
                                 this.coverImgSrc = "";
                                 this.in4.current = 0;
                                 this.in4.duration = 0;
-
                                 this.audio.pause();
-
+                                this._clearLyric();
                                 if (audio) {
                                     this.lyricLRCs = {
                                         origin: new LyricLRC(songInfo.lyric),
@@ -1414,14 +1415,16 @@
                                         // es: new LyricLRC(song.songInfo.lyric_en),
                                     };
                                     this._cache._rnsWk = false;
+
                                     this.audio = audio;
                                     this.audio.title = this.mainSongName || this.subSongName;
                                     this.audioEvent();
                                     this.audio.load();
                                     this.audio.play();
                                 } else {
-                                    fetch(this.audioSrc)
-                                        .then((response) => response.blob())
+                                    ctrl.MSService.getAudioSource(songInfo.fileId)
+                                        // fetch(this.audioSrc)
+                                        //     .then((response) => response.blob())
                                         .then((blob) => {
                                             this._cache.clearRns();
                                             let url = URL.createObjectURL(blob);
@@ -1753,6 +1756,7 @@
                 loadAllDrvAK() {
                     this.DataService.getAllKeys().then((result) => {
                         this.keyList = result;
+                        this.MSService.keyList = result;
                     });
                 }
                 getButtonLabel(name) {
@@ -1877,28 +1881,41 @@
                                 throw new Error(JSON.stringify(err));
                             });
                     } else {
-                        return this.$http
-                            .post(this.rpcServer, {
-                                jsonrpc: "2.0",
-                                method: methodName,
-                                params: params,
-                                authToken: _Service.getAuthToken(),
-                            })
-                            .then((response) => response.data)
-                            .then((data) => {
-                                // console.log(data);
-                                if ("result" in data) {
-                                    return data.result;
-                                }
-                                if ("error" in data) {
-                                    console.log("jsonrpc err" + data.error);
-                                    throw new Error("jsonrpc err" + res.error);
-                                }
-                            })
-                            .catch((err) => {
-                                console.log("post err" + err);
-                                throw new Error("err :" + methodName + " " + err);
-                            });
+                        return (
+                            this.$http
+                                .post(this.rpcServer, {
+                                    jsonrpc: "2.0",
+                                    method: methodName,
+                                    params: params,
+                                    authToken: _Service.getAuthToken(),
+                                })
+                                .then((response) => response.data)
+                                // return fetch(this.rpcServer, {
+                                //     method: "POST",
+                                //     redirect: "follow",
+                                //     body: {
+                                //         jsonrpc: "2.0",
+                                //         method: methodName,
+                                //         params: params,
+                                //         authToken: _Service.getAuthToken(),
+                                //     },
+                                // })
+                                .then((response) => response.json())
+                                .then((data) => {
+                                    // console.log(data);
+                                    if ("result" in data) {
+                                        return data.result;
+                                    }
+                                    if ("error" in data) {
+                                        console.log("jsonrpc err" + data.error);
+                                        throw new Error("jsonrpc err" + res.error);
+                                    }
+                                })
+                                .catch((err) => {
+                                    console.log("post err" + err);
+                                    throw new Error("err :" + methodName + " " + err);
+                                })
+                        );
                     }
                 }
             }
@@ -1955,6 +1972,32 @@
                     return this.query("addListens", [songInfo]);
                 }
             }
+            class MusicSourceService extends _Service {
+                constructor($http, keyList = []) {
+                    super($http);
+                    this.keyList = keyList;
+                }
+
+                getAudioSource(fileId) {
+                    if (true) {
+                        // if (isAppsScript) {
+                        return fetch("https://www.googleapis.com/drive/v3/files/" + fileId + "?alt=media&key=" + this.selectKeyA_()).then((response) => response.blob());
+                    } else {
+                        return this.query("getAudio", [fileId]).then((result) => {
+                            if (result) {
+                                return base64ToBlob(result);
+                            }
+                        });
+                    }
+                }
+                selectKeyA_() {
+                    if (this.keyList) {
+                        this.selectKeyA_.lastKeyIdx = ((this.selectKeyA_.lastAudioIndex ?? -1) + 1) % this.keyList.length;
+                        return this.keyList[this.selectKeyA_.lastKeyIdx];
+                    }
+                }
+            }
+
             var app = angular.module("musicApp", ["ngSanitize"]);
             app.service("DataService", ["$http", DataService]);
             app.service("AuthService", ["$http", AuthService]);
@@ -2008,6 +2051,22 @@
                 const minutes = Math.floor(seconds / 60);
                 const remainingSeconds = seconds % 60;
                 return `${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
+            }
+            function base64ToBlob(base64String, contentType = "") {
+                let base64Data = base64String;
+                if (base64String.includes(",")) {
+                    const parts = base64String.split(",");
+                    const mimeMatch = parts[0].match(/:(.*?);/);
+                    contentType = mimeMatch ? mimeMatch[1] : "application/octet-stream";
+                    base64Data = parts[1];
+                }
+                const byteCharacters = atob(base64Data);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                return new Blob([byteArray], { type: contentType });
             }
         </script>
     </body>

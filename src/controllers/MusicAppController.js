@@ -1,10 +1,10 @@
 
 /** @extends {IController} */
-class HomeController extends WebApp.Controller {
+class MusicAppController extends WebApp.Controller {
   constructor() {
     super()
     const post = WebApp.Method("POST")
-    post(HomeController.prototype.setSongFavorite)
+    post(MusicAppController.prototype.setSongFavorite)
     // post(HomeController.prototype.getAllApiKey)
     // post(HomeController.prototype.getAllSongs)
   }

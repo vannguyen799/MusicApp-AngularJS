@@ -19,8 +19,9 @@ function process() {
 
 function playSidebar() {
   return SpreadsheetApp.getUi().showSidebar(
-    new HomeController().index({
+    new MusicAppController().index({
       parameter: { mode: 'dev' }
+
     })
   )
 }

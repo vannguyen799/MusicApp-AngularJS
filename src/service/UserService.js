@@ -1,24 +1,58 @@
-// class UsersService {
-//     constructor() {
-//         this.db = new WebApp.MongoDBAtlasCollection({
-//             ...env.db,
-//             collection: 'Users'
-//         })
-//     }
-//     static get instance() {
-//         return new UsersService()
-//     }
+class UsersService {
+    constructor() {
 
-//     register(user) {
-//         let _user = this.db.findOne({
-//             username: user.username
-//         })
-//         if (_user == null) {
-//             this.db.insertOne({...user, role:})
-//         }
-//     }
+    }
+    static get instance() {
+        return new UsersService()
+    }
+    getUser(user) {
+        const u = db.Users.findOne({
+            username: user.username
+        })
+        if (u != null) {
+            delete u.password
+            u.playlist = PlaylistService.instance._parseSongInfo(u.playlist)
 
-//     login(user) {
+            return u
+        } else {
+            throw new Error('Couldnt find user ' + user)
+        }
 
-//     }
-// }
+    }
+
+    getFavoriteList(user) {
+        let u = db.Users.findOne({
+            username: user.username
+        })
+
+        if (u != null) {
+            return user.favorite || []
+        } else {
+            throw new Error('Couldnt find user ' + user)
+        }
+    }
+
+    addFavorite(user, filesId) {
+        let res = db.Users.updateOne({
+            username: user.username,
+        }, {
+            $push: {
+                favorite: filesId
+            }
+        })
+
+        return res
+    }
+
+    rmvFavorite(user, filesId) {
+        let res = db.Users.updateOne({
+            username: user.username,
+        }, {
+            $pull: {
+                favorite: filesId
+            }
+        })
+
+        return res
+    }
+}

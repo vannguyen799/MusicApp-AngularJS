@@ -2,7 +2,9 @@ function t() {
   // let key = AuthService.generateAuthToken('admin')
   // console.log(AuthService.verifyAuthToken(key))
   // let s = { "sheet": "Chinese", "fileId": "15YxaZMii_JPhM4mXRX9xd2cHE4D93Hda", "lyric": "", "singer": "王恰恰", "lyric_vn": "", "$$hashKey": "object:182", "vsinger": "Vương Kháp Kháp", "listens": 1, "name": "求佛", "isFavorite": false, "vname": "Cầu phật" }
-  // // console.log(simulateJSONRpcCall('updateSong', [s], 'yAJHx60yXnEHDob/zaU/NmZlpAQUKz0aBjUMS55oits=::admin::1725301736397'))
+  // let obj = { "method": "login", "params": [{ "password": "water7777", "username": "admin" }], "jsonrpc": "2.0", "authToken": "" }
+  console.log(AuthService.instance.verifyAuthToken('PBgM//R7b+1dLtA9up7iqNrs3tUk7cVTkJutZ6HsgvA=::admin::0::1725908039624'))
+  // console.log(simulateJSONRpcCall(obj.method, obj.params, obj.authToken))
   // console.log(new SongFileManager(s.sheet).updateSong(s))
   // // console.log(globalThis)
   // let a = new HomeController()
@@ -35,13 +37,21 @@ function t() {
   // console.log(doPost(exreq).getContent())
   // return folder = file.getParents().next();
   // console.log(lyricFrom('https://www.kugeci.com/song/AnhlMmwk'))
-  const f = DriveApp.getFileById('1-t-YjL6JoAGF8Du4tfp44x2NGmb_0EXM')
-  const ps = f.getParents()
+  // const f = DriveApp.getFileById('1-t-YjL6JoAGF8Du4tfp44x2NGmb_0EXM')
+  // const ps = f.getParents()
 
-  while (ps.hasNext()) {
-    console.log(f.getMimeType())
-    console.log(ps.next().getName())
-  }
+  // while (ps.hasNext()) {
+  //   console.log(f.getMimeType())
+  //   console.log(ps.next().getName())
+  // }
+
+  // const db = new WebApp.MongoDBAtlasCollection({
+  //   ...env.db,
+  //   collection: 'Users'
+  // })
+
+  // console.log(db.findOne({ username: 'admin', password: 'water7777' }))
+
   return { a: 'a' }
 }
 
@@ -66,8 +76,12 @@ function t2() {
       b.trimText()
     }
   }
-
 }
+function rs() {
+  const songs = getAllSongAndId()
+  console.log(SongService.instance.updateAllSongs(songs))
+}
+
 
 function testAddFavSong() {
   const fileId = extractFileId('https://drive.google.com/file/d/1-t-YjL6JoAGF8Du4tfp44x2NGmb_0EXM/view?usp=drivesdk')

@@ -1,5 +1,5 @@
 WebApp.registerControllerPath({
-  "": HomeController
+  "": MusicAppController
 })
 WebApp.useService({
   htmlService: HtmlService,
@@ -7,28 +7,49 @@ WebApp.useService({
   propertyScope: PropertyScope
 })
 WebApp.templatePath(
-  'src/view',
-  'src/view/v2',
-  'src/view/v1',
+  'src/view'
 )
 
 var JSONRPCServer = new WebApp.JSONRPCServer({
-  'getAllSongAndId': getAllSongAndId,
-  'getAllApiKey': getAllApiKey,
-  'getAllSheetName': getAllSheetName,
-  'setSongFavorite': WebApp.requireAuthToken(setSongFavorite),
-  'getAllPlaylist': getAllPlaylist,
-  'addPlaylist': addPlaylist,
-  'removePlaylist': WebApp.requireAuthToken(removePlaylist),
-  'updatePlaylist': WebApp.requireAuthToken(updatePlaylist),
-  'auth': function auth(user) {
-    return AuthService.instance.auth(user)
+  getAllApiKey() {
+    return secrect_.driveApiKey
   },
-  'addListens': addListens,
+  'getSongs': getAllSongAndId,
+  'getAllSheetName': getAllSheetName,
+  'getPlaylist': WebApp.requireAuthToken(function (session) {
+    return PlaylistService.instance.getPlaylist(session.user)
+  }),
+  'addPlaylist': WebApp.requireAuthToken(function (playlist, session) {
+    return PlaylistService.instance.addPlaylist(session.user, playlist)
+  }),
+  'removePlaylist': WebApp.requireAuthToken(function (playlist, session) {
+    return PlaylistService.instance.removePlaylist(session.user, playlist)
+  }),
+  'updatePlaylist': WebApp.requireAuthToken(function (playlist, session) {
+    return PlaylistService.instance.updatePlaylist(session.user, playlist)
+  }),
+  'getUserInfo': WebApp.requireAuthToken(function (session) {
+    return UsersService.instance.getUser(session.user)
+  }),
+  login(user) {
+    return AuthService.instance.login(user)
+  },
+  register(user) {
+    return AuthService.instance.register(user)
+  },
+  'setFavoriteSong': WebApp.requireAuthToken(function (fileIds, session) {
+    return UsersService.instance.addFavorite(session.user, fileIds)
+  }),
+  'rmvFavoriteSong': WebApp.requireAuthToken(function (fileIds, session) {
+    return UsersService.instance.rmvFavorite(session.user, fileIds)
+  }),
+  'addListens': function (songInfo) {
+    return new SongFileManager(songInfo.sheet).addListens(songInfo)
+  },
   'updateSong': WebApp.requireAuthToken(function (s) {
     return new SongFileManager(s.sheet).updateSong(s)
   }),
-  verifyAuthToken: (token) => {
+  verifyAuthToken(token) {
     return AuthService.instance.verifyAuthToken(token)
   },
   getAudio(fileid) {
@@ -51,21 +72,25 @@ function doPost(e) {
   if (postData.jsonrpc) {
     return JSONRPCServer.execute(postData)
   }
-  // try {
 
-  // } catch (err) {
-  //   return WebApp.jsonResponse({ e: err, er_r: 'err' })
-  // }
-  // console.log(JSON.stringify(JSONRPCServer))
   return WebApp.doPost(e)
 }
 
-function getAllApiKey() {
-  return driveApiKey
+function simulateJSONRpcCall(method, params, authToken) {
+  let req = {
+    contentLength: 1,
+    'postData': {
+      contents: JSON.stringify({ method, params, jsonrpc: '2.0', authToken })
+    }
+  }
+  console.log(req.postData.contents)
+  const r = JSON.parse(doPost(req).getContent())
+  console.log(r)
+  return r
 }
 
 function getAllSongAndId(sheet) {
-  if (sheet || sheet != '') {
+  if (sheet && sheet != '') {
     const manager = new SongFileManager(sheet)
     if (manager.validateClass()) { return manager.getAllSongs() } else { return [] }
   } else {
@@ -81,53 +106,11 @@ function getAllSongAndId(sheet) {
 function getAllSheetName() {
   let name = []
   for (const sheet of SpreadsheetApp.getActiveSpreadsheet().getSheets()) {
-    // try {
-    //   let name_ = sheet.getName()
-    //   if (new SongFileManager(name_).validateClass()) {
-    //     name.push(name_)
-    //     console.log(name_)
-    //   }
-    // } catch (e) {
-
-    // }
     name.push(sheet.getName())
   }
   return name.filter(n => !n.startsWith('_'))
 }
 
-function setSongFavorite(sheet, fileId, status) {
-  let b = new SongFileManager(sheet)
 
-  if (b.validateClass()) {
-    return b.setSongFavorite(fileId, status)
-  } return false
-}
-function addPlaylist(playlist) {
-  return PlaylistService.instance.createPlaylist(playlist)
-}
-function removePlaylist(id) {
-  return PlaylistService.instance.removePlaylist(id)
 
-}
-function updatePlaylist(playlist) {
-  return PlaylistService.instance.updatePlaylist(playlist)
-}
-function getAllPlaylist() {
-  return PlaylistService.instance.getAllPlaylist()
-}
-function addListens(songInfo) {
-  return new SongFileManager(songInfo.sheet).addListens(songInfo)
-}
-
-function simulateJSONRpcCall(method, params, authToken) {
-  // ContentService.createTextOutput().getContent()
-  let req = {
-    contentLength: 1,
-    'postData': {
-      contents: JSON.stringify({ method, params, jsonrpc: '2.0', authToken })
-    }
-  }
-  console.log(req.postData.contents)
-  return JSON.parse(doPost(req).getContent())
-}
 

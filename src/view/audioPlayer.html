@@ -24,12 +24,6 @@
                 background-color: var(--bg-color);
                 overflow: hidden;
             }
-            .text-truncate {
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                max-width: 200px;
-            }
             th,
             td {
                 border-bottom: 1px solid rgba(231, 231, 231, 0.504);
@@ -249,7 +243,7 @@
                         </ul>
                         <ul class="navbar-nav list-inline" style="background-color: #333">
                             <li class="nav-item mx-2">
-                                <button class="nav-link" ng-click="ctrl.menu.hidden = !ctrl.menu.hidden">
+                                <button class="nav-link text-decoration-none">
                                     <a href="https://github.com/vannguyen799/MusicApp-AngularJS" target="_blank"> Github </a>
                                 </button>
                             </li>

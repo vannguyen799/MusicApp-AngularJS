@@ -2,7 +2,7 @@
  * @typedef {Object} Playlist
  * @property {number} id - The unique identifier for the playlist.
  * @property {string} name - The name of the playlist.
- * @property {string} notes - The creator of the playlist.
+ * @property {string} description - The creator of the playlist.
  * @property {boolean} hidden - The creator of the playlist.
  * @property {SongInfo[]} songList - An array of songs in the playlist.
  */
@@ -98,7 +98,7 @@ class PlaylistService {
         for (const pl of pls) {
             if (!pl.name || pl.name == '') { return false }
             if (!pl.songList || !Array.isArray(pl.songList)) { return false }
-            if (!pl.creator || pl.creator == '') { return false }
+            // if (!pl.creator || pl.creator == '') { return false }
             delete pl["$$hashKey"]
             delete pl["'$$hashKey'"]
         }

@@ -2,10 +2,11 @@
  * @typedef {Object} Playlist
  * @property {number} id - The unique identifier for the playlist.
  * @property {string} name - The name of the playlist.
- * @property {string} description - The creator of the playlist.
+ * @property {string} notes - The creator of the playlist.
  * @property {boolean} hidden - The creator of the playlist.
  * @property {SongInfo[]} songList - An array of songs in the playlist.
  */
+
 class PlaylistService {
     constructor() { }
     /** @returns {PlaylistService}     */
@@ -24,13 +25,7 @@ class PlaylistService {
             _id: 0,
             playlist: 1
         })
-        if (playlist != null) {
-            let songs = SongService.instance.getSongs()
-            playlist.songList.map(fid => {
-                return songs.find(s => s.fileId == fid)
-            })
-        }
-        return playlist ?? []
+        return this._parseSongInfo(playlist) || []
     }
 
     addPlaylist(user, playlist) {
@@ -64,7 +59,6 @@ class PlaylistService {
     }
 
     removePlaylist(user, playlist) {
-
         let res = db.Users.updateOne({
             username: user.username,
         }, {

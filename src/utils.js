@@ -10,6 +10,20 @@ function extractFileId(url) {
   return null
 }
 
+function updateFlacMimeType() {
+  let names = getAllSheetName()
+  for (const n of names) {
+    let ins = new SongFileManager(n)
+    if (ins.validateClass()) {
+      console.log('update mimetype ' + n)
+      ins.fixRevision()
+    }
+  }
+}
+
+function isAudioMimeType(mimeType) {
+  return mimeType.startsWith('audio') || mimeType == 'application/x-flac'
+}
 
 function selectDriveAPIKey() {
   let i = PropertyScope.getProperty(properties.ldrvkeyuse)
@@ -85,4 +99,18 @@ function searchLyric(name, singer) {
   }
 
 }
+
+Array.prototype.popFilter = function (_q) {
+  let r = []
+  for (const e of this) {
+    if (_q(e)) {
+      r.push(e)
+      this.splice(this.indexOf(e), 1)
+      return e
+    }
+  }
+
+  // return r.length
+}
+
 

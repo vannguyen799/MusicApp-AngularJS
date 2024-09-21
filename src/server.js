@@ -14,7 +14,9 @@ var JSONRPCServer = new WebApp.JSONRPCServer({
   getAllApiKey() {
     return secrect_.driveApiKey
   },
-  'getSongs': getAllSongAndId,
+  getSongs(sheetName) {
+    return SongService.instance.getSongs(sheetName)
+  },
   'getAllSheetName': getAllSheetName,
   'getPlaylist': WebApp.requireAuthToken(function (session) {
     return PlaylistService.instance.getPlaylist(session.user)
@@ -43,11 +45,11 @@ var JSONRPCServer = new WebApp.JSONRPCServer({
   'rmvFavoriteSong': WebApp.requireAuthToken(function (fileIds, session) {
     return UsersService.instance.rmvFavorite(session.user, fileIds)
   }),
-  'addListens': function (songInfo) {
-    return new SongFileManager(songInfo.sheet).addListens(songInfo)
+  addListens(song) {
+    return SongService.instance.addListens(song)
   },
   'updateSong': WebApp.requireAuthToken(function (s) {
-    return new SongFileManager(s.sheet).updateSong(s)
+    return SongService.instance.updateSong(s)
   }),
   verifyAuthToken(token) {
     return AuthService.instance.verifyAuthToken(token)
@@ -89,8 +91,10 @@ function simulateJSONRpcCall(method, params, authToken) {
   return r
 }
 
+/** @param {string} sheet  @returns {any[]} */
 function getAllSongAndId(sheet) {
   if (sheet && sheet != '') {
+    console.log(sheet)
     const manager = new SongFileManager(sheet)
     if (manager.validateClass()) { return manager.getAllSongs() } else { return [] }
   } else {
@@ -111,6 +115,16 @@ function getAllSheetName() {
   return name.filter(n => !n.startsWith('_'))
 }
 
+function updateSongDb() {
+  const songs = getAllSongAndId()
+  console.log('all song get sheet')
+  // RETURN _ID LIST
+  console.log('updating')
+
+  SongService.instance.updateAllSongs(songs)
+  console.log('all song ypdate db', songs.length)
+
+}
 
 
 

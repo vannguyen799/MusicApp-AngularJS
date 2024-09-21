@@ -1,3 +1,10 @@
+const ROLE = {
+    "ADMIN": 0,
+    'USER': 1,
+    'STAFF': 2,
+    'GUEST': 3
+}
+
 class AuthService {
     constructor() {
         this.secrectKey = secrect_.secrectKey
@@ -33,7 +40,7 @@ class AuthService {
             username: user.username
         })
         if (_user == null) {
-            this.dbusers.insertOne({ ...user, role: WebApp.Role.USER })
+            this.dbusers.insertOne({ ...user, role: ROLE.USER })
             return this.login(user)
         } else {
             throw new Error('Register Failed ' + user.username)

@@ -10,6 +10,19 @@ var properties = {
   ldrvkeyuse: 'ldrvkeyuse'
 }
 
+
+function onOpen() {
+  const ui = SpreadsheetApp.getUi()
+
+  ui.createMenu('AppsciptMenu')
+    .addItem('process', process.name)
+    // .addItem('play', playSidebar.name)
+    .addItem('openWeb', playWeb.name)
+    .addItem('db push', updateSongDb.name)
+    .addToUi()
+}
+
+
 function process() {
   let manager = new SongFileManager(SpreadsheetApp.getActiveSheet().getName())
   if (manager.validateClass()) {
@@ -34,16 +47,6 @@ function playWeb() {
 }
 
 
-function onOpen() {
-  const ui = SpreadsheetApp.getUi()
-
-  ui.createMenu('AppsciptMenu')
-    .addItem('process', process.name)
-    .addItem('processtest', t.name)
-    .addItem('play', playSidebar.name)
-    .addItem('openWeb', playWeb.name)
-    .addToUi()
-}
 
 
 function requireAdmin(fn) {

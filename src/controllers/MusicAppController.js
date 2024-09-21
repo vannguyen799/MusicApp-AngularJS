@@ -1,4 +1,3 @@
-
 /** @extends {IController} */
 class MusicAppController extends WebApp.Controller {
   constructor() {

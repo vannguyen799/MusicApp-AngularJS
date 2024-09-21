@@ -24,10 +24,17 @@
                 background-color: var(--bg-color);
                 overflow: hidden;
             }
+            .text-truncate {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                max-width: 200px;
+            }
             th,
             td {
                 border-bottom: 1px solid rgba(231, 231, 231, 0.504);
                 padding: 8px;
+                width: auto;
                 text-align: left;
             }
             .header {
@@ -151,6 +158,15 @@
                 background-position: center;
                 filter: invert(0.9) sepia(0.1) saturate(2) hue-rotate(180deg) brightness(1.2);
             }
+
+            .btn-icon {
+                cursor: pointer;
+                outline: none;
+                background-size: contain;
+                background-repeat: no-repeat;
+                background-position: center;
+                color: var();
+            }
             /* Individual icons */
             .icon-play {
                 background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' fill='%23000000' height='800px' width='800px' version='1.1' id='Layer_1' viewBox='0 0 512 512' xml:space='preserve'%3E%3Cg%3E%3Cg%3E%3Cpath d='M256,0C114.51,0,0,114.497,0,256c0,141.49,114.495,256,256,256c141.491,0,256-114.497,256-256 C512,114.509,397.503,0,256,0z M256,478.609c-122.746,0-222.609-99.862-222.609-222.609S133.252,33.391,256,33.391 S478.609,133.254,478.609,256S378.746,478.609,256,478.609z'/%3E%3C/g%3E%3C/g%3E%3Cg%3E%3Cg%3E%3Cpath d='M358.185,241.544l-155.778-90.01c-11.128-6.426-25.048,1.63-25.048,14.456V346.01c0,12.922,14.01,20.833,25.048,14.456 l155.778-90.01C369.301,264.032,369.287,247.96,358.185,241.544z M210.75,317.081V194.919L316.461,256L210.75,317.081z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
@@ -243,7 +259,7 @@
                         </ul>
                         <ul class="navbar-nav list-inline" style="background-color: #333">
                             <li class="nav-item mx-2">
-                                <button class="nav-link text-decoration-none">
+                                <button class="nav-link" ng-click="ctrl.menu.hidden = !ctrl.menu.hidden">
                                     <a href="https://github.com/vannguyen799/MusicApp-AngularJS" target="_blank"> Github </a>
                                 </button>
                             </li>
@@ -251,7 +267,7 @@
                                 <button class="nav-link" ng-click="ctrl.menu.hidden = !ctrl.menu.hidden">Menu</button>
                             </li>
                             <li class="nav-item mx-2">
-                                <button class="nav-link" ng-if="!ctrl.user" ng-click="ctrl.enableUpdateBtnHandler()">Login</button>
+                                <button class="nav-link" data-bs-toggle="modal" data-bs-target="#loginModal" ng-if="!ctrl.user">Login/Register</button>
                                 <button class="nav-link" ng-if="ctrl.user" ng-click="ctrl.logout()">Logout</button>
                             </li>
                         </ul>
@@ -338,13 +354,24 @@
                             <div class="song-table songlisttable" style="min-height: 70vh">
                                 <table>
                                     <tr>
+                                        <th style="width: 1%"></th>
                                         <th style="width: 40%">Name</th>
                                         <th class="w-25">Singer</th>
                                         <th style="width: 5%">Listens</th>
                                         <th class="" style="width: 13%">Action</th>
                                     </tr>
-                                    <tr ng-repeat="s in ctrl.songList" ng-dblclick="ctrl.form.manageSong.init(s).show()">
+                                    <tr ng-repeat="s in ctrl.songTable" ng-dblclick="ctrl.form.manageSong.init(s).show()">
                                         <!-- <td>{{i + 1}}</td> -->
+                                        <td>
+                                            <button
+                                                ng-click="ctrl.player.playHandler(s, ctrl.songList)"
+                                                ng-class="{
+                                                'icon icon-play': s.fileId != ctrl.player.songInfo.fileId || (s.fileId == ctrl.player.songInfo.fileId && ctrl.player.audio.paused),
+                                                'icon icon-pause': s.fileId == ctrl.player.songInfo.fileId && !ctrl.player.audio.paused
+                                            }"
+                                                title="Play"
+                                            ></button>
+                                        </td>
                                         <td>
                                             {{s.vname == "" ? s.name : s.vname}}
                                             <div class="badge rounded-pill text-bg-secondary" ng-if="syncedLyricRegex.test(s.lyric)">Lyric</div>
@@ -356,30 +383,23 @@
                                         <td>
                                             <div class="song-action">
                                                 <button
-                                                    ng-click="ctrl.form.managePlaylist.addHandler(s)"
                                                     ng-if="ctrl.form.managePlaylist.isOpen"
+                                                    ng-click="ctrl.form.managePlaylist.addHandler(s)"
                                                     ng-class="{
                                                         'icon icon-add': !ctrl.form.managePlaylist.isAdded(s),
                                                         'icon icon-remove': ctrl.form.managePlaylist.isAdded(s)
                                                     }"
                                                     title="PlayList"
                                                 ></button>
-                                                <button
-                                                    ng-click="ctrl.player.playHandler(s, ctrl.songList)"
-                                                    ng-class="{
-                                                        'icon icon-play': s.fileId != ctrl.player.songInfo.fileId || (s.fileId == ctrl.player.songInfo.fileId && ctrl.player.audio.paused),
-                                                        'icon icon-pause': s.fileId == ctrl.player.songInfo.fileId && !ctrl.player.audio.paused
-                                                    }"
-                                                    title="Play"
-                                                ></button>
+
                                                 <button
                                                     class="icon"
                                                     title="Favorite"
                                                     ng-if="ctrl.user"
                                                     ng-class="{
-                                                        'icon-unfav': ctrl.user.favorite?.includes(s.fileId)  && !s.isLoadingFav,
+                                                        'icon-unfav': ctrl.user.favorite && ctrl.user.favorite.includes(s.fileId) && !s.isLoadingFav,
                                                         'icon-loading': s.isLoadingFav,
-                                                        'icon-fav': !ctrl.user.favorite?.includes(s.fileId)  && !s.isLoadingFav
+                                                        'icon-fav': !ctrl.user.favorite || !ctrl.user.favorite.includes(s.fileId) && !s.isLoadingFav
                                                     }"
                                                     ng-click="ctrl.favoriteBtnHandler(s)"
                                                 ></button>
@@ -396,9 +416,13 @@
                         .modal-backdrop {
                             position: absolute !important;
                         }
+                        .modal-dialog {
+                            color: #444444;
+                            font-weight: bold;
+                        }
                     </style>
                     <div class="modal fade" id="manageSongForm" tabindex="-1" aria-labelledby="manageSongFormLabel" aria-hidden="true">
-                        <div class="modal-dialog modal-xl" style="color: #444444; font-weight: bold">
+                        <div class="modal-dialog modal-xl">
                             <div class="modal-content">
                                 <div class="modal-header">
                                     <h1 class="modal-title fs-5" id="manageSongFormLabel">UpdateSong</h1>
@@ -481,26 +505,28 @@
                         <div class="song-table">
                             <table>
                                 <tr>
+                                    <th style="width: 1%"></th>
                                     <th style="width: 40%">Name</th>
                                     <th style="width: 20%">Singer</th>
                                     <th style="width: auto">Action</th>
                                 </tr>
                                 <tr ng-repeat="s in ctrl.form.managePlaylist.songList">
-                                    <!-- <td>{{i + 1}}</td> -->
+                                    <td>
+                                        <button
+                                            ng-click="ctrl.player.playHandler(s, ctrl.form.managePlaylist.songList)"
+                                            ng-class="{
+                                            'icon icon-play': s.fileId != ctrl.player.songInfo.fileId || (s.fileId == ctrl.player.songInfo.fileId && ctrl.player.audio.paused),
+                                            'icon icon-pause': s.fileId == ctrl.player.songInfo.fileId && !ctrl.player.audio.paused
+                                        }"
+                                            title="Play"
+                                        ></button>
+                                    </td>
                                     <td>{{s.vname == "" ? s.name : s.vname}}</td>
                                     <td>{{s.vsinger == "" ? s.singer : s.vsinger}}</td>
                                     <td>
                                         <div class="song-action">
                                             <button ng-click="ctrl.form.managePlaylist.remove(s)" class="icon icon-remove" title="Remove"></button>
 
-                                            <button
-                                                ng-click="ctrl.player.playHandler(s, ctrl.form.managePlaylist.songList)"
-                                                ng-class="{
-                                                    'icon icon-play': s.fileId != ctrl.player.songInfo.fileId || (s.fileId == ctrl.player.songInfo.fileId && ctrl.player.audio.paused),
-                                                    'icon icon-pause': s.fileId == ctrl.player.songInfo.fileId && !ctrl.player.audio.paused
-                                                }"
-                                                title="Play"
-                                            ></button>
                                             <!-- <button
                                                 ng-click="ctrl.favoriteBtnHandler(s)"
                                                 ng-class="{
@@ -515,25 +541,34 @@
                                 </tr>
                             </table>
                         </div>
-                        <button ng-click="ctrl.form.managePlaylist.push()" class="btn btn-light">{{ctrl.form.managePlaylist.playlist ? 'Update' : 'Create'}}</button>
+                        <button
+                            class="btn btn-light"
+                            style="min-width: 60px; min-height: 28px"
+                            ng-click="ctrl.form.managePlaylist.push()"
+                            ng-class="{
+                                'btn-icon icon-loading':  ctrl.form.managePlaylist.isLoading
+                            }"
+                        >
+                            {{ ctrl.form.managePlaylist.isLoading ? '' : (ctrl.form.managePlaylist.playlist ? 'Update' : 'Create') }}
+                        </button>
                     </div>
 
                     <div class="listPlaylist">
                         <table class="playlistTable">
                             <tr>
+                                <th style="width: 1%"></th>
                                 <th style="width: auto">Name</th>
                                 <th style="width: 17%">Description</th>
                                 <th style="width: 5%">Count</th>
                                 <th style="width: 24%">Action</th>
                             </tr>
                             <tr ng-repeat="p in ctrl.user.playlist" ng-if="ctrl.user.playlist">
-                                <!-- <td>{{i + 1}}</td> -->
+                                <td><button ng-click="ctrl.playPlaylistHandler(p)" class="icon icon-play"></button></td>
                                 <td>{{p.name}}</td>
                                 <td>{{p.description}}</td>
                                 <td>{{p.songList.length}}</td>
                                 <td>
                                     <div class="song-action">
-                                        <button ng-click="ctrl.playPlaylistHandler(p)" class="icon icon-play"></button>
                                         <button ng-click="ctrl.selectPlaylistBtnHandler(p)" class="icon icon-select"></button>
                                         <button ng-click="ctrl.removePlaylistBtnHandler(p)" class="icon icon-remove"></button>
                                     </div>
@@ -575,63 +610,52 @@
                             outline: none;
                             background-color: transparent;
                             transition: background-color 0.2s, transform 0.2s;
-                            background-size: 80% 80%;
+                            background-size: 70% 70%;
                             background-repeat: no-repeat;
                             background-position: center;
                             filter: invert(0.9) sepia(0.1) saturate(2) hue-rotate(180deg) brightness(1.2);
                         }
-
                         .player-icon:hover {
                             background-color: #1a73e863;
                             transform: scale(1.2);
                         }
-
                         .player-icon.i-selected {
                             background-color: #1a73e8;
                         }
                         .i-player-fullscreen {
-                            background-image: url("https://www.svgrepo.com/download/238217/expand-fullscreen.svg");
+                            background-image: url("https://www.svgrepo.com/download/470814/expand.svg");
+                            transform: scale(1.21);
                         }
                         .i-player-play {
                             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800px' height='800px' viewBox='0 0 24 24' fill='none'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M5.46484 3.92349C4.79896 3.5739 4 4.05683 4 4.80888V19.1911C4 19.9432 4.79896 20.4261 5.46483 20.0765L19.1622 12.8854C19.8758 12.5108 19.8758 11.4892 19.1622 11.1146L5.46484 3.92349ZM2 4.80888C2 2.55271 4.3969 1.10395 6.39451 2.15269L20.0919 9.34382C22.2326 10.4677 22.2325 13.5324 20.0919 14.6562L6.3945 21.8473C4.39689 22.8961 2 21.4473 2 19.1911V4.80888Z' fill='%230F0F0F'/%3E%3C/svg%3E");
                         }
-
                         .i-player-pause {
                             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800px' height='800px' viewBox='0 0 24 24' fill='none'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M10 5C10 3.34315 8.65686 2 7 2H5C3.34315 2 2 3.34315 2 5V19C2 20.6569 3.34315 22 5 22H7C8.65686 22 10 20.6569 10 19V5ZM8 5C8 4.44772 7.55229 4 7 4H5C4.44772 4 4 4.44772 4 5V19C4 19.5523 4.44772 20 5 20H7C7.55229 20 8 19.5523 8 19V5Z' fill='%230F0F0F'/%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M22 5C22 3.34315 20.6569 2 19 2H17C15.3431 2 14 3.34315 14 5V19C14 20.6569 15.3431 22 17 22H19C20.6569 22 22 20.6569 22 19V5ZM20 5C20 4.44772 19.5523 4 19 4H17C16.4477 4 16 4.44772 16 5V19C16 19.5523 16.4477 20 17 20H19C19.5523 20 20 19.5523 20 19V5Z' fill='%230F0F0F'/%3E%3C/svg%3E");
                         }
-
                         .i-player-next {
                             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800px' height='800px' viewBox='0 0 24 24' fill='none'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M5.60439 4.23093C4.94586 3.73136 4 4.20105 4 5.02762V18.9724C4 19.799 4.94586 20.2686 5.60439 19.7691L14.7952 12.7967C15.3227 12.3965 15.3227 11.6035 14.7952 11.2033L5.60439 4.23093ZM2 5.02762C2 2.54789 4.83758 1.13883 6.81316 2.63755L16.004 9.60993C17.5865 10.8104 17.5865 13.1896 16.004 14.3901L6.81316 21.3625C4.83758 22.8612 2 21.4521 2 18.9724V5.02762Z' fill='%230F0F0F'/%3E%3Cpath d='M20 3C20 2.44772 20.4477 2 21 2C21.5523 2 22 2.44772 22 3V21C22 21.5523 21.5523 22 21 22C20.4477 22 20 21.5523 20 21V3Z' fill='%230F0F0F'/%3E%3C/svg%3E");
                         }
-
                         .i-player-prev {
                             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800px' height='800px' viewBox='0 0 24 24' fill='none'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M18.3956 19.7691C19.0541 20.2687 20 19.799 20 18.9724L20 5.02764C20 4.20106 19.0541 3.73137 18.3956 4.23095L9.20476 11.2033C8.67727 11.6035 8.67727 12.3965 9.20476 12.7967L18.3956 19.7691ZM22 18.9724C22 21.4521 19.1624 22.8612 17.1868 21.3625L7.99598 14.3901C6.41353 13.1896 6.41353 10.8104 7.99599 9.60994L17.1868 2.63757C19.1624 1.13885 22 2.5479 22 5.02764L22 18.9724Z' fill='%230F0F0F'/%3E%3Cpath d='M2 3C2 2.44772 2.44772 2 3 2C3.55228 2 4 2.44772 4 3V21C4 21.5523 3.55228 22 3 22C2.44772 22 2 21.5523 2 21V3Z' fill='%230F0F0F'/%3E%3C/svg%3E");
                         }
-
                         .i-player-loop-1 {
                             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='icon icon-tabler icons-tabler-outline icon-tabler-repeat-once'%3E%3Cpath stroke='none' d='M0 0h24v24H0z' fill='none'/%3E%3Cpath d='M4 12v-3a3 3 0 0 1 3 -3h13m-3 -3l3 3l-3 3' /%3E%3Cpath d='M20 12v3a3 3 0 0 1 -3 3h-13m3 3l-3 -3l3 -3' /%3E%3Cpath d='M11 11l1 -1v4' /%3E%3C/svg%3E");
                         }
-
                         .i-player-loop {
                             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='icon icon-tabler icons-tabler-outline icon-tabler-repeat'%3E%3Cpath stroke='none' d='M0 0h24v24H0z' fill='none'/%3E%3Cpath d='M4 12v-3a3 3 0 0 1 3 -3h13m-3 -3l3 3l-3 3' /%3E%3Cpath d='M20 12v3a3 3 0 0 1 -3 3h-13m3 3l-3 -3l3 -3' /%3E%3C/svg%3E");
                         }
-
                         .i-player-rand {
                             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23000000' width='800px' height='800px' viewBox='0 0 256 256' id='Flat'%3E%3Cpath d='M237.65723,178.34277a8.00122,8.00122,0,0,1,0,11.31446l-24,24A8.00066,8.00066,0,0,1,200,208V191.98584a72.13911,72.13911,0,0,1-57.65332-30.13721L100.63379,103.4502A56.11029,56.11029,0,0,0,55.06445,80H32a8,8,0,0,1,0-16H55.06445a72.14126,72.14126,0,0,1,58.58887,30.15137l41.71289,58.39843A56.0996,56.0996,0,0,0,200,175.97168V160a8.00065,8.00065,0,0,1,13.65723-5.65723Zm-94.64356-71.36132a7.99621,7.99621,0,0,0,11.15918-1.86036l1.19336-1.67089A56.0996,56.0996,0,0,1,200,80.02832V96a8.00053,8.00053,0,0,0,13.65723,5.65723l24-24a8.00122,8.00122,0,0,0,0-11.31446l-24-24A8.00065,8.00065,0,0,0,200,48V64.01416a72.13911,72.13911,0,0,0-57.65332,30.13721l-1.19336,1.6709A7.9986,7.9986,0,0,0,143.01367,106.98145Zm-30.02734,42.0371a7.99642,7.99642,0,0,0-11.15918,1.86036l-1.19336,1.67089A56.11029,56.11029,0,0,1,55.06445,176H32a8,8,0,0,0,0,16H55.06445a72.14126,72.14126,0,0,0,58.58887-30.15137l1.19336-1.6709A7.9986,7.9986,0,0,0,112.98633,149.01855Z'/%3E%3C/svg%3E");
                         }
-
                         .i-player-setting {
                             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800px' height='800px' viewBox='0 0 48 48' fill='none'%3E%3Crect width='48' height='48' fill='white' fill-opacity='0.01'/%3E%3Cpath d='M41.5 10H35.5' stroke='%23000000' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M27.5 6V14' stroke='%23000000' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M27.5 10L5.5 10' stroke='%23000000' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M13.5 24H5.5' stroke='%23000000' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M21.5 20V28' stroke='%23000000' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M43.5 24H21.5' stroke='%23000000' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M41.5 38H35.5' stroke='%23000000' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M27.5 34V42' stroke='%23000000' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M27.5 38H5.5' stroke='%23000000' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
                         }
-
                         .i-player-speaker {
                             background-image: url("data:image/svg+xml,%3Csvg width='800px' height='800px' viewBox='0 0 28 28' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath clip-rule='evenodd' d='M6.48542 18.6893L13.0821 25.1703C14.8862 26.9427 17.971 25.6874 17.971 23.1808V4.81925C17.971 2.3126 14.8862 1.05725 13.0821 2.82973L6.48542 9.31065H3.43958C2.09223 9.31065 1 10.3837 1 11.7074V16.2926C1 17.6163 2.09224 18.6893 3.43958 18.6893H6.48542ZM7.58159 16.8188L14.5821 23.6966C15.0499 24.1561 15.8496 23.8306 15.8496 23.1808V4.81925C15.8496 4.16938 15.0499 3.84392 14.5821 4.30345L7.58159 11.1812C7.44234 11.318 7.36412 11.5035 7.36412 11.697V16.303C7.36412 16.4965 7.44234 16.682 7.58159 16.8188ZM5.24275 11.3948H3.43958C3.26384 11.3948 3.12137 11.5348 3.12137 11.7074V16.2926C3.12137 16.4652 3.26384 16.6052 3.43958 16.6052H5.24275V11.3948Z' fill='%23000000' fill-rule='evenodd'/%3E%3Cpath d='M22.7437 22.3364C22.2813 21.9831 22.2015 21.3302 22.5283 20.8526C25.3157 16.7793 25.9181 11.5645 22.7053 7.69395C22.3351 7.24793 22.3295 6.59119 22.7437 6.18423C23.158 5.77727 23.835 5.77583 24.214 6.21465C28.3909 11.0506 27.4383 17.4771 24.2055 22.1342C23.8755 22.6097 23.2061 22.6898 22.7437 22.3364Z' fill='%23000000'/%3E%3Cpath d='M20.8216 13.6463C20.7817 12.5486 20.5055 11.6062 20.1251 10.9429C19.8376 10.4415 19.7402 9.77098 20.0917 9.31056C20.4431 8.85015 21.1179 8.75448 21.4848 9.20319C22.411 10.3362 22.884 11.9871 22.9416 13.5719C23.0032 15.266 22.6045 17.1437 21.5255 18.631C21.1855 19.0996 20.5059 19.0962 20.0917 18.6893C19.6774 18.2823 19.688 17.6242 19.9906 17.1314C20.5942 16.1482 20.867 14.897 20.8216 13.6463Z' fill='%23000000'/%3E%3C/svg%3E");
                         }
-
                         .i-player-speaker-muted {
                             background-image: url("data:image/svg+xml,%3Csvg width='800px' height='800px' viewBox='0 0 28 28' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath clip-rule='evenodd' d='M6.4948 9.31065L13.1027 2.82973C14.91 1.05725 18 2.3126 18 4.81925V23.1808C18 25.6874 14.9099 26.9427 13.1027 25.1703L6.4948 18.6893H3.44375C2.0941 18.6893 1 17.6163 1 16.2926V11.7074C1 10.3837 2.0941 9.31065 3.44375 9.31065H6.4948ZM3.44375 11.3948C3.26771 11.3948 3.125 11.5348 3.125 11.7074V16.2926C3.125 16.4652 3.26771 16.6052 3.44375 16.6052H5.25V11.3948H3.44375ZM7.59284 16.8188C7.45336 16.682 7.375 16.4965 7.375 16.303V11.697C7.375 11.5035 7.45336 11.318 7.59284 11.1812L14.6053 4.30345C15.0739 3.84392 15.875 4.16938 15.875 4.81925V23.1808C15.875 23.8306 15.0739 24.1561 14.6053 23.6966L7.59284 16.8188Z' fill='%23000000' fill-rule='evenodd'/%3E%3Cpath d='M20.7071 12.1212C20.3166 11.7306 20.3166 11.0975 20.7071 10.707C21.0976 10.3164 21.7308 10.3164 22.1213 10.707L23.8887 12.4743L25.656 10.707C26.0465 10.3164 26.6797 10.3164 27.0702 10.707C27.4608 11.0975 27.4608 11.7306 27.0702 12.1212L25.3029 13.8885L27.0711 15.6567C27.4616 16.0472 27.4616 16.6804 27.0711 17.0709C26.6805 17.4614 26.0474 17.4614 25.6569 17.0709L23.8887 15.3027L22.1205 17.0709C21.73 17.4614 21.0968 17.4614 20.7063 17.0709C20.3158 16.6804 20.3158 16.0472 20.7063 15.6567L22.4745 13.8885L20.7071 12.1212Z' fill='%23000000'/%3E%3C/svg%3E");
                         }
-
                         .i-player-playlist {
                             background-image: url("data:image/svg+xml,%3Csvg width='800px' height='800px' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M16 5V18M16 18C16 19.1046 14.6569 20 13 20C11.3431 20 10 19.1046 10 18C10 16.8954 11.3431 16 13 16C14.6569 16 16 16.8954 16 18ZM4 5H12M4 9H12M4 13H8M16 4L20 3V7L16 8V4Z' stroke='%23000000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
                         }
@@ -669,12 +693,12 @@
                         <div class="d-flex align-items-center justify-content-center">
                             <div class="mx-1">{{ secToMin(ctrl.player.in4.current) }}</div>
                             <div class="mx-1" style="margin-top: -8px">
-                                <input class="range" id="audioTimeRange" style="width: 25vw; height: 2px" type="range" step="0.1" min="0" max="{{ ctrl.player.in4.duration }}" aria-valuemin="0" aria-valuemax="{{ ctrl.player.in4.duration }}" aria-valuenow="{{ ctrl.player.in4.current }}" value="{{ ctrl.player.in4.current }}" />
+                                <input class="range" id="audioTimeRange" style="width: 25vw; height: 2px" type="range" step="0.1" min="0" max="{{ ctrl.player.in4.duration }}" aria-valuemin="0" aria-valuemax="{{ ctrl.player.in4.duration }}" aria-valuenow="{{ ctrl.player.in4.current }}" value="0" />
                             </div>
                             <div class="mx-1">{{ secToMin(ctrl.player.in4.duration) }}</div>
                         </div>
                         <!-- <div class="d-flex align-items-center justify-content-center">
-                            <div class="" style="font-size: smaller">[No Lyrics]</div>
+                            <div class="" style="font-size: smaller">{{ ctrl.player.metadata.string }}</div>
                         </div> -->
                     </div>
                     <div class="col-sm-4 text-white d-inline-flex flex-row-reverse align-items-center">
@@ -708,7 +732,7 @@
                 position: fixed;
                 top: 0;
                 left: 0;
-                z-index: 1000; /* Ensure it appears on top */
+                z-index: 10121; /* Ensure it appears on top */
             }
 
             #player-fc img {
@@ -717,8 +741,11 @@
                 border: 2px solid #45454563;
             }
             #player-fc .player-icon {
+                /* width: 25px; */
                 transform: scale(1.5);
-                padding: 10px;
+                padding: 15px;
+                /* margin: 15px; */
+                background-size: 60% 60%;
             }
             #player-fc .i-player-playlist,
             #player-fc .i-player-speaker,
@@ -759,7 +786,7 @@
                         <div class="d-flex align-items-center justify-content-center fs-5">
                             <div class="mx-1">{{ secToMin(ctrl.player.in4.current) }}</div>
                             <div class="range mx-1">
-                                <input id="audioTimeRange-fc" style="width: 80vw; height: 4px" type="range" step="0.3" min="0" max="{{ ctrl.player.in4.duration }}" aria-valuemin="0" aria-valuemax="{{ ctrl.player.in4.duration }}" aria-valuenow="{{ ctrl.player.in4.current }}" value="{{ ctrl.player.in4.current }}" />
+                                <input id="audioTimeRange-fc" style="width: 80vw; height: 4px" type="range" step="0.3" min="0" max="{{ ctrl.player.in4.duration }}" aria-valuemin="0" aria-valuemax="{{ ctrl.player.in4.duration }}" aria-valuenow="{{ ctrl.player.in4.current }}" value="0" />
                             </div>
                             <div class="mx-1">{{ secToMin(ctrl.player.in4.duration) }}</div>
                         </div>
@@ -767,42 +794,42 @@
                     <!-- <div class="d-flex align-items-center justify-content-center">
                         <div class="" style="font-size: smaller">[No Lyrics]</div>
                     </div> -->
-                    <div class="row">
+                    <div class="row mt-4">
                         <div class="col-sm-4"></div>
                         <!-- control -->
-                        <div class="col-sm-4 play-icons text-white align-items-center d-flex justify-content-center mt-4">
+                        <div class="col-sm-4 play-icons text-white align-items-center d-flex justify-content-center">
                             <button
-                                class="mx-5 my-1"
+                                class="mx-4"
                                 ng-class="{
-                        'player-icon i-player-rand i-selected ': ctrl.player.isRandomPlay,
-                        'player-icon i-player-rand': !ctrl.player.isRandomPlay,
-                    }"
+                                    'player-icon i-player-rand i-selected ': ctrl.player.isRandomPlay,
+                                    'player-icon i-player-rand': !ctrl.player.isRandomPlay,
+                                }"
                                 ng-click="ctrl.player.isRandomPlay = !ctrl.player.isRandomPlay"
                             ></button>
-                            <button class="player-icon i-player-prev mx-5 my-1" ng-click="ctrl.player.prev()"></button>
+                            <button class="player-icon i-player-prev mx-4" ng-click="ctrl.player.prev()"></button>
                             <button
-                                class="mx-5 my-1"
+                                class="mx-4"
                                 ng-class="{
-                        'player-icon i-player-play': !ctrl.player.isPlaying,
-                        'player-icon i-player-pause i-selected': ctrl.player.isPlaying
-                    }"
+                                    'player-icon i-player-play': !ctrl.player.isPlaying,
+                                    'player-icon i-player-pause i-selected': ctrl.player.isPlaying
+                                }"
                                 ng-click="ctrl.player.playHandler()"
                             ></button>
-                            <button class="player-icon i-player-next mx-5 my-1" ng-click="ctrl.player.next() "></button>
+                            <button class="player-icon i-player-next mx-4" ng-click="ctrl.player.next() "></button>
                             <button
-                                class="mx-5 my-1"
+                                class="mx-4"
                                 ng-class="{
-                        'player-icon i-player-loop ': ctrl.player.loopMode == 0,
-                        'player-icon i-player-loop-1 i-selected': ctrl.player.loopMode == 1,
-                        'player-icon i-player-loop i-selected ': ctrl.player.loopMode == 2,
-                    }"
+                                    'player-icon i-player-loop ': ctrl.player.loopMode == 0,
+                                    'player-icon i-player-loop-1 i-selected': ctrl.player.loopMode == 1,
+                                    'player-icon i-player-loop i-selected ': ctrl.player.loopMode == 2,
+                                }"
                                 ng-click="ctrl.player.loopMode = (ctrl.player.loopMode+1)%3"
                             ></button>
                         </div>
                         <!-- setting  -->
-                        <div class="col-sm-4 play-icons text-white align-items-center d-flex justify-content-end mt-4">
-                            <div class="ml-2 mx-3"><button class="player-icon i-player-setting" id="settingBtn-fc"></button></div>
-                            <div class="ml-2 mx-3">
+                        <div class="col-sm-4 play-icons text-white align-items-center d-flex justify-content-end">
+                            <div class="mx-3"><button class="player-icon i-player-setting" id="settingBtn-fc"></button></div>
+                            <div class="mx-3">
                                 <button
                                     ng-class="{
                                 'player-icon i-player-speaker': !ctrl.player.in4.volume.isMuted,
@@ -812,7 +839,7 @@
                                     id="speakerBtn-fc"
                                 ></button>
                             </div>
-                            <div class="ml-2 mx-3"><button id="playlistBtn-fc" class="player-icon i-player-playlist"></button></div>
+                            <div class="mx-3"><button id="playlistBtn-fc" class="player-icon i-player-playlist"></button></div>
                         </div>
                     </div>
                 </div>
@@ -899,6 +926,76 @@
                 </div>
             </div>
         </div>
+        <div class="">
+            <!-- Sign-Up Modal -->
+            <div class="modal fade" id="signupModal" tabindex="-1" aria-labelledby="signupModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="signupModalLabel">Register</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form>
+                                <div class="mb-3">
+                                    <label for="signupEmail" class="form-label">Username</label>
+                                    <input type="text" minlength="3" class="form-control" id="signupEmail" placeholder="Enter Username" ng-model="ctrl.form.register.username" />
+                                </div>
+                                <div class="mb-3">
+                                    <label for="signupPassword" class="form-label">Password</label>
+                                    <input type="password" minlength="3" class="form-control" id="signupPassword" placeholder="Password" ng-model="ctrl.form.register.password" />
+                                </div>
+                                <!-- <div class="mb-3">
+                                    <label for="signupConfirmPassword" class="form-label">Confirm Password</label>
+                                    <input type="password" class="form-control" id="signupConfirmPassword" placeholder="Confirm Password" />
+                                </div> -->
+                                <button class="btn btn-primary" ng-click="ctrl.form.register.push()">Register</button>
+                                <div class="btn btn-light align-self-end" data-bs-toggle="modal" data-bs-target="#loginModal">Log In</div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Login Modal -->
+            <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="loginModalLabel">Login</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form>
+                                <div class="mb-3">
+                                    <label for="loginEmail" class="form-label">Username</label>
+                                    <input type="text" minlength="3" class="form-control" id="loginEmail" placeholder="Enter Username" ng-model="ctrl.form.login.username" />
+                                </div>
+                                <div class="mb-3">
+                                    <label for="loginPassword" class="form-label">Password</label>
+                                    <input type="password" minlength="3" class="form-control" id="loginPassword" placeholder="Password" ng-model="ctrl.form.login.password" />
+                                </div>
+                                <button class="btn btn-primary" ng-click="ctrl.form.login.push()">Login</button>
+                                <div class="btn btn-light" data-bs-toggle="modal" data-bs-target="#signupModal">Register</div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Loading Modal -->
+        <div class="modal fade" id="loadingModal" tabindex="-1" aria-labelledby="loadingModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content text-center">
+                    <div class="modal-body">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading, please wait...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
         <!-- <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script> -->
         <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
@@ -969,7 +1066,6 @@
                     /// read LRC
                     for (const [i, line] of lines.entries()) {
                         let l;
-
                         if ((l = line.match(lineRegex))) {
                             this.lyrics.data.push({
                                 startTime: parseInt(l[1]) * 60 + parseInt(l[2]) + parseFloat("0." + l[3]),
@@ -977,13 +1073,11 @@
                             });
                             continue;
                         }
-
                         if ((l = line.match(offsetRegex))) {
                             this.lyrics.offset = l[1] / 1000;
                             continue;
                         }
                     }
-
                     this.lyrics.data.map((lyric, i) => {
                         if (i < this.lyrics.data.length - 1) {
                             lyric.endTime = this.lyrics.data[i + 1].startTime;
@@ -995,7 +1089,12 @@
 
                     this.getLyrics_nextIndex = 0;
                 }
-
+                /** @params {number} timeAt */
+                getLyricsF(timeAt) {
+                    let text = this.lyrics.data.find((d) => d.startTime < timeAt && d.endTime > timeAt)?.text || "";
+                    // console.log(timeAt, text);
+                    return text;
+                }
                 getLyrics(timeAt) {
                     const { data, offset } = this.lyrics;
                     if (data.length == 0) {
@@ -1003,10 +1102,12 @@
                     }
                     timeAt = parseFloat(timeAt) + offset;
 
+                    return this.getLyricsF(timeAt);
+
                     let lyric = data[this.getLyrics_nextIndex % data.length];
 
                     if (timeAt > lyric.startTime && timeAt < lyric.endTime) {
-                        // console.log(this.getLyrics_nextIndex, timeAt, lyric.startTime, lyric.text);
+                        console.log(this.getLyrics_nextIndex, timeAt, lyric.startTime, lyric.text);
                         this.getLyrics_nextIndex++;
                         return lyric.text;
                     }
@@ -1022,18 +1123,25 @@
                             }
                         }
                     } catch (e) {
-                        // console.log(e);
+                        console.log(e);
                     }
                 }
             }
         </script>
         <script>
-            var cfg = {
-                preloadRate: 0.6,
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+            const cfg = {
+                ins: undefined,
+                preloadRate: 0.75,
+                preload: false,
             };
+
+            const loadingModal = new bootstrap.Modal(document.getElementById("loadingModal"));
             class MusicAppController {
                 constructor($scope, $sce, $timeout, $http, DataService, AuthService) {
                     const ctrl = this;
+                    cfg.ins = ctrl;
                     this.$scope = $scope;
                     $scope.syncedLyricRegex = /^\[(syncType:LINE_SYNCED|src:)/;
                     this.$sce = $sce;
@@ -1063,11 +1171,10 @@
                             { name: "来我身边", singer: "蓝心羽，KEYI", fileId: "1-t-YjL6JoAGF8Du4tfp44x2NGmb_0EXM", vname: "?Đến bên cạnh tôi", vsinger: "Lam Tâm Vũ, KEYI", isFavorite: false, listens: 0, sheet: "LanXinyu" },
                         ];
                     }
-                    // music player controll
                     this.player = {
+                        audioTimeRanges: [document.querySelector("#audioTimeRange"), document.querySelector("#audioTimeRange-fc")],
                         init: function ($scope) {
                             const player = this;
-                            // this.audioEvent();
                             $scope.secToMin = secToMin;
                             $scope.$watch(
                                 function () {
@@ -1089,17 +1196,12 @@
                                     }
                                 },
                             );
-                            const audioTimeRange = document.querySelector("#audioTimeRange");
-                            const audioTimeRangefc = document.querySelector("#audioTimeRange-fc");
-
-                            audioTimeRange.addEventListener("change", (event) => {
-                                console.log(player.in4.current, ">", event.target.value);
-                                player.audio.currentTime = event.target.value;
-                            });
-                            audioTimeRangefc.addEventListener("change", (event) => {
-                                console.log(player.in4.current, ">", event.target.value);
-                                player.audio.currentTime = event.target.value;
-                            });
+                            for (const e of this.audioTimeRanges) {
+                                e.addEventListener("change", (event) => {
+                                    console.log(player.in4.current, ">", event.target.value);
+                                    player.audio.currentTime = event.target.value;
+                                });
+                            }
                         },
                         in4: {
                             duration: "0",
@@ -1110,6 +1212,11 @@
                             },
                             changeTime: 0,
                             speed: 1,
+                        },
+                        metadata: {
+                            get string() {
+                                return this.audioBuffer ? `${ctrl.player.currentExt}, ${this.audioBuffer.sampleRate} Hz, ${this.bits} bits, ${this.bitrate}, channel ${this.audioBuffer.numberOfChannels}/2, ${this.bitrate.toFixed(2)} kbps` : "";
+                            },
                         },
                         _playlist: [],
                         _favlist: [],
@@ -1130,8 +1237,12 @@
                             this.setSpeakerValue(this.in4.volume.value);
                             const audio = this.audio;
                             let audioLog = {};
+                            function updateRange_() {}
                             audio.addEventListener("timeupdate", () => {
                                 this.in4.current = audio.currentTime;
+                                for (const e of this.audioTimeRanges) {
+                                    e.value = this.in4.current;
+                                }
                                 this.updateLyric(this.in4.current);
 
                                 if (this.in4.current > 0) {
@@ -1139,8 +1250,9 @@
                                 }
                                 // preparing next song
 
-                                if (!this._cache._rnsWk && this.in4.current / audio.duration > parseFloat(cfg.preloadRate)) {
+                                if (cfg.preload && !this.refresh.rdn && this.in4.current / audio.duration > parseFloat(cfg.preloadRate)) {
                                     // console.log("enter rdns");
+                                    this.refresh.rdn = true;
                                     this._readyNextSong();
                                 }
 
@@ -1182,7 +1294,7 @@
                             });
                             audio.addEventListener("canplay", () => {
                                 this.in4.duration = audio.duration;
-                                this.fetchMetadata();
+                                this.loadMetadata();
                                 ctrl.tryApply();
                             });
                             audio.addEventListener("pause", () => {
@@ -1327,9 +1439,11 @@
                         _cache: {
                             _rns: {},
                             _rnsWk: false,
-                            clearRns() {
+                            clearRns(revoke = true) {
                                 try {
-                                    URL.revokeObjectURL(this._rns.url);
+                                    if (revoke && this._rns.url) {
+                                        URL.revokeObjectURL(this._rns.url);
+                                    }
                                     delete this._rns.audio;
                                 } catch (e) {
                                     console.log(e);
@@ -1339,6 +1453,8 @@
                             },
                         },
                         _readyNextSong() {
+                            this._readyNextSong.idx = this._readyNextSong + 1 || 1;
+                            let idx = this._readyNextSong.idx;
                             this._cache._rnsWk = true;
                             if (this.loopMode > 0) {
                                 return;
@@ -1361,7 +1477,7 @@
                                 if (songIn42Play) {
                                     // console.log("ppfor ", songIn42Play);
                                     /// ready
-                                    this._cache.clearRns();
+                                    this._cache.clearRns(false);
                                     return (
                                         ctrl.MSService.getAudioSource(songIn42Play.fileId)
                                             // // let url = "https://www.googleapis.com/drive/v3/files/" + songIn42Play.fileId;
@@ -1371,6 +1487,7 @@
                                                 // console.log("rdn");
                                                 let url = URL.createObjectURL(blob);
                                                 let audio = new Audio(url);
+                                                if (this._readyNextSong.idx != idx) return;
                                                 return (this._cache._rns = {
                                                     songInfo: songIn42Play,
                                                     audio: audio,
@@ -1380,7 +1497,8 @@
                                                 });
                                             })
                                             .catch((err) => {
-                                                this._cache._rnsWk = false;
+                                                // this._cache._rnsWk = false;
+                                                console.log(err);
                                             })
                                     );
                                 }
@@ -1416,10 +1534,10 @@
                                     this.audio = audio;
                                     this.audio.title = this.mainSongName || this.subSongName;
                                     document.querySelector("body").appendChild(audio);
-
                                     this.audioEvent();
                                     this.audio.load();
                                     this.audio.play();
+                                    this.refresh.rdn = false;
                                     this._cache._rnsWk = false;
                                 } else {
                                     ctrl.MSService.getAudioSource(songInfo.fileId)
@@ -1476,14 +1594,12 @@
                             }
                             ctrl.tryApply();
                         },
-                        fetchMetadata: function () {
+                        loadMetadata() {
                             const player = this;
-
                             function processblob(blob) {
                                 jsmediatags.read(blob, {
                                     onSuccess: function (tag) {
-                                        player.currentExt = blob.type.split("/").pop();
-
+                                        player.currentExt = mimeTypeToExt(blob.type);
                                         const tags = tag.tags;
                                         const picture = tags.picture;
                                         console.log(tags);
@@ -1498,7 +1614,6 @@
                                     },
                                 });
                             }
-
                             fetch(player.audio.src, { headers: { Range: "bytes=0-2000000" } })
                                 .then((response) => response.blob())
                                 .then((blob) => {
@@ -1506,6 +1621,26 @@
                                 })
                                 .catch((error) => {
                                     console.error("Error fetching the file:", error);
+                                });
+                            return;
+
+                            fetch(player.audio.src)
+                                .then((response) => response.arrayBuffer())
+                                .then((data) => {
+                                    this.metadata.bits = getBitDepth(data);
+                                    return audioContext.decodeAudioData(data);
+                                })
+                                .then((audioBuffer) => {
+                                    this.metadata.audioBuffer = audioBuffer;
+                                    (this.metadata.bitrate = calcBitrate(audioBuffer, this.metadata.bits)), console.log("Sample Rate:", audioBuffer.sampleRate, "Hz"); // Sample rate in Hz
+                                    console.log("Number of Channels:", audioBuffer.numberOfChannels); // Mono, stereo, etc.
+                                    console.log("Duration:", audioBuffer.duration, "seconds"); // Length of the audio
+                                    // console.log("File size:", (this.metadata.size / (8 * 1024)).toFixed(2), "MB"); // Size of the Blob
+                                    console.log("Bitrate:", this.metadata.bitrate.toFixed(2), "kbps");
+                                    ctrl.tryApply();
+                                })
+                                .catch((err) => {
+                                    console.error("Error decoding audio data:", err);
                                 });
                         },
                         get mainSongName() {
@@ -1522,13 +1657,6 @@
                                 return "";
                             }
                         },
-                        _lastsrc: "",
-                        get audioSrc() {
-                            if (this.songInfo.fileId == "") return "";
-                            return (this._lastsrc = "https://www.googleapis.com/drive/v3/files/" + this.songInfo.fileId + "?alt=media&key=" + ctrl.selectKeyA_());
-                        },
-                        // showAndroidNotification() {
-                        // },
                         showFc() {
                             document.getElementById("player-fc").style.display = "block";
                         },
@@ -1544,6 +1672,7 @@
                         description: "",
                         songList: [],
                         playlist: undefined,
+                        isLoading: false,
                         remove: function (s) {
                             this.songList = this.songList.filter((x) => x.fileId != s.fileId);
                         },
@@ -1560,38 +1689,51 @@
                         getPlaylist() {
                             return {
                                 name: this.name,
-                                debugger: this.description,
+                                description: this.description,
                                 songList: this.songList,
                             };
                         },
                         push: function () {
                             let pl = this.getPlaylist();
-                            if (this.id == undefined) {
+                            this.isLoading = true;
+                            if (!this.playlist) {
                                 console.log("add");
-
-                                return ctrl.DataService.addPlaylist(pl).then((result) => {
-                                    if (result) {
-                                        ctrl.user.playlist.push(pl);
-                                        ctrl._lSupdate();
-                                        ctrl.tryApply();
-                                        alert("add ok" + JSON.stringify(result));
-                                    } else {
-                                        alert("add err" + result);
-                                    }
-                                });
+                                return ctrl.DataService.addPlaylist(pl)
+                                    .then((result) => {
+                                        if (result) {
+                                            if (!ctrl.user.playlist) {
+                                                ctrl.user.playlist = [];
+                                            }
+                                            ctrl.user.playlist.push(pl);
+                                            ctrl._lSupdate();
+                                            ctrl.tryApply();
+                                            alert("add ok" + JSON.stringify(result));
+                                        } else {
+                                            alert("add err" + result);
+                                        }
+                                        this.isLoading = false;
+                                    })
+                                    .catch((err) => {
+                                        this.isLoading = false;
+                                    });
                             } else {
-                                return ctrl.DataService.updatePlaylist(pl).then((result) => {
-                                    if (result) {
-                                        ctrl.user.playlist.map((x) => {
-                                            copyObj(x, pl);
-                                        });
-                                        ctrl._lSupdate();
-                                        ctrl.tryApply();
-                                        alert("update ok");
-                                    } else {
-                                        alert("Update error \n " + result);
-                                    }
-                                });
+                                return ctrl.DataService.updatePlaylist(pl)
+                                    .then((result) => {
+                                        if (result) {
+                                            ctrl.user.playlist.map((x) => {
+                                                copyObj(x, pl);
+                                            });
+                                            ctrl._lSupdate();
+                                            ctrl.tryApply();
+                                            alert("update ok");
+                                        } else {
+                                            alert("Update error \n " + result);
+                                        }
+                                        this.isLoading = false;
+                                    })
+                                    .catch((err) => {
+                                        this.isLoading = false;
+                                    });
                             }
                         },
                         isAdded(s) {
@@ -1622,24 +1764,34 @@
                             return this;
                         },
                         update() {
-                            let _si = this._songInfo;
-                            ctrl.DataService.updateSong(this.songInfo).then((result) => {
-                                if (result) {
-                                    alert("update ok ");
-                                    moveObj(_si, result);
-                                    if (result.fileId == this.songInfo.fileId) {
-                                        copyObj(this.songInfo, result);
+                            let s = {
+                                ...this.songInfo,
+                            };
+                            loadingModal.show();
+
+                            ctrl.DataService.updateSong(s)
+                                .then((result) => {
+                                    if (result) {
+                                        ctrl.updateSongHanlder(s);
+                                        alert("update ok ");
+                                        if (s.fileId == this.songInfo.fileId) {
+                                            copyObj(this.songInfo, s);
+                                        }
+                                        ctrl.tryApply();
+                                    } else {
+                                        alert("update err " + result);
                                     }
-                                    ctrl.tryApply();
-                                } else {
+                                    loadingModal.hide();
+                                })
+                                .catch((err) => {
                                     alert("update err " + result);
-                                }
-                            });
+                                    loadingModal.hide();
+                                });
                         },
                         show() {
                             $("#manageSongForm").modal("show");
                             $(".modal-backdrop").appendTo(".container.selfcontainer");
-                            $(".modal-backdrop").width("90vw");
+                            $(".modal-backdrop").width("97vw");
                             $("body").removeClass();
                             $("div.modal-backdrop.fade.show").hide();
                         },
@@ -1647,72 +1799,23 @@
                     this.form = {
                         managePlaylist: managePlaylist,
                         manageSong: manageSong,
+                        login: {
+                            username: "",
+                            password: "",
+                            push() {
+                                ctrl.loginHandler(this);
+                            },
+                        },
+                        register: {
+                            username: "",
+                            password: "",
+                            push() {
+                                ctrl.registerHandler(this);
+                            },
+                        },
                     };
-                    $scope.$watch(
-                        function () {
-                            return ctrl.searchValue;
-                        },
-                        function (newValue, oldValue) {
-                            if (newValue !== oldValue) {
-                                ctrl.songList = ctrl._songList.filter((s) => {
-                                    for (const key of newValue.toLowerCase().split(" ")) {
-                                        if (!removeVietnameseTones(`${s.vsinger} - ${s.vname} |  ${s.singer} - ${s.name}`).toLowerCase().includes(key)) {
-                                            return false;
-                                        }
-                                    }
-                                    return true;
-                                });
-                            }
-                        },
-                    );
-                    $scope.$watch(
-                        function () {
-                            return localStorage.getItem("authKey");
-                        },
-                        function (newValue, oldValue) {
-                            if (newValue !== oldValue && newValue == "") {
-                                ctrl.authToken = "";
-                            }
-                        },
-                    );
-                    $scope.$watch(
-                        function () {
-                            return ctrl.sortBy;
-                        },
-                        function (newValue, oldValue) {
-                            if (newValue !== oldValue) {
-                                console.log(newValue, ">", oldValue);
-
-                                switch (newValue) {
-                                    case "name-asc":
-                                        ctrl.songList.sort((a, b) => compareObj(a, b, "name"));
-                                        break;
-                                    case "name-desc":
-                                        ctrl.songList.sort((a, b) => compareObj(b, a, "name"));
-                                        break;
-                                    case "singer-asc":
-                                        ctrl.songList.sort((a, b) => compareObj(a, b, "singer"));
-                                        break;
-                                    case "singer-desc":
-                                        ctrl.songList.sort((a, b) => compareObj(b, a, "singer"));
-                                        break;
-                                    case "listens-asc":
-                                        ctrl.songList.sort((a, b) => compareObj(a, b, "listens"));
-                                        break;
-                                    case "listens-desc":
-                                        ctrl.songList.sort((a, b) => compareObj(b, a, "listens"));
-                                        break;
-                                    // case "":
-                                    //     ctrl.songList = [...ctrl._songList];
-                                    default:
-                                        break;
-                                }
-                            }
-                        },
-                    );
                     this.init($scope);
                 }
-
                 init($scope) {
                     let u = AuthService._getUS();
                     if (u && u != "null") {
@@ -1740,10 +1843,66 @@
                         this.loadSongTable();
                     }
                 }
+                get songTable() {
+                    const sortBy = this.sortBy || "";
+                    const sheet = this.sheet || "";
+                    const songList = this.songList || [];
+                    const searchValue = this.searchValue;
+                    if (!Array.isArray(songList)) return undefined;
+                    if (this._lastSongTable) {
+                        let { _sheet, _sortBy, _searchValue, _len } = this._lastSongTable;
+                        if (_sheet == sheet && _sortBy == sortBy && _searchValue == searchValue && songList.length == _len) {
+                            return this._lastSongTable._data;
+                        }
+                    }
+
+                    function checkSearchName(s, searchValue) {
+                        return rmvVietnameseTones(`${s.vsinger} - ${s.vname} |  ${s.singer} - ${s.name}`).toLowerCase().includes(rmvVietnameseTones(searchValue).toLowerCase());
+                    }
+                    let songs = songList.filter((s) => (sheet == "" || s.sheet == sheet) && (!searchValue || checkSearchName(s, searchValue)));
+                    this._lastSongTable = this._lastSongTable || {};
+                    this._lastSongTable._searchValue = searchValue;
+                    this._lastSongTable._sortBy = sortBy;
+                    this._lastSongTable._sheet = sheet;
+                    this._lastSongTable._len = songList.length;
+                    this._lastSongTable._data = this._lastSongTable._data || [];
+                    this._lastSongTable._data.length = 0;
+
+                    concatSelf(this._lastSongTable._data, ...songs);
+                    // console.log(this._lastSongTable);
+                    // console.log(songs);
+
+                    if (sortBy) {
+                        this._lastSongTable._data.sort((a, b) => {
+                            switch (sortBy) {
+                                case "name-asc":
+                                    return compareObj(a, b, "name");
+                                case "name-desc":
+                                    return compareObj(b, a, "name");
+                                case "singer-asc":
+                                    return compareObj(a, b, "singer");
+                                case "singer-desc":
+                                    return compareObj(b, a, "singer");
+                                case "listens-asc":
+                                    return compareObj(a, b, "listens");
+                                case "listens-desc":
+                                    return compareObj(b, a, "listens");
+                                default:
+                                    return 0;
+                            }
+                        });
+                    }
+                    return this._lastSongTable._data;
+                }
+                updateSongHanlder(song) {
+                    let orgS = this._songList.find((s) => s.fileId == song.fileId);
+                    if (orgS) {
+                        moveObj(orgS, song);
+                    }
+                }
                 _lSupdate() {
                     AuthService._setUS(this.user);
                 }
-
                 isReady() {
                     if (this.keyList.length > 0) {
                         return true;
@@ -1887,17 +2046,45 @@
                         return this.keyList[this.selectKeyA_.lastKeyIdx];
                     }
                 }
-                enableUpdateBtnHandler() {
-                    let __key = prompt("enter Keys");
-                    if (__key) {
-                        let token = this.AuthService.login({ username: "admin", password: __key }).then((result) => {
-                            if (result) {
-                                this.user = result.user;
-                                this.tryApply();
-                            } else {
-                                console.log(result);
-                            }
-                        });
+                loginHandler({ username, password }) {
+                    if (username && password) {
+                        loadingModal.show();
+                        let token = this.AuthService.login({ username: username, password: password })
+                            .then((result) => {
+                                if (result) {
+                                    this.user = result.user;
+                                    this.tryApply();
+                                    alert("login Ok");
+                                    loadingModal.hide();
+                                } else {
+                                    console.log(result);
+                                }
+                            })
+                            .catch((err) => {
+                                loadingModal.hide();
+                                alert("login err");
+                            });
+                    }
+                }
+                registerHandler({ username, password }) {
+                    if (username && password) {
+                        loadingModal.show();
+
+                        let token = this.AuthService.signup({ username: username, password: password })
+                            .then((result) => {
+                                if (result) {
+                                    this.user = result.user;
+                                    this.tryApply();
+                                    alert("registerHandler Ok");
+                                    loadingModal.hide();
+                                } else {
+                                    console.log(result);
+                                }
+                            })
+                            .catch((err) => {
+                                loadingModal.hide();
+                                alert("registerHandler err");
+                            });
                     }
                 }
                 logout() {
@@ -1914,7 +2101,7 @@
                 query(methodName, params) {
                     let prm;
                     if (isAppsScript) {
-                        prm = appsScriptRunAsync("simulateJSONRpcCall", [methodName, params, AuthService.getAuthToken()]);
+                        prm = appsScriptRunAsync("simulateJSONRpcCall", [methodName, JSON.parse(angular.toJson(params)), AuthService.getAuthToken()]);
                     } else {
                         prm = this.$http
                             .post(this.rpcServer, {
@@ -1975,7 +2162,7 @@
                     try {
                         let token = this._getAT();
                         let user = this._getUS();
-                        if (token == null || token == "" || user == null || user == "") return this.logout();
+                        if (token == null || token == "" || token == "undefined" || user == null || user == "") return this.logout();
                         if (new Date().getTime() > token.split("::").pop()) {
                             return this.logout();
                         }
@@ -2000,6 +2187,23 @@
                         })
                         .catch((err) => {
                             alert("Login err: " + JSON.stringify(err));
+                        });
+                }
+
+                signup({ username, password }) {
+                    return this.query("register", [{ username, password }])
+                        .then((result) => {
+                            if (result) {
+                                AuthService._setAT(result.token);
+                                AuthService._setUS(result.user);
+                                alert("register OK");
+                                return result;
+                            } else {
+                                alert("registerFailer");
+                            }
+                        })
+                        .catch((err) => {
+                            alert("register err: " + JSON.stringify(err));
                         });
                 }
                 getUserInfo() {
@@ -2058,7 +2262,6 @@
                     super($http);
                     this.keyList = keyList;
                 }
-
                 getAudioSource(fileId) {
                     if (true) {
                         // if (isAppsScript) {
@@ -2078,7 +2281,6 @@
                     }
                 }
             }
-
             var app = angular.module("musicApp", ["ngSanitize"]);
             app.service("DataService", ["$http", DataService]);
             app.service("AuthService", ["$http", AuthService]);
@@ -2101,7 +2303,7 @@
                 }
                 return window.btoa(binary);
             }
-            function removeVietnameseTones(str) {
+            function rmvVietnameseTones(str) {
                 str = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                 str = str.replace(/đ/g, "d").replace(/Đ/g, "D");
                 return str;
@@ -2121,7 +2323,7 @@
             }
             function moveObj(a, b) {
                 for (const [k, v] of Object.entries(b)) {
-                    if (!k.includes("$")) {
+                    if (!k.includes("$") && k != "_id") {
                         a[k] = v;
                     }
                 }
@@ -2148,6 +2350,94 @@
                 }
                 const byteArray = new Uint8Array(byteNumbers);
                 return new Blob([byteArray], { type: contentType });
+            }
+            var concatSelf = function (_this, ...arrays) {
+                for (const items of arrays.flat()) {
+                    _this.push(items);
+                }
+            };
+            function mimeTypeToExt(mimeType) {
+                const audioMimeTypes = {
+                    "audio/mpeg": "MP3",
+                    "audio/mp4": "MP4",
+                    "audio/wav": "WAV",
+                    "audio/x-wav": "WAV",
+                    "audio/ogg": "OGG",
+                    "audio/webm": "WEBM",
+                    "audio/flac": "FLAC",
+                    "audio/x-flac": "FLAC",
+                    "application/x-flac": "FLAC",
+                    "audio/aac": "AAC",
+                    "audio/x-aiff": "AIFF",
+                    "audio/basic": "AU",
+                    "audio/midi": "MID",
+                    "audio/x-midi": "MID",
+                    "audio/x-ms-wma": "WMA",
+                    "audio/x-matroska": "MKA",
+                    "audio/vnd.rn-realaudio": "RA",
+                    "audio/vnd.wave": "WAV",
+                    "audio/3gpp": "3GP",
+                    "audio/3gpp2": "3G2",
+                    "audio/ac3": "AC3",
+                    "audio/x-pn-realaudio": "RM",
+                };
+                return audioMimeTypes[mimeType] || mimeType;
+            }
+            function calcBitrate(audioBuffer, bits) {
+                const sampleRate = audioBuffer.sampleRate; // in Hz
+                const numChannels = audioBuffer.numberOfChannels; // Number of audio channels
+                const bitDepth = parseInt(bits) || 16; // Assuming 16-bit depth for PCM audio
+                // Calculate bitrate in kbps
+                const bitrate = (sampleRate * bitDepth * numChannels) / 1000; // kbps
+                return bitrate;
+            }
+            function calcFileSize(audioBuffer, bits) {
+                const sampleRate = audioBuffer.sampleRate; // in Hz
+                const numChannels = audioBuffer.numberOfChannels; // Number of audio channels
+                const bitDepth = parseInt(bits) || 16; // Assuming 16-bit depth for PCM audio
+                const duration = audioBuffer.duration; // Duration in seconds
+                // Calculate file size in bytes
+                const fileSize = ((sampleRate * bitDepth) / 8) * numChannels * duration; // bytes
+                return fileSize;
+            }
+            function getBitDepth(arrayBuffer) {
+                const uint8Array = new Uint8Array(arrayBuffer);
+
+                // WAV format
+                if (uint8Array[0] === 0x52 && uint8Array[1] === 0x49 && uint8Array[2] === 0x46) {
+                    // "RIFF"
+                    const bitDepth = uint8Array[34]; // Bit depth at byte 34 for WAV
+                    return bitDepth === 16 || bitDepth === 24 || bitDepth === 32 ? bitDepth : "Unknown";
+                }
+                // FLAC format
+                else if (uint8Array[0] === 0x66 && uint8Array[1] === 0x4c && uint8Array[2] === 0x61 && uint8Array[3] === 0x43) {
+                    // "fLaC"
+                    for (let i = 0; i < uint8Array.length; i++) {
+                        if (uint8Array[i] === 0x7e && uint8Array[i + 1] === 0x00 && uint8Array[i + 2] === 0x00 && uint8Array[i + 3] === 0x00) {
+                            const bitDepth = (uint8Array[i + 18] << 8) | uint8Array[i + 19];
+                            return bitDepth === 16 || bitDepth === 24 || bitDepth === 32 ? bitDepth : "Unknown";
+                        }
+                    }
+                    return "Unknown";
+                }
+                // AIFF format
+                else if (uint8Array[0] === 0x46 && uint8Array[1] === 0x4f && uint8Array[2] === 0x52 && uint8Array[3] === 0x4d) {
+                    // "FORM"
+                    const bitDepth = uint8Array[22]; // Bit depth at byte 22 for AIFF
+                    return bitDepth === 16 || bitDepth === 24 || bitDepth === 32 ? bitDepth : "Unknown";
+                }
+                // OGG, AAC, MP3 formats (assumed)
+                else if (uint8Array[0] === 0x4f && uint8Array[1] === 0x67 && uint8Array[2] === 0x67 && uint8Array[3] === 0x53) {
+                    // "OggS"
+                    return 16; // Assumed bit depth for OGG
+                } else if (uint8Array[0] === 0xff && (uint8Array[1] & 0xf0) === 0xf0) {
+                    // AAC header
+                    return 16; // Assumed bit depth for AAC
+                } else if (uint8Array[0] === 0xff && (uint8Array[1] & 0xe0) === 0xe0) {
+                    // MP3 header
+                    return 16; // Assumed bit depth for MP3
+                }
+                return 16;
             }
         </script>
     </body>

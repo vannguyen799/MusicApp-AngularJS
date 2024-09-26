@@ -22,7 +22,6 @@ function onOpen() {
     .addToUi()
 }
 
-
 function process() {
   let manager = new SongFileManager(SpreadsheetApp.getActiveSheet().getName())
   if (manager.validateClass()) {
@@ -44,15 +43,4 @@ function playWeb() {
   return SpreadsheetApp.getUi().showModalDialog(WebApp.renderTemplate('newTab', {
     url: `${testUrl}&sheet=${SpreadsheetApp.getActiveSheet().getName()}`
   }), 'playWeb')
-}
-
-
-
-
-function requireAdmin(fn) {
-  let admin = ["nguyenbavan799@gmail.com", "waterbasement77@gmail.com"]
-  if (admin.find(x => x == Session.getActiveUser().getEmail()) == undefined) {
-    throw new Error('not authorized' + Session.getActiveUser().getEmail())
-  }
-  return fn
 }

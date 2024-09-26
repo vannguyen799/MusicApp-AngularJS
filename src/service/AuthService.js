@@ -10,8 +10,9 @@ class AuthService {
         this.secrectKey = secrect_.secrectKey
         this.dbusers = db.Users
     }
+    /** @returns {AuthService} */
     static get instance() {
-        return new AuthService()
+        return instanceOf(this)
     }
 
     getUser(user) {
@@ -47,12 +48,13 @@ class AuthService {
         }
     }
     generateAuthToken(user) {
-        const exprieTime = new Date().getTime() + 1000 * 60 * 60 * 24;
+        const exprieTime = new Date().getTime() + 1000 * 60 * 60 * 24 * 7; //7 days
         const dataToHash = `${user.username}::${user.role}::${exprieTime}::${this.secrectKey}`;
         const authKey = Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, dataToHash));
         // return Utilities.base64Encode(`${authKey}::${user.username}::${user.role}::${exprieTime}`);
         return Utilities.base64Encode(`${authKey}::${user.username}::${user.role}`) + `::${exprieTime}`
     }
+    // return session
     verifyAuthToken(token) {
         let [_token, exprieTime] = token.split('::')
         _token = String.fromCharCode(...Utilities.base64Decode(_token))

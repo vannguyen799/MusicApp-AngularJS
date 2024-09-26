@@ -9,9 +9,10 @@
 
 class PlaylistService {
     constructor() { }
-    /** @returns {PlaylistService}     */
+
+    /** @returns {PlaylistService} */
     static get instance() {
-        return new PlaylistService()
+        return instanceOf(this)
     }
 
     /**

@@ -259,7 +259,7 @@
                         </ul>
                         <ul class="navbar-nav list-inline" style="background-color: #333">
                             <li class="nav-item mx-2">
-                                <button class="nav-link" ng-click="ctrl.menu.hidden = !ctrl.menu.hidden">
+                                <button class="nav-link">
                                     <a href="https://github.com/vannguyen799/MusicApp-AngularJS" target="_blank"> Github </a>
                                 </button>
                             </li>
@@ -319,7 +319,7 @@
                         </div>
                     </div>
                     <div>
-                        <h1 style="align-items: center; justify-items: center; display: flex">{{ctrl.sheet}} <button style="margin-left: 10px" ng-click="ctrl.playSongList()" ng-if="ctrl.songList" class="icon icon-play"></button></h1>
+                        <h1 style="align-items: center; justify-items: center; display: flex" title="{{ctrl.songList.length}}">{{ctrl.sheet}} <button style="margin-left: 10px" ng-click="ctrl.playSongList()" ng-if="ctrl.songList" class="icon icon-play"></button></h1>
                         <div style="margin-top: 20px" ng-if="ctrl.message">{{ctrl.message}}</div>
 
                         <div ng-if="ctrl.songList">
@@ -374,9 +374,9 @@
                                         </td>
                                         <td>
                                             {{s.vname == "" ? s.name : s.vname}}
-                                            <div class="badge rounded-pill text-bg-secondary" ng-if="syncedLyricRegex.test(s.lyric)">Lyric</div>
-                                            <div class="badge rounded-pill text-bg-secondary" ng-if="syncedLyricRegex.test(s.lyric_vn)">Vietsub</div>
-                                            <div class="badge rounded-pill text-bg-secondary" ng-if="syncedLyricRegex.test(s.lyric_en)">Engsub</div>
+                                            <div class="badge rounded-pill text-bg-secondary" ng-if="isSyncedLRC(s.lyric)">Lyric</div>
+                                            <div class="badge rounded-pill text-bg-secondary" ng-if="isSyncedLRC(s.lyric_vn)">Vietsub</div>
+                                            <div class="badge rounded-pill text-bg-secondary" ng-if="isSyncedLRC(s.lyric_en)">Engsub</div>
                                         </td>
                                         <td>{{s.vsinger == "" ? s.singer : s.vsinger}}</td>
                                         <td>{{s.listens}}</td>
@@ -562,7 +562,7 @@
                                 <th style="width: 5%">Count</th>
                                 <th style="width: 24%">Action</th>
                             </tr>
-                            <tr ng-repeat="p in ctrl.user.playlist" ng-if="ctrl.user.playlist">
+                            <tr ng-repeat="p in ctrl.user.playlist" ng-if="ctrl.user.playlist" ng-dblclick="ctrl.selectPlaylistBtnHandler(p)">
                                 <td><button ng-click="ctrl.playPlaylistHandler(p)" class="icon icon-play"></button></td>
                                 <td>{{p.name}}</td>
                                 <td>{{p.description}}</td>
@@ -587,7 +587,7 @@
         <div id="player-pro" --n-g-if="ctrl.player._playlist.length > 0">
             <div class="container-fluid fixed-bottom px-2" style="background-color: #333; z-index: 1">
                 <div class="row p-2">
-                    <div class="col-sm-4">
+                    <div class="col-sm-4" ng-dblclick="ctrl.form.manageSong.init(ctrl.player.songInfo).show()">
                         <div class="">
                             <div class="d-flex align-items-center mx-1">
                                 <div class="flex-shrink-0">
@@ -1134,7 +1134,7 @@
             const cfg = {
                 ins: undefined,
                 preloadRate: 0.75,
-                preload: false,
+                preload: true,
             };
 
             const loadingModal = new bootstrap.Modal(document.getElementById("loadingModal"));
@@ -1143,7 +1143,6 @@
                     const ctrl = this;
                     cfg.ins = ctrl;
                     this.$scope = $scope;
-                    $scope.syncedLyricRegex = /^\[(syncType:LINE_SYNCED|src:)/;
                     this.$sce = $sce;
                     this.$timeout = $timeout;
                     this.$http = $http;
@@ -1213,11 +1212,7 @@
                             changeTime: 0,
                             speed: 1,
                         },
-                        metadata: {
-                            get string() {
-                                return this.audioBuffer ? `${ctrl.player.currentExt}, ${this.audioBuffer.sampleRate} Hz, ${this.bits} bits, ${this.bitrate}, channel ${this.audioBuffer.numberOfChannels}/2, ${this.bitrate.toFixed(2)} kbps` : "";
-                            },
-                        },
+                        metadata: {},
                         _playlist: [],
                         _favlist: [],
                         playlist: [],
@@ -1373,6 +1368,11 @@
                             }
                         },
                         prev() {
+                            let { current, duration } = this.in4;
+                            if (current > 10) {
+                                this.restart();
+                                return;
+                            }
                             if (this.prevPlaylist.length > 0) {
                                 this.refresh(this.prevPlaylist.pop());
                             }
@@ -1399,25 +1399,29 @@
                                 if (origin && (sub = origin.getLyrics(timeAt))) {
                                     document.getElementById("lyric").innerText = sub;
                                     try {
-                                        document.getElementById("supLyric").innerHTML = sub
-                                            .split(".")
-                                            .map((s) => {
-                                                return s
-                                                    .split(",")
-                                                    .map((_s) => {
-                                                        return pinyin
-                                                            .pinyin(_s, {
-                                                                segment: true, // 启用分词
-                                                                group: true, // 启用词组
-                                                            })
-                                                            .map((p) => p[0])
-                                                            .join(" ");
-                                                    })
-                                                    .join(", ")
-                                                    .trim();
-                                            })
-                                            .join(". ")
-                                            .trim();
+                                        if (/[\u4e00-\u9fff]/.test(sub)) {
+                                            document.getElementById("supLyric").innerHTML = sub
+                                                .split(".")
+                                                .map((s) => {
+                                                    return s
+                                                        .split(",")
+                                                        .map((_s) => {
+                                                            return pinyin
+                                                                .pinyin(_s, {
+                                                                    segment: true, // 启用分词
+                                                                    group: true, // 启用词组
+                                                                })
+                                                                .map((p) => p[0])
+                                                                .join(" ");
+                                                        })
+                                                        .join(", ")
+                                                        .trim();
+                                                })
+                                                .join(". ")
+                                                .trim();
+                                        } else {
+                                            document.getElementById("supLyric").innerHTML = "";
+                                        }
                                     } catch (e) {
                                         console.log(e);
                                     }
@@ -1520,8 +1524,8 @@
                                 this.coverImgSrc = "";
                                 this.in4.current = 0;
                                 this.in4.duration = 0;
-                                this.audio.pause();
-                                this.audio.remove();
+                                this.audio?.pause();
+                                this.audio?.remove();
                                 this.audio = new Audio("");
                                 this._clearLyric();
                                 if (audio) {
@@ -1533,7 +1537,7 @@
                                     };
                                     this.audio = audio;
                                     this.audio.title = this.mainSongName || this.subSongName;
-                                    document.querySelector("body").appendChild(audio);
+                                    document.querySelector("body").appendChild(this.audio);
                                     this.audioEvent();
                                     this.audio.load();
                                     this.audio.play();
@@ -1591,8 +1595,10 @@
                             this.in4.volume.isMuted = !this.in4.volume.isMuted;
                             if (!this.in4.volume.isMuted) {
                                 this.in4.value = value;
+                                this.audio.volume = value;
+                            } else {
+                                this.audio.volume = 0;
                             }
-                            ctrl.tryApply();
                         },
                         loadMetadata() {
                             const player = this;
@@ -1623,25 +1629,6 @@
                                     console.error("Error fetching the file:", error);
                                 });
                             return;
-
-                            fetch(player.audio.src)
-                                .then((response) => response.arrayBuffer())
-                                .then((data) => {
-                                    this.metadata.bits = getBitDepth(data);
-                                    return audioContext.decodeAudioData(data);
-                                })
-                                .then((audioBuffer) => {
-                                    this.metadata.audioBuffer = audioBuffer;
-                                    (this.metadata.bitrate = calcBitrate(audioBuffer, this.metadata.bits)), console.log("Sample Rate:", audioBuffer.sampleRate, "Hz"); // Sample rate in Hz
-                                    console.log("Number of Channels:", audioBuffer.numberOfChannels); // Mono, stereo, etc.
-                                    console.log("Duration:", audioBuffer.duration, "seconds"); // Length of the audio
-                                    // console.log("File size:", (this.metadata.size / (8 * 1024)).toFixed(2), "MB"); // Size of the Blob
-                                    console.log("Bitrate:", this.metadata.bitrate.toFixed(2), "kbps");
-                                    ctrl.tryApply();
-                                })
-                                .catch((err) => {
-                                    console.error("Error decoding audio data:", err);
-                                });
                         },
                         get mainSongName() {
                             try {
@@ -1784,11 +1771,15 @@
                                     loadingModal.hide();
                                 })
                                 .catch((err) => {
-                                    alert("update err " + result);
+                                    alert("update err " + err);
                                     loadingModal.hide();
                                 });
                         },
                         show() {
+                            if (ctrl.user?.role != 0) {
+                                // admin only
+                                return;
+                            }
                             $("#manageSongForm").modal("show");
                             $(".modal-backdrop").appendTo(".container.selfcontainer");
                             $(".modal-backdrop").width("97vw");
@@ -1816,7 +1807,11 @@
                     };
                     this.init($scope);
                 }
+
                 init($scope) {
+                    $scope.isSyncedLRC = (lrcString) => {
+                        return new LyricLRC(lrcString).lyrics.data.length > 5;
+                    };
                     let u = AuthService._getUS();
                     if (u && u != "null") {
                         this.user = u;
@@ -2382,62 +2377,6 @@
                     "audio/x-pn-realaudio": "RM",
                 };
                 return audioMimeTypes[mimeType] || mimeType;
-            }
-            function calcBitrate(audioBuffer, bits) {
-                const sampleRate = audioBuffer.sampleRate; // in Hz
-                const numChannels = audioBuffer.numberOfChannels; // Number of audio channels
-                const bitDepth = parseInt(bits) || 16; // Assuming 16-bit depth for PCM audio
-                // Calculate bitrate in kbps
-                const bitrate = (sampleRate * bitDepth * numChannels) / 1000; // kbps
-                return bitrate;
-            }
-            function calcFileSize(audioBuffer, bits) {
-                const sampleRate = audioBuffer.sampleRate; // in Hz
-                const numChannels = audioBuffer.numberOfChannels; // Number of audio channels
-                const bitDepth = parseInt(bits) || 16; // Assuming 16-bit depth for PCM audio
-                const duration = audioBuffer.duration; // Duration in seconds
-                // Calculate file size in bytes
-                const fileSize = ((sampleRate * bitDepth) / 8) * numChannels * duration; // bytes
-                return fileSize;
-            }
-            function getBitDepth(arrayBuffer) {
-                const uint8Array = new Uint8Array(arrayBuffer);
-
-                // WAV format
-                if (uint8Array[0] === 0x52 && uint8Array[1] === 0x49 && uint8Array[2] === 0x46) {
-                    // "RIFF"
-                    const bitDepth = uint8Array[34]; // Bit depth at byte 34 for WAV
-                    return bitDepth === 16 || bitDepth === 24 || bitDepth === 32 ? bitDepth : "Unknown";
-                }
-                // FLAC format
-                else if (uint8Array[0] === 0x66 && uint8Array[1] === 0x4c && uint8Array[2] === 0x61 && uint8Array[3] === 0x43) {
-                    // "fLaC"
-                    for (let i = 0; i < uint8Array.length; i++) {
-                        if (uint8Array[i] === 0x7e && uint8Array[i + 1] === 0x00 && uint8Array[i + 2] === 0x00 && uint8Array[i + 3] === 0x00) {
-                            const bitDepth = (uint8Array[i + 18] << 8) | uint8Array[i + 19];
-                            return bitDepth === 16 || bitDepth === 24 || bitDepth === 32 ? bitDepth : "Unknown";
-                        }
-                    }
-                    return "Unknown";
-                }
-                // AIFF format
-                else if (uint8Array[0] === 0x46 && uint8Array[1] === 0x4f && uint8Array[2] === 0x52 && uint8Array[3] === 0x4d) {
-                    // "FORM"
-                    const bitDepth = uint8Array[22]; // Bit depth at byte 22 for AIFF
-                    return bitDepth === 16 || bitDepth === 24 || bitDepth === 32 ? bitDepth : "Unknown";
-                }
-                // OGG, AAC, MP3 formats (assumed)
-                else if (uint8Array[0] === 0x4f && uint8Array[1] === 0x67 && uint8Array[2] === 0x67 && uint8Array[3] === 0x53) {
-                    // "OggS"
-                    return 16; // Assumed bit depth for OGG
-                } else if (uint8Array[0] === 0xff && (uint8Array[1] & 0xf0) === 0xf0) {
-                    // AAC header
-                    return 16; // Assumed bit depth for AAC
-                } else if (uint8Array[0] === 0xff && (uint8Array[1] & 0xe0) === 0xe0) {
-                    // MP3 header
-                    return 16; // Assumed bit depth for MP3
-                }
-                return 16;
             }
         </script>
     </body>

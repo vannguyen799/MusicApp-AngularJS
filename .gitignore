@@ -2,3 +2,6 @@
 _secrect.js
 src/secrect.js
 secrect.js
+localImport.js
+src/service/LyricService.js
+src/service/AM.js

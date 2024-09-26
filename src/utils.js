@@ -36,69 +36,17 @@ function selectDriveAPIKey() {
   return driveApiKey[i] ?? driveApiKey[0]
 }
 
-function lyricFrom(url = '') {
-  console.log(url)
-  if (url.startsWith('https://www.kugeci.com/song/')) {
-    let html = UrlFetchApp.fetch(url).getContentText()
-    const $ = Cheerio.load(html);
-    let lyric = $("#lyricsContainer").html().replace('<br/>', '<br>').split('<br>')
-    return [`[src:${url}]`, '', ...lyric].map(s => s.trim()).join('\n').trim()
+function instanceOf(constructor, args) {
+  // hmm TODO
+  if (args) {
+    return new constructor(...args)
   }
-  return ''
+  if (!constructor.__instance__) {
+    constructor.__instance__ = new constructor()
+  }
+  return constructor.__instance__
 }
 
-function lyric(url) {
-  return lyricFrom(url)
-}
-
-function searchLyric(name, singer) {
-  function compareSinger(s1, s2 = '') {
-    let _s1 = s1.replace('，', ',').split(',')
-    for (const s of _s1) {
-      if (!s2.includes(s.trim())) {
-        return false
-      }
-    }
-    return true
-  }
-  console.log(name, singer)
-  // kugeci.com
-  let html = UrlFetchApp.fetch(`https://www.kugeci.com/search?q=${name.trim()}`).getContentText()
-  let $ = Cheerio.load(html)
-  let songs = []
-  $("#tablesort tbody tr").each((i, tr) => {
-    console.log($(tr).text())
-    let td = $(tr).find('td')
-    songs.push({
-      name: td.eq(1).find('a').text().trim(),
-      singer: td.eq(2).find('a').text().trim(),
-      url: td.eq(1).find('a').attr('href').trim()
-    })
-  })
-
-  for (const s of songs) {
-    console.log(s)
-    if (s.name == name && compareSinger(singer, s.singer)) {
-      return lyricFrom(s.url)
-    }
-  }
-
-
-  return ''
-  // LRCGET not trusted
-  const lrclibApi = "https://lrclib.net/api"
-  let res = JSON.parse(UrlFetchApp.fetch(lrclibApi + `/search?q=${name}`).getContentText())
-  try {
-    for (const r of res) {
-      if (r.trackName == name && compareSinger(singer, r.artistName) && r.syncedLyrics != null) {
-        return [`[src:${lrclibApi}]`, '', r.syncedLyrics.split('\n')].map(s => s.trim()).join('\n').trim()
-      }
-    }
-  } catch (e) {
-
-  }
-
-}
 
 Array.prototype.popFilter = function (_q) {
   let r = []
@@ -110,7 +58,53 @@ Array.prototype.popFilter = function (_q) {
     }
   }
 
-  // return r.length
 }
 
+/* Source: https://gist.github.com/erickoledadevrel/6b1e9e2796e3c21f669f */
+/**
+ * Converts an XML string to a JSON object, using logic similar to the
+ * sunset method Xml.parse().
+ * @param {string} xml The XML to parse.
+ * @returns {Object} The parsed XML.
+ */
 
+function xmlToJSON(xml) {
+  var doc = XmlService.parse(xml);
+  var result = {};
+  var root = doc.getRootElement();
+  result[root.getName()] = elementToJSON(root);
+  // console.log(JSON.stringify(result))
+  return result;
+}
+
+/**
+ * Converts an XmlService element to a JSON object, using logic similar to
+ * the sunset method Xml.parse().
+ * @param {XmlService.Element} element The element to parse.
+ * @returns {Object} The parsed element.
+ */
+function elementToJSON(element) {
+  var result = {};
+  // Attributes.
+  element.getAttributes().forEach(function (attribute) {
+    result[attribute.getName()] = attribute.getValue();
+  });
+  // Child elements.
+  element.getChildren().forEach(function (child) {
+    var key = child.getName();
+    var value = elementToJSON(child);
+    if (result[key]) {
+      if (!(result[key] instanceof Array)) {
+        result[key] = [result[key]];
+      }
+      result[key].push(value);
+    } else {
+      result[key] = value;
+    }
+  });
+  // Text content.
+  if (element.getText()) {
+    result['Text'] = element.getText();
+  }
+  return result;
+}

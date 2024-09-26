@@ -27,7 +27,6 @@ class SongFileManager extends SM.Sheet.SheetManager {
     }
     this.ignoreFile = [SpreadsheetApp.getActiveSpreadsheet().getName()]
   }
-
   validateClass() {
     return this.forderId != ''
   }
@@ -199,7 +198,7 @@ class SongFileManager extends SM.Sheet.SheetManager {
       this.flush()
     }
   }
-  /** @param {{allowNull: boolean}} _  @returns {SongInfo[]}*/
+  /** @param {{allowNull: boolean}} @returns {SongInfo[]}*/
   getAllSongs({ allowNull } = { allowNull: false }) {
     console.log('getAllSongs ' + this.sheetName)
     const vnames = this.vnameColumn.getData()
@@ -302,8 +301,8 @@ class SongFileManager extends SM.Sheet.SheetManager {
           }
         }
         if (rename) {
-          let formatedName = this.toFomartedName(songInfo.singer, songInfo.name, songInfo.vsinger, songInfo.vname)
-          DriveApp.getFileById(songInfo.fileId).setName(formatedName)
+          let formatedName = new SongInfo(songInfo).getFilename()
+          renameFileFixed(songInfo.fileId, formatedName)
         }
         return songInfo
       }
@@ -348,7 +347,7 @@ class SongInfo {
         filename = tmp.join('.')
       }
     }
-    return filename
+    return filename.replace('_', ' ')
   }
 
   /** @param {string} filename  @returns {SongInfo} */

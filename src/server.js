@@ -48,8 +48,20 @@ var JSONRPCServer = new WebApp.JSONRPCServer({
   addListens(song) {
     return SongService.instance.addListens(song)
   },
-  'updateSong': WebApp.requireAuthToken(function (s) {
-    return SongService.instance.updateSong(s)
+  'updateSong': WebApp.requireAuthToken(function (s, session) {
+    const u = UsersService.instance.getUser(session.user.username)
+    if (u.role != ROLE.ADMIN) {
+      throw new Error('Require Admin Role')
+    }
+    try {
+      return SongService.instance.updateSong(s)
+
+    } catch (e) {
+      console.log(e)
+      return UrlFetchApp.fetch(ScriptApp.getService().getUrl(), genRPCrequest_(
+        'updateSong', [s], session.token
+      ))
+    }
   }),
   verifyAuthToken(token) {
     return AuthService.instance.verifyAuthToken(token)
@@ -79,16 +91,20 @@ function doPost(e) {
 }
 
 function simulateJSONRpcCall(method, params, authToken) {
-  let req = {
-    contentLength: 1,
-    'postData': {
-      contents: JSON.stringify({ method, params, jsonrpc: '2.0', authToken })
-    }
-  }
+  let req = genRPCrequest_(method, params, authToken)
   console.log(req.postData.contents)
   const r = JSON.parse(doPost(req).getContent())
   console.log(r)
   return r
+}
+
+function genRPCrequest_(method, params, authToken) {
+  return {
+    contentLength: 1,
+    postData: {
+      contents: JSON.stringify({ method, params, jsonrpc: '2.0', authToken })
+    }
+  }
 }
 
 /** @param {string} sheet  @returns {any[]} */
@@ -103,7 +119,7 @@ function getAllSongAndId(sheet) {
     for (const sheet of sheets) {
       res = res.concat(getAllSongAndId(sheet))
     }
-    return res
+    return res.filter(r => { delete r.id; return r.status != 'danger' })
   }
 }
 
@@ -120,11 +136,7 @@ function updateSongDb() {
   console.log('all song get sheet')
   // RETURN _ID LIST
   console.log('updating')
-
   SongService.instance.updateAllSongs(songs)
   console.log('all song ypdate db', songs.length)
 
 }
-
-
-

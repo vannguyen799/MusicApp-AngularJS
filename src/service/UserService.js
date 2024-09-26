@@ -2,8 +2,9 @@ class UsersService {
     constructor() {
 
     }
+    /** @returns {UsersService} */
     static get instance() {
-        return new UsersService()
+        return instanceOf(this)
     }
     getUser(user) {
         const u = db.Users.findOne({

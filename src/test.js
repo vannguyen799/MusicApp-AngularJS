@@ -1,5 +1,6 @@
 function t() {
-  console.log(SongService.instance.getSongs('LanXinyu'))
+  // console.log(SongService.instance.getSongs('LanXinyu'))
+  console.log(new NCT().searchLyric('Chớm Đông', 'Orin, Trung I.U, Anh Khoa'))
 }
 
 function testFetchApi() {

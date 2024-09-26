@@ -1,7 +1,8 @@
 class SongService {
     constructor() { }
+    /** @returns {SongService} */
     static get instance() {
-        return new SongService()
+        return instanceOf(this)
     }
 
     getSongs(categoryName) {
@@ -33,10 +34,13 @@ class SongService {
     /** @param {SongInfo} song  */
     updateSong(song) {
         let sheetStt = new SongFileManager(song.sheet).updateSong(song)
-        return db.Songs.replaceOne({
-            _id: song._id,
-            fileId: song.fileId
-        }, song)
+        if (sheetStt) {
+            return db.Songs.replaceOne({
+                _id: song._id,
+                fileId: song.fileId
+            }, song)
+        }
+        throw new Error('update song err on sheet')
     }
     addListens(song) {
         new SongFileManager(song.sheet).addListens(song)

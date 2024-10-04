@@ -10,71 +10,6 @@ WebApp.templatePath(
   'src/view'
 )
 
-var JSONRPCServer = new WebApp.JSONRPCServer({
-  getAllApiKey() {
-    return secrect_.driveApiKey
-  },
-  getSongs(sheetName) {
-    return SongService.instance.getSongs(sheetName)
-  },
-  'getAllSheetName': getAllSheetName,
-  'getPlaylist': WebApp.requireAuthToken(function (session) {
-    return PlaylistService.instance.getPlaylist(session.user)
-  }),
-  'addPlaylist': WebApp.requireAuthToken(function (playlist, session) {
-    return PlaylistService.instance.addPlaylist(session.user, playlist)
-  }),
-  'removePlaylist': WebApp.requireAuthToken(function (playlist, session) {
-    return PlaylistService.instance.removePlaylist(session.user, playlist)
-  }),
-  'updatePlaylist': WebApp.requireAuthToken(function (playlist, session) {
-    return PlaylistService.instance.updatePlaylist(session.user, playlist)
-  }),
-  'getUserInfo': WebApp.requireAuthToken(function (session) {
-    return UsersService.instance.getUser(session.user)
-  }),
-  login(user) {
-    return AuthService.instance.login(user)
-  },
-  register(user) {
-    return AuthService.instance.register(user)
-  },
-  'setFavoriteSong': WebApp.requireAuthToken(function (fileIds, session) {
-    return UsersService.instance.addFavorite(session.user, fileIds)
-  }),
-  'rmvFavoriteSong': WebApp.requireAuthToken(function (fileIds, session) {
-    return UsersService.instance.rmvFavorite(session.user, fileIds)
-  }),
-  addListens(song) {
-    return SongService.instance.addListens(song)
-  },
-  'updateSong': WebApp.requireAuthToken(function (s, session) {
-    const u = UsersService.instance.getUser(session.user.username)
-    if (u.role != ROLE.ADMIN) {
-      throw new Error('Require Admin Role')
-    }
-    try {
-      return SongService.instance.updateSong(s)
-
-    } catch (e) {
-      console.log(e)
-      return UrlFetchApp.fetch(ScriptApp.getService().getUrl(), genRPCrequest_(
-        'updateSong', [s], session.token
-      ))
-    }
-  }),
-  verifyAuthToken(token) {
-    return AuthService.instance.verifyAuthToken(token)
-  },
-  getAudio(fileid) {
-    const file = DriveApp.getFileById(fileid)
-    if (file.getMimeType().startsWith("audio/")) {
-      return Utilities.base64Encode(file.getBlob().getBytes())
-    }
-    return false
-  }
-});
-
 function doGet(e) {
   return WebApp.doGet(e)
 }
@@ -84,7 +19,7 @@ function doPost(e) {
   // console.log(e)
   let postData = JSON.parse(e.postData.contents)
   if (postData.jsonrpc) {
-    return JSONRPCServer.execute(postData)
+    return JSONRPCServer.instance.execute(postData)
   }
 
   return WebApp.doPost(e)
@@ -110,7 +45,7 @@ function genRPCrequest_(method, params, authToken) {
 /** @param {string} sheet  @returns {any[]} */
 function getAllSongAndId(sheet) {
   if (sheet && sheet != '') {
-    console.log(sheet)
+    // console.log(sheet)
     const manager = new SongFileManager(sheet)
     if (manager.validateClass()) { return manager.getAllSongs() } else { return [] }
   } else {
@@ -138,5 +73,4 @@ function updateSongDb() {
   console.log('updating')
   SongService.instance.updateAllSongs(songs)
   console.log('all song ypdate db', songs.length)
-
 }

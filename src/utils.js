@@ -1,24 +1,15 @@
 function extractFileId(url) {
   try {
     const match = url.match(/\/d\/(.+?)\//);
-    if (match && match[1]) {
-      return match[1];
-    }
+    if (match && match[1] && isDriveId(match[1])) return match[1];
   } catch (e) {
     return null
   }
   return null
 }
 
-function updateFlacMimeType() {
-  let names = getAllSheetName()
-  for (const n of names) {
-    let ins = new SongFileManager(n)
-    if (ins.validateClass()) {
-      console.log('update mimetype ' + n)
-      ins.fixRevision()
-    }
-  }
+function isDriveId(id) {
+  return /^[a-zA-Z0-9-_]{33}$/.test(id)
 }
 
 function isAudioMimeType(mimeType) {
@@ -107,4 +98,102 @@ function elementToJSON(element) {
     result['Text'] = element.getText();
   }
   return result;
+}
+
+function languageIs(text) {
+  return {
+    chinese: /[\u4e00-\u9fa5]/.test(text),
+    english: /[A-Za-z]/.test(text),
+    vietnamese: /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(text)
+  };
+}
+
+function translate(lrcText) {
+  for (const line of lrcText.split('\n')) {
+    if (line.startsWith('[00:')) {
+      let lang = languageIs(line)
+      if (lang.chinese) {
+        return {
+          language: 'chinese',
+          lrc: `[translate:Google]\n${LanguageApp.translate(lrcText, 'zh', 'vi')}`
+        }
+      } else {
+        if (lang.english) {
+          return {
+            language: 'english',
+            lrc: `[translate:Google]\n${LanguageApp.translate(lrcText, 'en', 'vi')}`
+          }
+        } else if (lang.vietnamese) {
+          return {
+            language: 'vietnamese',
+            lrc: lrcText
+          }
+        }
+      }
+      return lrcText
+    }
+  }
+}
+
+
+function chineseNameParse() {
+  const allsong = SongService.instance.getSongs('Chinese')
+  let songNameMap = {}, singerMap = {}
+  for (const song of allsong) {
+    if (song.vname && song.vname != '' && song.name && song.name != '') {
+      songNameMap[song.name] = song.vname
+    }
+    if (song.vsinger && song.singer && song.vsinger != '' && song.singer != '') {
+      singerMap[song.singer] = song.vsinger
+    }
+  }
+  /** @param {string} singer  */
+  function psinger(singer) {
+    let sg = singer.replace('&', ',').replace('，', ',').replace('/', ',').split(',')
+    return sg.map(s => {
+      s = singerMap[s.trim()] || s.trim()
+      return s
+    }).join(', ')
+  }
+  /** @param {string} name  */
+  function pname(name) {
+    let ns = name.split('(')
+    ns[0] = songNameMap[ns[0].trim()] || ns[0].trim()
+    return ns.join(' (')
+  }
+
+  // console.log(singerMap)
+  // console.log(songNameMap)
+  for (const song of allsong) {
+    let check = false
+    if (song.vname == '' || song.vsinger == '') {
+      if (song.vname == '') {
+        song.vname = pname(song.name) || ''
+        if (song.vname == song.name) {
+          song.vname = ''
+          check = false
+        }
+        else {
+          check = true
+
+          console.log(song.singer, '>>>>', song.vsinger)
+        }
+      }
+      if (song.vsinger == '') {
+        song.vsinger = psinger(song.singer) || ''
+        if (song.vsinger == song.singer) {
+          check = false
+          song.vsinger = ''
+        }
+        else {
+          check = true
+          console.log(song.singer, '>>>>', song.vsinger)
+        }
+      }
+      if (check) {
+        SongService.instance.updateSong(song)
+        console.log('--------------')
+      }
+    }
+  }
 }

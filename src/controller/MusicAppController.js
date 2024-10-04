@@ -2,14 +2,9 @@
 class MusicAppController extends WebApp.Controller {
   constructor() {
     super()
-    const post = WebApp.Method("POST")
-    post(MusicAppController.prototype.setSongFavorite)
-    // post(HomeController.prototype.getAllApiKey)
-    // post(HomeController.prototype.getAllSongs)
+    // const post = WebApp.Method("POST")
   }
-  /**
-     * @param {HTTPRequest} request
-     */
+  /** @param {HTTPRequest} request */
   index(request) {
     let { mode, sheet } = request.parameter
 
@@ -25,7 +20,9 @@ class MusicAppController extends WebApp.Controller {
         }
       } catch (e) { sheet = '' }
     } else {
-      sheet = ''
+      if (!isDriveId(sheet)) {
+        sheet = ''
+      }
     }
 
     // return WebApp.renderTemplate(mode != 'dev' ? 'audioPlayer' : 'apDev', {
@@ -38,27 +35,4 @@ class MusicAppController extends WebApp.Controller {
       // token: ScriptApp.getOAuthToken()
     })
   }
-
-  // /**
-  //  * @param {HTTPRequest} request
-  //  */
-  // getAllApiKey(request) {
-  //   return WebApp.jsonResponse(driveApiKey)
-  // }
-  // /**
-  //  * @param {HTTPRequest} request
-  //  */
-  // getAllSongs(request) {
-  //   const manager = new SongFileManager(request.parameter.sheet ?? SpreadsheetApp.getActiveSheet().getName())
-  //   return WebApp.jsonResponse(manager.getAllSongs())
-  // }
-
-  setSongFavorite(sheet, fileId, status) {
-    return setSongFavorite(sheet, fileId, status)
-  }
-  getAllSongAndId(sheet) { getAllSongAndId(sheet) }
-
-  /** @returns {string[]} */
-  getAllSheetName() { return getAllSheetName() }
-
 }

@@ -5,3 +5,5 @@ secrect.js
 localImport.js
 src/service/LyricService.js
 src/service/AM.js
+src/angularjs.js
+src/auth.js

@@ -4,52 +4,87 @@ class SongService {
     static get instance() {
         return instanceOf(this)
     }
-
+    /** @param {string | DriveFolderID} categoryName  @returns {SongInfo[]} */
     getSongs(categoryName) {
-        let res = db.Songs.find(categoryName ? {
-            sheet: categoryName,
-            deleted: { $exists: false }
-        } : {})
-        if (res?.length == 0 || res == null) {
-            db.Songs.find(categoryName ? {
-                sheet: categoryName,
-                deleted: { $exists: true }
-            } : { deleted: { $exists: true } })
+        if (isDriveId(categoryName)) {
+            return SongFileManager.songFromFolder(categoryName)
         }
-        if (res != null) {
-            let a = res.filter(r => !r.deleted && !['', 'danger'].includes(r.status))
-            if (a.length == 0) {
-                return res
-            } else return a
+        let filter = categoryName ? { sheet: categoryName } : {}
+        if (categoryName == 'Chinese') {
+            filter.sheet = {
+                '$in': [
+                    'Chinese',
+                    'LanXinyu',
+                    'XuLanxin',
+                    'Dengshenmejun',
+                    'AYueYue',
+                    'RenRan'
+                ]
+            }
         }
+        if (categoryName == 'Mix') {
+            filter = {
+                '$or': [
+                    { sheet: categoryName },
+                    { name: { $regex: 'DJ', $options: 'i' } },
+                    { name: { $regex: 'Remix', $options: 'i' } }
+                ]
+            }
+        }
+        let res = db.Songs.find(filter)
+        let a = res.filter(r => !r.deleted && !['', 'danger'].includes(r.status))
+        return a
     }
+    /** @param {SongInfo[]} songs  */
     updateAllSongs(songs) {
-        db.Songs.updateMany({}, {
-            $set: { deleted: true }
-        })
+        db.Songs.deleteMany()
+        songs.forEach(s => {
+            if (s.lyric != '' && s.lyric_vn == '') {
+                s.lyric_vn_translated = translate(s.lyric)?.lrc || ''
+            }
+        });
         let a = db.Songs.insertMany(songs)
-        db.Songs.deleteMany({ deleted: true })
+        return a
+    }
+    /** @param {SongInfo[]} songs  */
+    updateSingleSongs(songs) {
+        db.Songs.deleteMany({ sheet: songs[0].sheet })
+        songs.forEach(s => {
+            if (s.lyric != '' && s.lyric_vn == '') {
+                s.lyric_vn_translated = translate(s.lyric)?.lrc || ''
+                Utilities.sleep(100)
+            }
+        });
+        let a = db.Songs.insertMany(songs)
         return a
     }
     /** @param {SongInfo} song  */
     updateSong(song) {
+        if (isDriveId(song.sheet)) return
         let sheetStt = new SongFileManager(song.sheet).updateSong(song)
         if (sheetStt) {
+            if (song.lyric != '' && song.lyric_vn == '' && (!song.lyric_vn_translated || song.lyric_vn_translated == '')) {
+                song.lyric_vn_translated = translate(song.lyric)?.lrc || undefined
+            }
             return db.Songs.replaceOne({
                 _id: song._id,
                 fileId: song.fileId
             }, song)
-        }
-        throw new Error('update song err on sheet')
+
+        } else throw new Error('update song err on sheet')
     }
+
     addListens(song) {
-        new SongFileManager(song.sheet).addListens(song)
-        return db.Songs.updateOne({
-            fileId: song.fileId
-        }, {
-            $inc: {
-                listens: 1
-            }
-        })
+        if (!isDriveId(song.sheet)) {
+            new SongFileManager(song.sheet).addListens(song)
+            return db.Songs.updateOne({
+                fileId: song.fileId
+            }, {
+                $inc: {
+                    listens: 1
+                }
+            })
+        }
+        return true
     }
 }

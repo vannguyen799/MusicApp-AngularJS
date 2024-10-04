@@ -1,3 +1,5 @@
+var ssJWT = new SpreadsheetJWTAuth(secrect_.serviceAccount)
+
 /** @extends {ISheetManager} */
 class SongFileManager extends SM.Sheet.SheetManager {
   constructor(sheetName, folderId, mode) {
@@ -65,7 +67,35 @@ class SongFileManager extends SM.Sheet.SheetManager {
   }
   get enlyricColumn() {
     return this.getColumn(this.tableHeader.lyric_en, null, false)
+  }
 
+  loadData() {
+    // ssJWT.__countUsage = ssJWT.__countUsage || 0
+    // ssJWT.__countUsage++
+    // try {
+    //   if (ssJWT.__countUsage % 2 == 0) {
+    //     console.log('def')
+
+    //     return super.loadData()
+    //   }
+    //   console.log('jwt')
+    //   const sheet = ssJWT.getSheetByName(this.sheetName)
+    //   this.data = sheet.getDataRange().getValues()
+    //   // this.data = Sheets.Spreadsheets.Values.get(ssId, this.sheetName).values
+    //   let max = 0
+    //   this.data.forEach((d, i) => {
+    //     if (d.length > max) { max = d.length }
+    //   })
+
+    //   this.data.forEach(d => {
+    //     while (d.length < max) { d.push('') }
+    //   })
+    // } catch (e) {
+    //   console.log('err on load sheet data ', e)
+    // }
+    super.loadData()
+
+    return this
   }
 
   fixRevision() {
@@ -106,7 +136,23 @@ class SongFileManager extends SM.Sheet.SheetManager {
       });
     }
   }
+  static songFromFolder(folderId) {
+    if (!isDriveId(folderId)) { return [] }
+    const filesIterator = DriveApp.getFolderById(folderId).getFiles()
+    const rs = []
+    while (filesIterator.hasNext()) {
+      const file = filesIterator.next()
+      let mtype = file.getMimeType()
+      if (mtype.startsWith('audio') || mtype.includes('flac')) {
+        let s = SongInfo.try(file.getName())
+        s.fileId = file.getId()
+        s.sheet = folderId
 
+        rs.push(s)
+      }
+    }
+    return rs
+  }
   process({ update }) {
     console.log('processing... ' + this.sheetName)
     console.log(update)
@@ -118,10 +164,8 @@ class SongFileManager extends SM.Sheet.SheetManager {
     while (filesIterator.hasNext()) {
       let file = filesIterator.next()
       let mimeType = file.getMimeType()
-      if (!mimeType.startsWith('audio') && !mimeType != 'application/x-flac') { continue }
-      if (mimeType == 'application/x-flac' || mimeType == 'audio/x-flac') {
-        // Drive.Files.get()
-      }
+      if (!mimeType.startsWith('audio') && !mimeType.includes('application/x-flac')) { continue }
+
       let fileName = file.getName()
       if (this.ignoreFile.includes(fileName)) { continue }
 
@@ -164,8 +208,53 @@ class SongFileManager extends SM.Sheet.SheetManager {
       let row = s.i + 1
       if (row > 0) {
         this.Sheet.getRange(row + this.statusColumn.headerCell.row, this.statusColumn.headerCell.col).setValue('danger')
-        this.Sheet.getRange(row + this.linkUpColum.headerCell.row, this.linkUpColum.headerCell.col).setValue(`danger` + (s.fileId && s.fileId != '' ? `https://drive.google.com/file/d/${s.fileId}/view?usp=sharing` : ''))
+        this.Sheet.getRange(row + this.linkUpColum.headerCell.row, this.linkUpColum.headerCell.col).setValue(`danger` + (s.fileId && `${s.fileId}` != '' ? ` https://drive.google.com/file/d/${s.fileId}/view?usp=sharing` : ' '))
       } else {
+      }
+    }
+  }
+
+  pFileId() {
+    console.log('processingName... ' + this.sheetName)
+
+    const allSong = this.getAllSongs({ allowNull: false })
+
+    for (const s of allSong) {
+      let f = undefined
+      try {
+        let f = DriveApp.getFileById(s.fileId)
+      } catch (e) {
+        console.log(e)
+        let fs = this.folder.getFiles()
+        while (fs.hasNext()) {
+          let _f = fs.next()
+          if (_f.getName().startsWith(`${s.vsinger} - ${s.vname}   ${s.singer}`) && _f.getMimeType().includes('flac')) {
+            f = _f
+            break
+          }
+        }
+      }
+      if (f && s.getFilename() != f?.getName()) {
+        console.log('rename', f.getName(), '>', s.getFilename())
+        f.setName(s.getFilename())
+      } else {
+        if (!f) {
+          console.log('err: ', s.getFilename(), s.fileId)
+        }
+      }
+    }
+  }
+
+  updateFileName() {
+    const allSong = this.getAllSongs({ allowNull: false })
+    for (const song of allSong) {
+      try {
+        let file = DriveApp.getFileById(song.fileId)
+        if (file && file.getName() != song.getFilename()) {
+          file.setName(song.getFilename())
+        }
+      } catch (e) {
+        console.log(e)
       }
     }
   }
@@ -281,7 +370,6 @@ class SongFileManager extends SM.Sheet.SheetManager {
     for (const [i, fileUrl] of linkUp.getData().entries()) {
       if (extractFileId(fileUrl) == songInfo.fileId) {
         // console.log(i)
-
         let rename = false
         for (const [k, v] of Object.entries(songInfo)) {
           // console.log(k, v, 'update')
@@ -289,35 +377,39 @@ class SongFileManager extends SM.Sheet.SheetManager {
             continue
           }
           let column = this.getColumn(this.tableHeader[k], null, false)
-          console.log(column.cells[i].value, v, k)
+          // console.log(column.cells[i].value, v, k)
           if (column != null && column.cells[i].value != v) {
-            console.log(k, 'update')
+            // console.log(k, 'update')
 
             if (['name', 'singer', 'vname', 'vsinger'].find(n => n == k)) {
               rename = true
             }
-            // console.log(k, 'update')
+            console.log(k, 'update', v)
             this.Sheet.getRange(column.headerCell.row + i + 1, column.headerCell.col).setValue(v)
           }
         }
+        console.log('rename', rename)
         if (rename) {
           let formatedName = new SongInfo(songInfo).getFilename()
-          renameFileFixed(songInfo.fileId, formatedName)
+          console.log('rename >>>', formatedName)
+          DriveApp.getFileById(songInfo.fileId).setName(formatedName)
         }
-        return songInfo
+        return true
       }
     }
+    return false
   }
 }
+const spliter = 'ǁ'
 
 class SongInfo {
   /** @param {{[name:string]:string}} */
   constructor({ name = '', singer = '', vname = '', vsinger = '', linkUp = '', listens = 0, lyric = '', lyric_vn = '', lyric_en = '', status, sheet, i = -1 }) {
     this.i = parseInt(i)
-    this.singer = singer.trim()
-    this.name = name.trim()
-    this.vsinger = vsinger.trim() ?? ''
-    this.vname = vname.trim() ?? ''
+    this.singer = singer?.trim() || ''
+    this.name = name.toString().trim()
+    this.vsinger = vsinger?.trim() ?? ''
+    this.vname = vname?.trim() ?? ''
     // this.linkUp = linkUp
     this.status = status || ''
     this.lyric = lyric
@@ -326,6 +418,8 @@ class SongInfo {
     this.fileId = extractFileId(linkUp)
     this.sheet = sheet || 'Others'
     this.listens = listens || 0
+    this.lyric_vn_translated = undefined
+    this.lyric_en_translated = undefined
   }
   getUrl() {
     return `https://drive.google.com/file/d/${this.fileId}/view?usp=sharing`
@@ -334,7 +428,7 @@ class SongInfo {
     if (!(this.vsinger == this.vname == '')) {
       return `${this.singer} - ${this.name}`
     } else {
-      return `${this.vsinger} - ${this.vname} | ${this.singer} - ${this.name}`
+      return `${this.vsinger} - ${this.vname} ${spliter} ${this.singer} - ${this.name}`
     }
   }
   /** @param {string} filename  */
@@ -347,7 +441,7 @@ class SongInfo {
         filename = tmp.join('.')
       }
     }
-    return filename.replace('_', ' ')
+    return filename.replace('_', ' ').trim()
   }
 
   /** @param {string} filename  @returns {SongInfo} */
@@ -362,11 +456,8 @@ class SongInfo {
       return undefined
     }
     let res = test('+-+', filename)
-
-    if (!res) {
-      if (filename.indexOf('-') == filename.lastIndexOf('-')) {
-        res = test('-', filename)
-      }
+    if (!res && filename.indexOf('-') == filename.lastIndexOf('-')) {
+      res = test('-', filename)
     }
     res = res || test(' - ', filename) || ['', filename]
 
@@ -377,7 +468,8 @@ class SongInfo {
   }
 
   static try(fileName) {
-    if (fileName.includes('|')) {
+    fileName = this._removeExt(fileName)
+    if (fileName.includes(spliter) || fileName.includes('|') || fileName.includes('   ')) {
       return this.fromFileName(fileName)
     } else {
       return this.fromUploadFilename(fileName)
@@ -388,20 +480,24 @@ class SongInfo {
     filename = this._removeExt(filename)
     let [_vname, _vsinger, _name, _signer] = ['', '', '', '']
     // fomat singerName - SongName | orignSingerName - originSongName
-    if (filename.includes('|')) {
-      let vs = filename.split('|')[0].split(' - ')
-      let origin = filename.split('|')[1].split(' - ')
-      return new SongInfo({
-        name: origin[1],
-        singer: origin[0],
-        vname: vs[1],
-        vsinger: vs[0]
-      })
-    } else {
-      return new SongInfo({
-        name: filename.split(' - ')[1], singer: filename.split(' - ')[0]
-      })
+    function testSplit(str) {
+      if (filename.includes(str) && filename.indexOf(str) == filename.lastIndexOf(str)) {
+        let vs = filename.split(str)[0].split(' - ')
+        let origin = filename.split(str)[1].split(' - ')
+        return new SongInfo({
+          name: origin[1],
+          singer: origin[0],
+          vname: vs[1],
+          vsinger: vs[0]
+        })
+      }
+      if (!str && (filename.includes(' - ') || filename.indexOf("-") == filename.lastIndexOf('-'))) {
+        return new SongInfo({
+          name: filename.split('-')[1], singer: filename.split('-')[0]
+        })
+      }
     }
+    return testSplit('ǁ') || testSplit('|') || testSplit("   ") || testSplit()
   }
 }
 

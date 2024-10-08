@@ -1,45 +1,38 @@
-WebApp.registerControllerPath({
-  "": MusicAppController
-})
-WebApp.useService({
+
+
+/** @type {IWEBAPP_.WebApp} */
+var AppServer = WebApp.create({
   htmlService: HtmlService,
   scriptApp: ScriptApp,
   propertyScope: PropertyScope
 })
-WebApp.templatePath(
+
+
+AppServer.registerControllerPath({
+  "": MusicAppController
+})
+AppServer.templatePath(
   'src/view'
 )
 
 function doGet(e) {
-  return WebApp.doGet(e)
+  return AppServer.doGet(e)
 }
 
 function doPost(e) {
-  // console.log(JSON.stringify(JSONRPCServer))
-  // console.log(e)
-  let postData = JSON.parse(e.postData.contents)
-  if (postData.jsonrpc) {
-    return JSONRPCServer.instance.execute(postData)
-  }
-
-  return WebApp.doPost(e)
+  console.log(e)
+  return JSONRPCServer.instance.doPost(e) || AppServer.doPost(e)
 }
 
 function simulateJSONRpcCall(method, params, authToken) {
-  let req = genRPCrequest_(method, params, authToken)
-  console.log(req.postData.contents)
-  const r = JSON.parse(doPost(req).getContent())
-  console.log(r)
-  return r
-}
-
-function genRPCrequest_(method, params, authToken) {
-  return {
-    contentLength: 1,
-    postData: {
-      contents: JSON.stringify({ method, params, jsonrpc: '2.0', authToken })
-    }
-  }
+  console.log({
+    method, params, authToken, jsonrpc: '2.0'
+  })
+  const res = JSONRPCServer.instance.execute({
+    method, params, authToken, jsonrpc: '2.0'
+  })
+  console.log(res)
+  return res
 }
 
 /** @param {string} sheet  @returns {any[]} */
@@ -74,3 +67,4 @@ function updateSongDb() {
   SongService.instance.updateAllSongs(songs)
   console.log('all song ypdate db', songs.length)
 }
+

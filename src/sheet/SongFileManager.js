@@ -1,4 +1,3 @@
-var ssJWT = new SpreadsheetJWTAuth(secrect_.serviceAccount)
 
 /** @extends {ISheetManager} */
 class SongFileManager extends SM.Sheet.SheetManager {
@@ -70,29 +69,7 @@ class SongFileManager extends SM.Sheet.SheetManager {
   }
 
   loadData() {
-    // ssJWT.__countUsage = ssJWT.__countUsage || 0
-    // ssJWT.__countUsage++
-    // try {
-    //   if (ssJWT.__countUsage % 2 == 0) {
-    //     console.log('def')
 
-    //     return super.loadData()
-    //   }
-    //   console.log('jwt')
-    //   const sheet = ssJWT.getSheetByName(this.sheetName)
-    //   this.data = sheet.getDataRange().getValues()
-    //   // this.data = Sheets.Spreadsheets.Values.get(ssId, this.sheetName).values
-    //   let max = 0
-    //   this.data.forEach((d, i) => {
-    //     if (d.length > max) { max = d.length }
-    //   })
-
-    //   this.data.forEach(d => {
-    //     while (d.length < max) { d.push('') }
-    //   })
-    // } catch (e) {
-    //   console.log('err on load sheet data ', e)
-    // }
     super.loadData()
 
     return this
@@ -441,7 +418,7 @@ class SongInfo {
         filename = tmp.join('.')
       }
     }
-    return filename.replace('_', ' ').trim()
+    return filename.trim()
   }
 
   /** @param {string} filename  @returns {SongInfo} */
@@ -500,5 +477,3 @@ class SongInfo {
     return testSplit('ǁ') || testSplit('|') || testSplit("   ") || testSplit()
   }
 }
-
-

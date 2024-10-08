@@ -1,6 +1,7 @@
 class JSONRPCServer extends WebApp.JSONRPCServer {
     constructor() {
         super();
+        this.scriptApp = ScriptApp
     }
 
     static get instance() {
@@ -70,7 +71,7 @@ class JSONRPCServer extends WebApp.JSONRPCServer {
             return SongService.instance.updateSong(song);
         } catch (e) {
             console.log(e);
-            return UrlFetchApp.fetch(ScriptApp.getService().getUrl(), genRPCrequest_('updateSong', [song], session.token));
+            return this.callWithAPI('updateSong', [song], session.token);
         }
     }
 

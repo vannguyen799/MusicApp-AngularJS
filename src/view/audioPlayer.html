@@ -275,10 +275,10 @@
                     <!-- Navbar content with collapse -->
                     <div class="collapse navbar-collapse" id="navbarNav">
                         <ul class="navbar-nav me-auto mb-2 mb-lg-0" style="background-color: #333">
-                            <li class="nav-item mx-1">
+                            <li class="nav-item mx-1 text-truncate">
                                 <button class="nav-link" ng-click="ctrl.selectSheetBtnHandler('')">All Song</button>
                             </li>
-                            <li class="nav-item mx-1" ng-repeat="name in ctrl.sheetNames">
+                            <li class="nav-item mx-1 text-truncate" ng-repeat="name in ctrl.sheetNames">
                                 <button ng-class="{ 'nav-link active': name == ctrl.sheet, 'nav-link': name != ctrl.sheet }" ng-click="ctrl.selectSheetBtnHandler(name)">{{name}}</button>
                             </li>
                         </ul>
@@ -391,10 +391,10 @@
                                     <tr ng-repeat="s in ctrl.songTable" ng-dblclick="ctrl.form.manageSong.init(s).show()">
                                         <td>
                                             <button
-                                                ng-click="ctrl.player.playHandler(s, ctrl.songList)"
+                                                ng-click="player.playBtnHandler(s, ctrl.songList)"
                                                 ng-class="{
-                                                'icon icon-play': s.fileId != ctrl.player.songInfo.fileId || (s.fileId == ctrl.player.songInfo.fileId && ctrl.player.audio.paused),
-                                                'icon icon-pause': s.fileId == ctrl.player.songInfo.fileId && !ctrl.player.audio.paused
+                                                'icon icon-play': s.fileId != player.songInfo.fileId || (s.fileId == player.songInfo.fileId && player.audio.paused),
+                                                'icon icon-pause': s.fileId == player.songInfo.fileId && !player.audio.paused
                                              }"
                                                 title="Play"
                                             ></button>
@@ -540,10 +540,10 @@
                                 <tr ng-repeat="s in ctrl.form.managePlaylist.songList">
                                     <td>
                                         <button
-                                            ng-click="ctrl.player.playHandler(s, ctrl.form.managePlaylist.songList)"
+                                            ng-click="player.playBtnHandler(s, ctrl.form.managePlaylist.songList)"
                                             ng-class="{
-                                            'icon icon-play': s.fileId != ctrl.player.songInfo.fileId || (s.fileId == ctrl.player.songInfo.fileId && ctrl.player.audio.paused),
-                                            'icon icon-pause': s.fileId == ctrl.player.songInfo.fileId && !ctrl.player.audio.paused
+                                            'icon icon-play': s.fileId != player.songInfo.fileId || (s.fileId == player.songInfo.fileId && player.audio.paused),
+                                            'icon icon-pause': s.fileId == player.songInfo.fileId && !player.audio.paused
                                         }"
                                             title="Play"
                                         ></button>
@@ -611,18 +611,18 @@
                 border-radius: 6px;
             }
         </style>
-        <div id="player-pro" --n-g-if="ctrl.player._playlist.length > 0">
+        <div id="player-pro" --n-g-if="player.playlist.default.length > 0">
             <div class="container-fluid fixed-bottom px-2" style="background-color: #333; z-index: 1">
                 <div class="row p-2">
-                    <div class="col-sm-4" ng-dblclick="ctrl.form.manageSong.init(ctrl.player.songInfo).show()">
+                    <div class="col-sm-4" ng-dblclick="ctrl.form.manageSong.init(player.songInfo).show()">
                         <div class="">
                             <div class="d-flex align-items-center mx-1">
                                 <div class="flex-shrink-0">
-                                    <img ng-src="{{ ctrl.player.coverImgSrc ?  ctrl.player.coverImgSrc : ctrl.player.defaultCoverImgUrl }}" style="width: 60px; height: 60px" class="align-self-center mr-3" alt="..." />
+                                    <img ng-src="{{ player.metadata.coverSrc ?  player.metadata.coverSrc : player.defaultCoverSrc }}" style="width: 60px; height: 60px" class="align-self-center mr-3" alt="..." />
                                 </div>
                                 <div class="ms-2 align-items-center">
-                                    <div class="text-truncate fs-5" style="max-width: 450px" title="{{ctrl.player.songInfo.vname ? ctrl.player.songInfo.vname + ' - ' + ctrl.player.songInfo.name : ctrl.player.songInfo.name }}">{{ctrl.player.songInfo.vname ? ctrl.player.songInfo.vname + ' / ' + ctrl.player.songInfo.name : ctrl.player.songInfo.name}} <span class="badge fs-6">{{ctrl.player.currentExt.toUpperCase()}}</span></div>
-                                    <div class="text-truncate fs-6 fst-normal" style="max-width: 450px" title="{{ctrl.player.songInfo.vsinger ? ctrl.player.songInfo.vsinger + ' - ' + ctrl.player.songInfo.singer: ctrl.player.songInfo.singer}}">{{ctrl.player.songInfo.vsinger ? ctrl.player.songInfo.vsinger + ' / ' + ctrl.player.songInfo.singer: ctrl.player.songInfo.singer}}</div>
+                                    <div class="text-truncate fs-5" style="max-width: 450px">{{player.songInfo.vname ? player.songInfo.vname + ' / ' + player.songInfo.name : player.songInfo.name}} <span class="badge fs-6">{{player.metadata.extension.toUpperCase()}}</span></div>
+                                    <div class="text-truncate fs-6 fst-normal" style="max-width: 450px">{{player.songInfo.vsinger ? player.songInfo.vsinger + ' - ' + player.songInfo.singer: player.songInfo.singer}}</div>
                                 </div>
                             </div>
                         </div>
@@ -692,40 +692,40 @@
                             <button
                                 class="mx-2 my-1"
                                 ng-class="{
-                                    'player-icon i-player-rand i-selected ': ctrl.player.isRandomPlay,
-                                    'player-icon i-player-rand': !ctrl.player.isRandomPlay,
+                                    'player-icon i-player-rand i-selected ': player.config.isRandom,
+                                    'player-icon i-player-rand': !player.config.isRandom,
                                 }"
-                                ng-click="ctrl.player.isRandomPlay = !ctrl.player.isRandomPlay"
+                                ng-click="player.config.isRandom = !player.config.isRandom"
                             ></button>
-                            <button class="player-icon i-player-prev mx-2 my-1" ng-click="ctrl.player.prev()"></button>
+                            <button class="player-icon i-player-prev mx-2 my-1" ng-click="player.prev()"></button>
                             <button
                                 class="mx-2 my-1"
                                 ng-class="{
-                                    'player-icon i-player-play': !ctrl.player.isPlaying,
-                                    'player-icon i-player-pause i-selected': ctrl.player.isPlaying
+                                    'player-icon i-player-play': !player.isPlaying,
+                                    'player-icon i-player-pause i-selected': player.isPlaying
                                 }"
-                                ng-click="ctrl.player.playHandler()"
+                                ng-click="player.playBtnHandler()"
                             ></button>
-                            <button class="player-icon i-player-next mx-2 my-1" ng-click="ctrl.player.next() "></button>
+                            <button class="player-icon i-player-next mx-2 my-1" ng-click="player.next() "></button>
                             <button
                                 class="mx-2 my-1"
                                 ng-class="{
-                                    'player-icon i-player-loop ': ctrl.player.loopMode == 0,
-                                    'player-icon i-player-loop-1 i-selected': ctrl.player.loopMode == 1,
-                                    'player-icon i-player-loop i-selected ': ctrl.player.loopMode == 2,
+                                    'player-icon i-player-loop ': player.config.loopMode == 0,
+                                    'player-icon i-player-loop-1 i-selected': player.config.loopMode == 1,
+                                    'player-icon i-player-loop i-selected ': player.config.loopMode == 2,
                                 }"
-                                ng-click="ctrl.player.loopMode = (ctrl.player.loopMode+1)%3"
+                                ng-click="player.config.loopMode = (player.config.loopMode+1)%3"
                             ></button>
                         </div>
                         <div class="d-flex align-items-center justify-content-center">
-                            <div class="mx-1">{{ secToMin(ctrl.player.in4.current) }}</div>
+                            <div class="mx-1">{{ secToMin(player.metadata.timing.current) }}</div>
                             <div class="mx-1" style="margin-top: -8px">
-                                <input class="range" id="audioTimeRange" style="width: 25vw; height: 2px" type="range" step="0.1" min="0" max="{{ ctrl.player.in4.duration }}" aria-valuemin="0" aria-valuemax="{{ ctrl.player.in4.duration }}" aria-valuenow="{{ ctrl.player.in4.current }}" value="0" />
+                                <input class="range" id="audioTimeRange" style="width: 25vw; height: 2px" type="range" step="0.1" min="0" max="{{ player.metadata.timing.duration }}" aria-valuemin="0" aria-valuemax="{{ player.metadata.timing.duration }}" aria-valuenow="{{ player.metadata.timing.current }}" value="0" />
                             </div>
-                            <div class="mx-1">{{ secToMin(ctrl.player.in4.duration) }}</div>
+                            <div class="mx-1">{{ secToMin(player.metadata.timing.duration) }}</div>
                         </div>
                         <!-- <div class="d-flex align-items-center justify-content-center">
-                            <div class="" style="font-size: smaller">{{ ctrl.player.metadata.string }}</div>
+                            <div class="" style="font-size: smaller">{{ player.metadata.string }}</div>
                         </div> -->
                     </div>
                     <div class="col-sm-4 text-white d-inline-flex flex-row-reverse align-items-center">
@@ -733,15 +733,15 @@
                         <div class="ml-2 mx-1">
                             <button
                                 ng-class="{
-                                    'player-icon i-player-speaker': !ctrl.player.in4.volume.isMuted,
-                                    'player-icon i-player-speaker-muted': ctrl.player.in4.volume.isMuted
+                                    'player-icon i-player-speaker': !player.metadata.volume.isMuted,
+                                    'player-icon i-player-speaker-muted': player.metadata.volume.isMuted
                                 }"
-                                ng-click="ctrl.player.speakerBtnHandle()"
+                                ng-click="player.speakerBtnHandle()"
                                 id="speakerBtn"
                             ></button>
                         </div>
                         <div class="ml-2 mx-1"><button id="playlistBtn" class="player-icon i-player-playlist"></button></div>
-                        <div class="ml-2 mx-1"><button class="player-icon i-player-fullscreen" id="fullScreebBtn" ng-click="ctrl.player.showFc()"></button></div>
+                        <div class="ml-2 mx-1"><button class="player-icon i-player-fullscreen" id="fullScreebBtn" ng-click="player.showFc()"></button></div>
                     </div>
                 </div>
             </div>
@@ -785,11 +785,11 @@
             <div class="row w-100" style="height: 85%">
                 <div class="col-sm-4 d-flex justify-content-end align-items-end p-4">
                     <div class="">
-                        <img class="song-cover" ng-src="{{ ctrl.player.coverImgSrc ?  ctrl.player.coverImgSrc : ctrl.player.defaultCoverImgUrl }}" style="width: 333px; height: 333px" />
+                        <img class="song-cover" ng-src="{{ player.metadata.coverSrc ?  player.metadata.coverSrc : player.metadata.defaultCoverSrc }}" style="width: 333px; height: 333px" />
                     </div>
                 </div>
                 <div class="col-sm-8 position-relative p-4">
-                    <div class="row d-inline-flex justify-content-end w-100" style="height: 10%"><button class="icon icon-remove" ng-click="ctrl.player.hideFc()" title="Close"></button></div>
+                    <div class="row d-inline-flex justify-content-end w-100" style="height: 10%"><button class="icon icon-remove" ng-click="player.hideFc()" title="Close"></button></div>
                     <div class="row h-65">
                         <div class="col-12" style="font-weight: normal">
                             <div class="row justify-content-center align-content-center pb-1 fs-3" id="lyric"></div>
@@ -800,10 +800,10 @@
                     </div>
                     <div class="row h-auto position-absolute bottom-0 p-4">
                         <div class="" style="font-size: 35px">
-                            {{ctrl.player.mainSongName}} {{ ctrl.player.in4.speed && ctrl.player.in4.speed == 1 ? '' : ctrl.player.in4.speed +'x' }}
-                            <!-- <span class="badge" style="color: #333; background-color: var(--line-color); filter: invert(0.9) sepia(0.1) saturate(2) hue-rotate(180deg) brightness(1.2)">{{ctrl.player.currentExt.toUpperCase()}}</span> -->
+                            {{player.mainSongName}} {{ player.metadata.timing.speed && player.metadata.timing.speed == 1 ? '' : player.metadata.timing.speed +'x' }}
+                            <!-- <span class="badge" style="color: #333; background-color: var(--line-color); filter: invert(0.9) sepia(0.1) saturate(2) hue-rotate(180deg) brightness(1.2)">{{player.currentExt.toUpperCase()}}</span> -->
                         </div>
-                        <div class="" style="font-size: 20px; font-weight: normal">{{ctrl.player.subSongName}}</div>
+                        <div class="" style="font-size: 20px; font-weight: normal">{{player.subSongName}}</div>
                     </div>
                 </div>
             </div>
@@ -811,11 +811,11 @@
                 <div class="col-sm-12 align-items-end pb-0">
                     <div class="row w-100">
                         <div class="d-flex align-items-center justify-content-center fs-5">
-                            <div class="mx-1">{{ secToMin(ctrl.player.in4.current) }}</div>
+                            <div class="mx-1">{{ secToMin(player.metadata.timing.current) }}</div>
                             <div class="range mx-1">
-                                <input id="audioTimeRange-fc" style="width: 80vw; height: 4px" type="range" step="0.3" min="0" max="{{ ctrl.player.in4.duration }}" aria-valuemin="0" aria-valuemax="{{ ctrl.player.in4.duration }}" aria-valuenow="{{ ctrl.player.in4.current }}" value="0" />
+                                <input id="audioTimeRange-fc" style="width: 80vw; height: 4px" type="range" step="0.3" min="0" max="{{ player.metadata.timing.duration }}" aria-valuemin="0" aria-valuemax="{{ player.metadata.timing.duration }}" aria-valuenow="{{ player.metadata.timing.current }}" value="0" />
                             </div>
-                            <div class="mx-1">{{ secToMin(ctrl.player.in4.duration) }}</div>
+                            <div class="mx-1">{{ secToMin(player.metadata.timing.duration) }}</div>
                         </div>
                     </div>
                     <!-- <div class="d-flex align-items-center justify-content-center">
@@ -828,29 +828,29 @@
                             <button
                                 class="mx-4"
                                 ng-class="{
-                                    'player-icon i-player-rand i-selected ': ctrl.player.isRandomPlay,
-                                    'player-icon i-player-rand': !ctrl.player.isRandomPlay,
+                                    'player-icon i-player-rand i-selected ': player.config.isRandom,
+                                    'player-icon i-player-rand': !player.config.isRandom,
                                 }"
-                                ng-click="ctrl.player.isRandomPlay = !ctrl.player.isRandomPlay"
+                                ng-click="player.config.isRandom = !player.config.isRandom"
                             ></button>
-                            <button class="player-icon i-player-prev mx-4" ng-click="ctrl.player.prev()"></button>
+                            <button class="player-icon i-player-prev mx-4" ng-click="player.prev()"></button>
                             <button
                                 class="mx-4"
                                 ng-class="{
-                                    'player-icon i-player-play': !ctrl.player.isPlaying,
-                                    'player-icon i-player-pause i-selected': ctrl.player.isPlaying
+                                    'player-icon i-player-play': !player.isPlaying,
+                                    'player-icon i-player-pause i-selected': player.isPlaying
                                 }"
-                                ng-click="ctrl.player.playHandler()"
+                                ng-click="player.playBtnHandler()"
                             ></button>
-                            <button class="player-icon i-player-next mx-4" ng-click="ctrl.player.next() "></button>
+                            <button class="player-icon i-player-next mx-4" ng-click="player.next() "></button>
                             <button
-                                class="mx-4"
+                                class="mx-4 player-icon"
                                 ng-class="{
-                                    'player-icon i-player-loop ': ctrl.player.loopMode == 0,
-                                    'player-icon i-player-loop-1 i-selected': ctrl.player.loopMode == 1,
-                                    'player-icon i-player-loop i-selected ': ctrl.player.loopMode == 2,
+                                    'i-player-loop': player.config.loopMode == 0,
+                                    'i-player-loop-1 i-selected': player.config.loopMode == 1,
+                                    'i-player-loop i-selected ': player.config.loopMode == 2,
                                 }"
-                                ng-click="ctrl.player.loopMode = (ctrl.player.loopMode+1)%3"
+                                ng-click="player.config.loopMode = (player.config.loopMode+1)%3"
                             ></button>
                         </div>
                         <!-- setting  -->
@@ -859,10 +859,10 @@
                             <div class="mx-3">
                                 <button
                                     ng-class="{
-                                        'player-icon i-player-speaker': !ctrl.player.in4.volume.isMuted,
-                                        'player-icon i-player-speaker-muted': ctrl.player.in4.volume.isMuted
+                                        'player-icon i-player-speaker': !player.metadata.volume.isMuted,
+                                        'player-icon i-player-speaker-muted': player.metadata.volume.isMuted
                                     }"
-                                    ng-click="ctrl.player.speakerBtnHandle()"
+                                    ng-click="player.speakerBtnHandle()"
                                     id="speakerBtn-fc"
                                 ></button>
                             </div>
@@ -890,19 +890,19 @@
                     background-color: whitesmoke;
                 }
             </style>
-            <div class="propover-p" id="speakerPopover" ng-if="!ctrl.player.in4.volume.isMuted">
-                <input type="range" step="1" min="0" max="100" ng-model="ctrl.player.in4.volume.value" ng-value="ctrl.player.in4.volume.value" />
+            <div class="propover-p" id="speakerPopover" ng-if="!player.metadata.volume.isMuted">
+                <input type="range" step="1" min="0" max="100" ng-model="player.metadata.volume.value" ng-value="player.metadata.volume.value" />
             </div>
             <div id="settingPopover" class="w-75 propover-p">
                 <table>
                     <tr>
                         <td>Speed</td>
-                        <td><input type="number" step="0.01" ng-model="ctrl.player.in4.speed" /></td>
+                        <td><input type="number" step="0.01" ng-model="player.metadata.timing.speed" /></td>
                     </tr>
                     <tr>
                         <td>LyricAutoTranslate</td>
                         <td class="form-check form-switch">
-                            <input class="form-check-input" style="width: 2.8em; height: 1.3em" type="checkbox" role="switch" ng-model="ctrl.config.lyricAutoTranslate" />
+                            <input class="form-check-input" style="width: 2.8em; height: 1.3em" type="checkbox" role="switch" ng-model="player.config.lyricAutoTranslate" />
                         </td>
                     </tr>
                 </table>
@@ -917,15 +917,15 @@
                             <th style="max-width: 200px">Name</th>
                             <th style="max-width: 20%">Singer</th>
                         </tr>
-                        <tr ng-repeat="s in ctrl.player.playlist">
+                        <tr ng-repeat="s in player.playlist.getPlaylist(player.config.isFav)">
                             <!-- <td>{{i + 1}}</td> -->
                             <td>
                                 <div class="song-action">
                                     <button
-                                        ng-click="ctrl.player.playHandler(s)"
+                                        ng-click="player.playBtnHandler(s)"
                                         ng-class="{
-                                            'icon icon-play': s.fileId != ctrl.player.songInfo.fileId || (s.fileId == ctrl.player.songInfo.fileId && ctrl.player.audio.paused),
-                                            'icon icon-pause': s.fileId == ctrl.player.songInfo.fileId && !ctrl.player.audio.paused
+                                            'icon icon-play': s.fileId != player.songInfo.fileId || (s.fileId == player.songInfo.fileId && player.audio.paused),
+                                            'icon icon-pause': s.fileId == player.songInfo.fileId && !player.audio.paused
                                         }"
                                         title="Play"
                                     ></button>
@@ -1032,18 +1032,6 @@
                 const stgPopoverfc = configPopover("#settingBtn-fc", "#settingPopover", { trigger: "click hover" });
                 const playlistPropoverfc = configPopover("#playlistBtn-fc", "#playlistPopover", { trigger: "click hover" });
             });
-            function closeAllPopover() {
-                // Select all elements that have popovers
-                const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
-
-                // Iterate through each element and hide its popover
-                popoverTriggerList.forEach(function (popoverTriggerEl) {
-                    const popoverInstance = bootstrap.Popover.getInstance(popoverTriggerEl);
-                    if (popoverInstance) {
-                        popoverInstance.hide();
-                    }
-                });
-            }
 
             function configPopover(btnSelector, contentSelector, opt = {}) {
                 const content = document.querySelector(contentSelector);
@@ -1152,31 +1140,50 @@
 
                     return this.getLyricsF(timeAt, allowTranslated);
 
-                    let lyric = data[this.getLyrics_nextIndex % data.length];
+                    // let lyric = data[this.getLyrics_nextIndex % data.length];
 
-                    if (timeAt > lyric.startTime && timeAt < lyric.endTime) {
-                        console.log(this.getLyrics_nextIndex, timeAt, lyric.startTime, lyric.text);
-                        this.getLyrics_nextIndex++;
-                        return lyric.text;
-                    }
+                    // if (timeAt > lyric.startTime && timeAt < lyric.endTime) {
+                    //     console.log(this.getLyrics_nextIndex, timeAt, lyric.startTime, lyric.text);
+                    //     this.getLyrics_nextIndex++;
+                    //     return lyric.text;
+                    // }
 
-                    try {
-                        const prevLyric = data[(this.getLyrics_nextIndex - 1) % data.length];
-                        const nextLyric = data[(this.getLyrics_nextIndex + 1) % data.length];
-                        if (timeAt < prevLyric.startTime || timeAt > nextLyric.endTime) {
-                            let r = data.findIndex((l) => l.startTime < timeAt && l.endTime > timeAt);
-                            if (r) {
-                                this.getLyrics_nextIndex = r + 1;
-                                return data[r].text;
-                            }
-                        }
-                    } catch (e) {
-                        console.log(e);
-                    }
+                    // try {
+                    //     const prevLyric = data[(this.getLyrics_nextIndex - 1) % data.length];
+                    //     const nextLyric = data[(this.getLyrics_nextIndex + 1) % data.length];
+                    //     if (timeAt < prevLyric.startTime || timeAt > nextLyric.endTime) {
+                    //         let r = data.findIndex((l) => l.startTime < timeAt && l.endTime > timeAt);
+                    //         if (r) {
+                    //             this.getLyrics_nextIndex = r + 1;
+                    //             return data[r].text;
+                    //         }
+                    //     }
+                    // } catch (e) {
+                    //     console.log(e);
+                    // }
                 }
             }
         </script>
         <script>
+            /**
+             * @typedef {Object} SongInfo
+             * @property {string} [name='']
+             * @property {string} [singer='']
+             * @property {string} [vname='']
+             * @property {string} [vsinger='']
+             * @property {number} [listens=0]
+             * @property {string} [lyric='']
+             * @property {string} [lyric_vn='']
+             * @property {string} [lyric_en='']
+             * @property {string} [status]
+             * @property {string} [sheet='Others']
+             * @property {string} [fileId]
+             * @property {string|undefined} [lyric_vn_translated]
+             * @property {string|undefined} [lyric_en_translated]
+             */
+
+            /** @typedef {{name: string, description:string, songList: SongInfo[]}} Playlist */
+
             // const audioContext = new (window.AudioContext || window.webkitAudioContext)();
             const loadingModal = new bootstrap.Modal(document.getElementById("loadingModal"));
 
@@ -1185,541 +1192,196 @@
                 preloadRate: 0.75,
                 preload: true,
             };
+            class ControllerHepler {
+                constructor($scope) {
+                    /** @type {ngScope} */
+                    this.$scope = $scope;
+                    /** @type {typeof $http} */
+                    this.$http = undefined;
+                    class ngScope {
+                        constructor() {
+                            /**
+                             * @ngdoc property
+                             * @name properties
+                             * @type {Object}
+                             * @description
+                             * A container for properties that are dynamically added to the scope.
+                             */
+                            this.properties = {};
 
-            class MusicAppController {
+                            /**
+                             * @ngdoc property
+                             * @name listeners
+                             * @type {Object.<string, Array.<function>>}
+                             * @description
+                             * A map of event names to arrays of listener functions.
+                             */
+                            this.listeners = {};
+                        }
+
+                        /**
+                         * @ngdoc method
+                         * @name $set
+                         * @description
+                         * Sets a property on the scope.
+                         *
+                         * @param {string} key - The property name.
+                         * @param {*} value - The value to assign to the property.
+                         */
+                        $set(key, value) {}
+
+                        /**
+                         * @ngdoc method
+                         * @name $get
+                         * @description
+                         * Retrieves a property from the scope.
+                         *
+                         * @param {string} key - The property name.
+                         * @returns {*} The value of the property.
+                         */
+                        $get(key) {}
+
+                        /**
+                         * @ngdoc method
+                         * @name $on
+                         * @description
+                         * Registers a listener for a specific event.
+                         *
+                         * @param {string} eventName - The name of the event to listen for.
+                         * @param {function} listener - The function to call when the event is triggered.
+                         */
+                        $on(eventName, listener) {}
+
+                        /**
+                         * @ngdoc method
+                         * @name $emit
+                         * @description
+                         * Emits an event upwards, calling all registered listeners for the event.
+                         *
+                         * @param {string} eventName - The name of the event to emit.
+                         * @param {...*} args - Arguments to pass to the listeners.
+                         */
+                        $emit(eventName, ...args) {}
+
+                        /**
+                         * @ngdoc method
+                         * @name $broadcast
+                         * @description
+                         * Broadcasts an event downwards to all child scopes (simulated in this example).
+                         *
+                         * @param {string} eventName - The name of the event to broadcast.
+                         * @param {...*} args - Arguments to pass to the listeners.
+                         */
+                        $broadcast(eventName, ...args) {}
+
+                        /**
+                         * @ngdoc method
+                         * @name $destroy
+                         * @description
+                         * Cleans up the scope by removing all properties and listeners.
+                         */
+                        $destroy() {}
+                    }
+
+                    /**
+                     * @typedef {Object} HTTPResponse
+                     * @property {*} data - The response body.
+                     * @property {number} status - The HTTP status code.
+                     * @property {Object} headers - The headers of the HTTP response.
+                     * @property {HTTPConfig} config - The configuration object used for the request.
+                     * @property {string} statusText - The HTTP status text.
+                     */
+
+                    /**
+                     * @typedef {Object} HTTPConfig
+                     * @property {Object} [headers] - An object representing HTTP headers.
+                     * @property {Object} [params] - URL parameters for GET requests.
+                     * @property {Object} [data] - Data to be sent as the request body (for POST, PUT, etc.).
+                     * @property {string} [method] - The HTTP method (GET, POST, PUT, DELETE, etc.).
+                     * @property {string} [url] - The URL for the HTTP request.
+                     * @property {string} [responseType] - The type of response expected (e.g., 'json', 'text').
+                     */
+                    /** @param {HTTPConfig} config  @returns {Promise<HTTPResponse>}*/
+                    function $http(config) {}
+                    /**
+                     * Makes an HTTP GET request.
+                     * @param {string} url - The URL for the GET request.
+                     * @param {HTTPConfig} [config] - Optional configuration for the request.
+                     * @returns {Promise<HTTPResponse>} - A promise that resolves with the HTTP response.
+                     */
+                    $http.get = function (url, config) {};
+
+                    /**
+                     * Makes an HTTP POST request.
+                     * @param {string} url - The URL for the POST request.
+                     * @param {Object} data - The data to be sent in the body of the POST request.
+                     * @param {HTTPConfig} [config] - Optional configuration for the request.
+                     * @returns {Promise<HTTPResponse>} - A promise that resolves with the HTTP response.
+                     */
+                    $http.post = function (url, data, config) {};
+
+                    /**
+                     * Makes an HTTP PUT request.
+                     * @param {string} url - The URL for the PUT request.
+                     * @param {Object} data - The data to be sent in the body of the PUT request.
+                     * @param {HTTPConfig} [config] - Optional configuration for the request.
+                     * @returns {Promise<HTTPResponse>} - A promise that resolves with the HTTP response.
+                     */
+                    $http.put = function (url, data, config) {};
+
+                    /**
+                     * Makes an HTTP DELETE request.
+                     * @param {string} url - The URL for the DELETE request.
+                     * @param {HTTPConfig} [config] - Optional configuration for the request.
+                     * @returns {Promise<HTTPResponse>} - A promise that resolves with the HTTP response.
+                     */
+                    $http.delete = function (url, config) {};
+                }
+
+                apply(fn) {
+                    try {
+                        this.$scope.$apply(fn);
+                    } catch (e) {
+                        console.log(e);
+                    }
+                }
+
+                closeBootstrapPopovers() {
+                    const popoverElements = document.querySelectorAll(".popover.show");
+                    for (const element of popoverElements) {
+                        const popoverInstance = bootstrap.Popover.getInstance(element);
+                        if (popoverInstance) {
+                            popoverInstance.hide();
+                        }
+                    }
+                }
+            }
+
+            class MusicAppController extends ControllerHepler {
                 constructor($scope, $sce, $timeout, $http, DataService, AuthService) {
+                    super($scope);
                     const ctrl = this;
                     cfg.ins = ctrl;
-                    this.config = {
-                        lyricAutoTranslate: true,
-                    };
-                    this.$scope = $scope;
                     this.$sce = $sce;
                     this.$timeout = $timeout;
                     this.$http = $http;
                     this.MSService = new MusicSourceService($http);
+                    /** @type {DataService} */
                     this.DataService = DataService;
+                    /** @type {AuthService} */
                     this.AuthService = AuthService;
                     this.menu = document.getElementById("menu");
                     this.sortBy = "";
                     this.playlist = [];
-                    const timer = { setPlaybackRateTimer: undefined };
-                    const urlRvk = [];
                     // this.fileId = "<?= fileId?>";
                     this.sheet = "<?= sheet?>";
                     this.message = "";
                     this.keyList = [];
                     this.songList = undefined;
-                    this.player = {
-                        audioTimeRanges: [document.querySelector("#audioTimeRange"), document.querySelector("#audioTimeRange-fc")],
-                        init: function ($scope) {
-                            const player = this;
-                            $scope.secToMin = secToMin;
-                            $scope.$watch(
-                                () => player.in4.volume.value,
-                                function (newValue, oldValue) {
-                                    if (newValue !== oldValue) player.setSpeakerValue(newValue);
-                                },
-                            );
-                            $scope.$watch(
-                                () => this.in4.speed,
-                                (newValue, oldValue) => {
-                                    if (newValue !== oldValue) {
-                                        clearTimeout(timer.setPlaybackRateTimer);
-                                        timer.setPlaybackRateTimer = setTimeout(() => player.setPlaybackRate(newValue), 2000);
-                                    }
-                                },
-                            );
-                            for (const e of this.audioTimeRanges) {
-                                e.addEventListener("change", (event) => {
-                                    console.log(player.in4.current, ">", event.target.value);
-                                    player.audio.currentTime = event.target.value;
-                                });
-                            }
-                        },
-                        in4: {
-                            duration: "0",
-                            current: "0",
-                            volume: {
-                                isMuted: false,
-                                value: 75,
-                            },
-                            changeTime: 0,
-                            speed: 1,
-                        },
-                        metadata: {},
-                        _playlist: [],
-                        _favlist: [],
-                        playlist: [],
-                        prevPlaylist: [],
-                        favlist: [],
-                        // audio element
-                        audio: new Audio(),
-                        setPlaybackRate(_val) {
-                            if (_val == player.audio.playbackRate) {
-                                return;
-                            }
-                            this.audio.pause();
-                            this.audio.playbackRate = parseFloat(_val);
-                            setTimeout(() => {
-                                this.audio.play();
-                            }, 200);
-                        },
-                        setSpeakerValue(_val) {
-                            if (_val && (_val > 0 || _val <= 100)) {
-                                _val = parseFloat(_val);
-                                this.audio.volume = _val / 100;
-                            } else {
-                                this.audio.volume = 0;
-                            }
-                        },
-                        isPlaying: false,
-                        generateAudioEvent() {
-                            this.setSpeakerValue(this.in4.volume.value);
-                            const audio = this.audio;
-                            let audioLog = {};
-                            function updateRange_() {}
-                            audio.addEventListener("timeupdate", () => {
-                                this.in4.current = audio.currentTime;
-                                for (const e of this.audioTimeRanges) {
-                                    e.value = this.in4.current;
-                                }
-                                this.updateLyric(this.in4.current);
-
-                                if (this.in4.current > 0) {
-                                    this.isPlaying = true;
-                                }
-                                // preparing next song
-
-                                if (cfg.preload && !this.refresh.rdn && this.in4.current / audio.duration > parseFloat(cfg.preloadRate)) {
-                                    console.log("enter rdns");
-                                    this.refresh.rdn = true;
-                                    this._readyNextSong();
-                                }
-
-                                if (!audioLog.songInfo || audioLog.songInfo.fileId != this.songInfo.fileId) {
-                                    audioLog = {
-                                        songInfo: this.songInfo,
-                                        count: 0,
-                                        lastT: 0,
-                                        done: false,
-                                    };
-                                } else {
-                                    if (audioLog.songInfo && audioLog.songInfo.fileId == this.songInfo.fileId && audio.currentTime <= 1 && audioLog.lastT > audio.currentTime) {
-                                        audioLog = {
-                                            songInfo: this.songInfo,
-                                            count: 0,
-                                            lastT: 0,
-                                            done: false,
-                                        };
-                                    }
-                                }
-                                audioLog.count += audio.currentTime - audioLog.lastT;
-                                audioLog.lastT = audio.currentTime;
-                                if (!audioLog.done && audio.duration / 2 < audioLog.count) {
-                                    let s = audioLog.songInfo;
-                                    audioLog.done = true;
-                                    console.log("1viewup");
-                                    ctrl.DataService.addListens(s).then((result) => {
-                                        if (result.fileId) {
-                                            ctrl.tryApply();
-                                        }
-                                    });
-                                    this.songInfo.listens++;
-                                }
-                                ctrl.tryApply();
-                            });
-                            audio.addEventListener("ended", () => {
-                                this.next();
-                                ctrl.tryApply();
-                            });
-                            audio.addEventListener("canplay", () => {
-                                this.in4.duration = audio.duration;
-                                this.loadMetadata();
-                                ctrl.tryApply();
-                            });
-                            audio.addEventListener("pause", () => {
-                                this.isPlaying = false;
-                                ctrl.tryApply();
-                            });
-                            // audio.addEventListener("loadedmetadata", function () {
-                            //     ctrl.tryApply();
-                            // });
-                        },
-                        // current song playing info
-                        songInfo: undefined,
-                        coverImgSrc: "",
-                        currentExt: "",
-                        defaultCoverImgUrl: "https://i.pinimg.com/736x/5a/e1/58/5ae15822d73ac828599044153fb91fed.jpg",
-                        isRandomPlay: true,
-                        loopMode: 0,
-                        lyricLRCs: {
-                            origin: undefined,
-                            vs: undefined,
-                            es: undefined,
-                        },
-                        isFavoriteList: false,
-                        // set player song list
-                        setPlaylist(songList) {
-                            this._playlist = [...songList];
-                            //set playlist
-                            this.playlist = [...songList];
-                            this.prevPlaylist = [];
-                            this._favList = songList.filter((s) => s.isFavorite);
-                            this.favList = [...this._favlist];
-                            this.isOpen = true;
-                            // this.audio.pause();
-                        },
-                        next() {
-                            this._clearLyric();
-                            if (this.playlist.length > 0) {
-                                let rns = this._cache._rns;
-                                if (rns.songInfo && this.isRandomPlay == rns.random && this.playlist.find((x) => x.fileId == rns.songInfo.fileId)) {
-                                    console.log("play rns");
-                                    this._cache.clearRns(false);
-
-                                    this.refresh(rns.songInfo, rns.audio);
-                                    return;
-                                }
-
-                                let songIn42Play;
-                                if (this.isFavoriteList && this.playlist !== this.favlist) {
-                                    this.favlist = [...this._favlist];
-                                    this.playlist = this.favlist;
-                                } else {
-                                    if (this.playlist === this.favlist) {
-                                        this.playlist = [...this._playlist];
-                                    }
-                                }
-                                if (this.loopMode != 0 && this.songInfo) {
-                                    console.log("play loop");
-
-                                    this.audio.currentTime = 0;
-                                    this.audio.play();
-                                    if (this.loopMode == 1) {
-                                        this.loopMode = 0;
-                                    }
-                                    return;
-                                }
-                                if (this.isRandomPlay) {
-                                    songIn42Play = popRandomElement(this.playlist);
-                                } else {
-                                    songIn42Play = this.playlist.pop();
-                                }
-                                if (songIn42Play) {
-                                    console.log("play df");
-
-                                    this.refresh(songIn42Play);
-                                    this.prevPlaylist.push(songIn42Play);
-                                }
-                            }
-                        },
-                        prev() {
-                            let { current, duration } = this.in4;
-                            if (current > 10) {
-                                this.restart();
-                                return;
-                            }
-                            if (this.prevPlaylist.length > 0) {
-                                this.refresh(this.prevPlaylist.pop());
-                            }
-                        },
-                        _clearLyric() {
-                            document.getElementById("lyric").innerHTML = "";
-                            document.getElementById("supLyric").innerHTML = "";
-                            document.getElementById("vnLyric").innerHTML = "";
-                            document.getElementById("enLyric").innerHTML = "";
-                        },
-                        // play button handler
-                        play(s) {
-                            this.refresh(s);
-                        },
-                        restart() {
-                            this.audio.currentTime = 0;
-                            this.audio.play();
-                        },
-                        updateLyric(timeAt = 0) {
-                            timeAt = parseFloat(timeAt) + 0.25;
-                            const { origin, es, vs } = this.lyricLRCs;
-                            try {
-                                let originSub = origin?.getLyrics(timeAt, ctrl.config.lyricAutoTranslate),
-                                    vietsub = vs?.getLyrics(timeAt, ctrl.config.lyricAutoTranslate),
-                                    engsub;
-                                if (originSub) {
-                                    document.getElementById("lyric").innerHTML = originSub;
-                                    try {
-                                        if (/[\u4e00-\u9fff]/.test(originSub)) {
-                                            document.getElementById("supLyric").innerHTML = originSub
-                                                .split(".")
-                                                .map((s) => {
-                                                    return s
-                                                        .split(",")
-                                                        .map((_s) => {
-                                                            return pinyin
-                                                                .pinyin(_s, {
-                                                                    segment: true, // 启用分词
-                                                                    group: true, // 启用词组
-                                                                })
-                                                                .map((p) => p[0])
-                                                                .join(" ");
-                                                        })
-                                                        .join(", ")
-                                                        .trim();
-                                                })
-                                                .join(". ")
-                                                .trim();
-                                        } else {
-                                            document.getElementById("supLyric").innerHTML = "";
-                                        }
-                                    } catch (e) {
-                                        console.log(e);
-                                    }
-                                } else {
-                                    document.getElementById("lyric").innerHTML = "";
-                                    document.getElementById("supLyric").innerHTML = "";
-                                }
-                                document.getElementById("vnLyric").innerHTML = vietsub && vietsub != originSub ? vietsub : "";
-                            } catch (e) {
-                                // this._clearLyric
-                                console.log("update lyric err", e);
-                            }
-                        },
-                        // reset playlist
-                        resetPlaylist() {
-                            this.playlist = [...this._playlist];
-                            this.favList = [...this._favlist];
-                            this.prevPlaylist = [];
-                        },
-                        _cache: {
-                            _rns: {},
-                            _rnsWk: false,
-                            clearRns(revoke = true) {
-                                try {
-                                    if (revoke && this._rns.url) {
-                                        // URL.revokeObjectURL(this._rns.url);
-                                    }
-                                } catch (e) {
-                                    console.log(e);
-                                }
-                                this._rns = {};
-                                this._rnsWk = false;
-                            },
-                        },
-                        _readyNextSong() {
-                            this._readyNextSong.idx = this._readyNextSong + 1 || 1;
-                            let idx = this._readyNextSong.idx;
-                            this._cache._rnsWk = true;
-                            if (this.loopMode > 0) {
-                                return;
-                            }
-                            if (this.playlist.length > 0) {
-                                let songIn42Play;
-                                if (this.isFavoriteList && this.playlist !== this.favlist) {
-                                    this.favlist = [...this._favlist];
-                                    this.playlist = this.favlist;
-                                } else {
-                                    if (this.playlist === this.favlist) {
-                                        this.playlist = [...this._playlist];
-                                    }
-                                }
-                                if (this.isRandomPlay) {
-                                    songIn42Play = this.playlist[Math.floor(Math.random() * this.playlist.length)];
-                                } else {
-                                    songIn42Play = this.playlist[this.playlist.length - 1];
-                                }
-                                if (songIn42Play) {
-                                    // console.log("ppfor ", songIn42Play);
-                                    /// ready
-                                    this._cache.clearRns(false);
-                                    return (
-                                        ctrl.MSService.getAudioSource(songIn42Play.fileId)
-                                            // // let url = "https://www.googleapis.com/drive/v3/files/" + songIn42Play.fileId;
-                                            // return fetch(url + "?alt=media&key=" + ctrl.selectKeyA_())
-                                            //     .then((response) => response.blob())
-                                            .then((blob) => {
-                                                // console.log("rdn");
-                                                let url = URL.createObjectURL(blob);
-                                                let audio = new Audio(url);
-                                                if (this._readyNextSong.idx != idx) return;
-                                                return (this._cache._rns = {
-                                                    songInfo: songIn42Play,
-                                                    audio: audio,
-                                                    url: url,
-                                                    blob: blob,
-                                                    random: this.isRandomPlay,
-                                                });
-                                            })
-                                            .catch((err) => {
-                                                // this._cache._rnsWk = false;
-                                                console.log(err);
-                                            })
-                                    );
-                                }
-                            }
-                        },
-                        // set songinfo and play
-                        refresh(songInfo, audio) {
-                            if (ctrl.isReady()) {
-                                let rfs = this.refresh.rfs ?? 0;
-                                this.refresh.rfs = rfs;
-                                this.refresh.playIndex = this.refresh.playIndex || 0;
-                                const currentIndex = this.refresh.playIndex + 1;
-                                this.refresh.playIndex = currentIndex;
-                                try {
-                                    if (songInfo.fileId == this._cache._rns.songInfo.fileId) {
-                                        audio = this._cache._rns.audio;
-                                    }
-                                } catch (e) {}
-
-                                this.songInfo = songInfo;
-                                this.currentExt = "";
-                                this.coverImgSrc = "";
-                                this.in4.current = 0;
-                                this.in4.duration = 0;
-                                this.audio?.pause();
-                                this.audio?.remove();
-                                this.audio = new Audio("");
-                                this._clearLyric();
-                                if (audio) {
-                                    this.refresh.rfs += 1;
-                                    if (this.refresh.playIndex != currentIndex) return;
-
-                                    this.lyricLRCs = {
-                                        origin: new LyricLRC(songInfo.lyric),
-                                        vs: new LyricLRC((songInfo.lyric_vn == "" || !songInfo.lyric_vn) && songInfo.lyric_vn_translated ? songInfo.lyric_vn_translated : songInfo.lyric_vn),
-                                        // es: new LyricLRC(song.songInfo.lyric_en),
-                                    };
-                                    this.audio = audio;
-                                    this.audio.title = this.mainSongName || this.subSongName;
-                                    this.generateAudioEvent();
-                                    this.audio.load();
-                                    this.audio.play();
-                                    this.refresh.rdn = false;
-                                    this._cache._rnsWk = false;
-                                    for (const [i, url] of urlRvk.entries()) {
-                                        if (url != audio.src) {
-                                            try {
-                                                URL.revokeObjectURL(url);
-                                                urlRvk.slice(i, 1);
-                                            } catch (e) {
-                                                console.log(e);
-                                            }
-                                        }
-                                    }
-                                    urlRvk.push(audio.src);
-                                } else {
-                                    clearTimeout(timer.loadSongAudioTimer);
-                                    timer.loadSongAudioTimer = setTimeout(() => {
-                                        ctrl.MSService.getAudioSource(songInfo.fileId)
-                                            // fetch(this.audioSrc)
-                                            //     .then((response) => response.blob())
-                                            .then((blob) => {
-                                                if (rfs != this.refresh.rfs) {
-                                                    return blob;
-                                                }
-                                                this._cache.clearRns();
-                                                let url = URL.createObjectURL(blob);
-                                                let audio = new Audio(url);
-                                                this._cache._rns = {
-                                                    // songInfo: songInfo,
-                                                    blob: blob,
-                                                    audio: audio,
-                                                    url: url,
-                                                };
-                                                this.refresh(songInfo, audio);
-                                                ctrl.tryApply();
-                                            });
-                                    }, 2000);
-                                }
-                            }
-                        },
-                        playHandler(s, p) {
-                            if (p) this.setPlaylist(p);
-                            if (!s) {
-                                if (this.songInfo) {
-                                    if (this.audio.paused) {
-                                        this.audio.play();
-                                    } else {
-                                        this.audio.pause();
-                                    }
-                                } else {
-                                    this.next();
-                                }
-                            } else {
-                                if (this.songInfo && s.fileId == this.songInfo.fileId) {
-                                    if (this.audio.paused) {
-                                        this.audio.play();
-                                    } else {
-                                        this.audio.pause();
-                                    }
-                                } else {
-                                    this.play(s);
-                                }
-                                return;
-                            }
-                        },
-                        speakerBtnHandle(value) {
-                            this.in4.volume.isMuted = !this.in4.volume.isMuted;
-                            if (!this.in4.volume.isMuted) {
-                                this.setSpeakerValue(this.in4.volume.value);
-                            } else {
-                                this.audio.volume = 0;
-                            }
-                        },
-                        loadMetadata() {
-                            const player = this;
-                            function processblob(blob) {
-                                jsmediatags.read(blob, {
-                                    onSuccess: function (tag) {
-                                        player.currentExt = mimeTypeToExt(blob.type);
-                                        const tags = tag.tags;
-                                        const picture = tags.picture;
-                                        console.log(tags);
-                                        if (picture) {
-                                            player.coverImgSrc = "data:" + picture.format + ";base64," + arrayBufferToBase64(picture.data);
-                                            ctrl.tryApply();
-                                        } else {
-                                        }
-                                    },
-                                    onError: function (error) {
-                                        console.log("err: " + JSON.stringify(error));
-                                    },
-                                });
-                            }
-                            fetch(player.audio.src)
-                                .then((response) => response.blob())
-                                .then((blob) => {
-                                    processblob(blob);
-                                })
-                                .catch((error) => {
-                                    console.error("Error fetching the file:", error);
-                                });
-                            return;
-                        },
-                        get mainSongName() {
-                            try {
-                                return this.songInfo.name == "" ? "" : `${this.songInfo.singer} - ${this.songInfo.name}`;
-                            } catch (e) {
-                                return "";
-                            }
-                        },
-                        get subSongName() {
-                            try {
-                                return this.songInfo.vname == "" ? "" : `${this.songInfo.vsinger} - ${this.songInfo.vname}`;
-                            } catch (e) {
-                                return "";
-                            }
-                        },
-                        showFc() {
-                            closeAllPopover();
-                            document.getElementById("player-fc").style.display = "block";
-                        },
-                        hideFc() {
-                            closeAllPopover();
-                            document.getElementById("player-fc").style.display = "none";
-                        },
-                    };
-                    this.player.init($scope);
+                    const player = new PlayerController($scope, $http);
+                    player.DataService = DataService;
+                    player.MSService = this.MSService;
+                    this.player = player;
                     const managePlaylist = {
                         isOpen: false,
                         id: undefined,
@@ -1731,10 +1393,10 @@
                         remove(s) {
                             this.songList = this.songList.filter((x) => x.fileId != s.fileId);
                         },
-                        add: function (s) {
+                        add(s) {
                             this.songList.push(s);
                         },
-                        addHandler: function (s) {
+                        addHandler(s) {
                             if (this.isAdded(s)) {
                                 this.remove(s);
                             } else {
@@ -1761,7 +1423,7 @@
                                             }
                                             ctrl.user.playlist.push(pl);
                                             ctrl._lSupdate();
-                                            ctrl.tryApply();
+                                            ctrl.apply();
                                             alert("add ok" + JSON.stringify(result));
                                         } else {
                                             alert("add err" + result);
@@ -1779,7 +1441,7 @@
                                                 copyObj(x, pl);
                                             });
                                             ctrl._lSupdate();
-                                            ctrl.tryApply();
+                                            ctrl.apply();
                                             alert("update ok");
                                         } else {
                                             alert("Update error \n " + result);
@@ -1832,7 +1494,7 @@
                                         if (s.fileId == this.songInfo.fileId) {
                                             copyObj(this.songInfo, s);
                                         }
-                                        ctrl.tryApply();
+                                        ctrl.apply();
                                     } else {
                                         alert("update err " + result);
                                     }
@@ -1874,6 +1536,8 @@
                         },
                     };
                     this.init($scope);
+                    // $scope.app = ctrl
+                    $scope.player = player;
                 }
 
                 init($scope) {
@@ -1881,7 +1545,7 @@
                     $scope.isSyncedLRC = (lrcString) => {
                         return new LyricLRC(lrcString).lyrics.data.length > 5;
                     };
-                    let u = AuthService._getUS();
+                    let u = AuthService.getUser();
                     if (u && u != "null") {
                         this.user = u;
                         this.AuthService.getUserInfo()
@@ -1889,13 +1553,13 @@
                                 console.log(result);
                                 if (this.user && result) {
                                     this.user = result;
-                                    this.tryApply();
+                                    this.apply();
                                 }
                             })
                             .catch((err) => {
                                 console.log(err);
-                                this.user = AuthService._getUS();
-                                this.tryApply();
+                                this.user = AuthService.getUser();
+                                this.apply();
                             });
                     }
 
@@ -1909,7 +1573,7 @@
 
                     setTimeout(() => {
                         $scope.loading = false; // Hide the loader once data is loaded
-                        this.tryApply();
+                        this.apply();
                     }, 2000);
                 }
                 get songTable() {
@@ -1976,31 +1640,18 @@
                 _lSupdate() {
                     AuthService._setUS(this.user);
                 }
-                isReady() {
-                    if (this.keyList.length > 0) {
-                        return true;
-                    }
-                    return false;
-                }
-                tryApply() {
-                    try {
-                        this.$scope.$apply();
-                    } catch (e) {
-                        // console.log("apply err " + e);
-                    }
-                }
                 loadPlaylist() {
                     this.DataService.getAllPlaylist().then((result) => {
                         if (result) {
                             this.playlist = result;
-                            this.tryApply();
+                            this.apply();
                         }
                     });
                 }
                 loadSongCategory() {
                     this.DataService.getAllCategory().then((result) => {
                         this.sheetNames = result;
-                        this.tryApply();
+                        this.apply();
                     });
                 }
                 loadSongTable() {
@@ -2015,8 +1666,7 @@
                         if (__w == this.sheet) {
                             this._songList = [...result];
                             this.songList = [...result];
-                            // this.player.setPlaylist(result);
-                            this.tryApply();
+                            this.apply();
                             document.body.style.cursor = "default";
                         }
                     });
@@ -2027,13 +1677,7 @@
                         this.MSService.keyList = result;
                     });
                 }
-                getButtonLabel(name) {
-                    if (name == this.sheet) {
-                        return this.$sce.trustAsHtml("<u>" + name + "</u>"); // Use trusted HTML for rendering
-                    } else {
-                        return this.$sce.trustAsHtml(name);
-                    }
-                }
+
                 selectSheetBtnHandler(name) {
                     this.sheet = name;
                     this.loadSongTable();
@@ -2067,7 +1711,7 @@
                     if (confirm("Confirm delete playlist " + pl.name)) {
                         this.DataService.removePlaylist(pl).then((result) => {
                             this.playlist.filter((x) => x.id != pl.id);
-                            this.tryApply();
+                            this.apply();
                             alert("remove ok");
                         });
                     }
@@ -2095,11 +1739,11 @@
                                         alert("favoriteBtnHandler err: unknown " + ": got result= \n" + result);
                                     }
                                     song.isLoadingFav = false;
-                                    this.tryApply();
+                                    this.apply();
                                 })
                                 .catch((err) => {
                                     song.isLoadingFav = false;
-                                    this.tryApply();
+                                    this.apply();
                                     alert(err);
                                 });
                         } else {
@@ -2112,11 +1756,11 @@
                                         alert("favoriteBtnHandler err: unknown " + ": got result= \n" + result);
                                     }
                                     song.isLoadingFav = false;
-                                    this.tryApply();
+                                    this.apply();
                                 })
                                 .catch((err) => {
                                     song.isLoadingFav = false;
-                                    this.tryApply();
+                                    this.apply();
                                     alert(err);
                                 });
                         }
@@ -2139,7 +1783,7 @@
                             .then((result) => {
                                 if (result) {
                                     this.user = result.user;
-                                    this.tryApply();
+                                    this.apply();
                                     loadingModal.hide();
                                 } else {
                                     console.log(result);
@@ -2159,7 +1803,7 @@
                             .then((result) => {
                                 if (result) {
                                     this.user = result.user;
-                                    this.tryApply();
+                                    this.apply();
                                     alert("registerHandler Ok");
                                     loadingModal.hide();
                                 } else {
@@ -2177,6 +1821,500 @@
                     this.user = undefined;
                 }
             }
+
+            class PlayerController extends ControllerHepler {
+                constructor($scope, $http) {
+                    super($scope);
+
+                    const player = this;
+                    /** @type {MusicSourceService} */
+                    this.MSService = undefined;
+                    /** @type {DataService} */
+                    this.DataService = undefined;
+                    /** @type {SongInfo} */
+                    this.songInfo = undefined;
+
+                    this.metadata = {
+                        defaultCoverSrc: "https://i.pinimg.com/736x/5a/e1/58/5ae15822d73ac828599044153fb91fed.jpg",
+                        extension: "",
+                        coverSrc: "https://i.pinimg.com/736x/5a/e1/58/5ae15822d73ac828599044153fb91fed.jpg",
+                        volume: {
+                            isMuted: false,
+                            value: 75,
+                        },
+                        timing: {
+                            current: 0,
+                            duration: 0,
+                            speed: 1,
+                        },
+                        lyricLRCs: {
+                            origin: undefined,
+                            vs: undefined,
+                            en: undefined,
+                        },
+                        reset() {
+                            this.coverSrc = this.defaultCoverSrc;
+                            this.extension = "";
+                            this.timing.current = 0;
+                            this.timing.duration = 0;
+                            this.timing.speed = 1;
+                        },
+                    };
+                    /** @type {HTMLAudioElement} */
+                    this.audio = new Audio();
+
+                    this.audioTimeRanges = document.querySelectorAll("#audioTimeRange, #audioTimeRange-fc");
+
+                    this.cache = {
+                        previousRefresh: 0,
+                        refreshPlayIndex: 0,
+                        prepareNextSongIndex: 0,
+                    };
+
+                    this.config = {
+                        loopMode: 0,
+                        isFav: false,
+                        isRandom: true,
+                        lyricAutoTranslate: true,
+                    };
+
+                    this.nextSong = {
+                        songInfo: undefined,
+                        audio: undefined,
+                        random: undefined,
+                        set({ songInfo, audio, random }) {
+                            this.songInfo = songInfo;
+                            this.audio = audio;
+                            this.random = random;
+                            if (audio) {
+                                this.audio.load();
+                            }
+                        },
+                    };
+
+                    this.playlist = {
+                        set(songList) {
+                            this.default = [...songList];
+                            this.curList = [...this.default];
+                            this.prevList = [];
+                            this.favList = this.getFavList();
+                        },
+                        reset() {
+                            this.set(this.default);
+                        },
+                        getFavList() {
+                            return (this.favList = this.default.filter((s) => player.isFavorite(s)));
+                        },
+                        default: [],
+                        curList: [],
+                        prevList: [],
+                        favList: [],
+                        getPlaylist(isFav) {
+                            return isFav ? this.favList : this.curList;
+                        },
+
+                        getSong(isRandom, isFav) {
+                            let songToPlay;
+                            const wlist = this.getPlaylist(isFav);
+
+                            if (isRandom) {
+                                songToPlay = popRandomElement(wlist);
+                            } else {
+                                songToPlay = wlist.pop();
+                            }
+                            this.prevList.push(songToPlay);
+                            return songToPlay;
+                        },
+                    };
+                    this.audioObjectURLs = [];
+                    this.isPlaying = false;
+
+                    this.document = document;
+                    this.document.addEventListener("keydown", (event) => {
+                        if (["ArrowLeft", "ArrowRight", " "].includes(event.key)) {
+                            event.preventDefault(); // Prevents the default behavior (like scrolling)
+
+                            if (event.key === "ArrowLeft") {
+                                this.prev();
+                            } else if (event.key === "ArrowRight") {
+                                this.next();
+                            } else if (event.key === " ") {
+                                this.playToggle();
+                            }
+                        }
+                    });
+
+                    this.init($scope);
+                }
+                playToggle() {
+                    if (this.audio.paused) {
+                        this.audio.play();
+                    } else this.audio.pause();
+                }
+                init($scope) {
+                    $scope.secToMin = secToMin;
+                    $scope.$watch(
+                        () => this.metadata.volume.value,
+                        (newValue, oldValue) => {
+                            if (newValue !== oldValue) this.setSpeakerValue(newValue);
+                        },
+                    );
+                    $scope.$watch(
+                        () => this.metadata.timing.speed,
+                        (newValue, oldValue) => {
+                            if (newValue !== oldValue) {
+                                clearTimeout(this.setPlaybackRate.timer);
+                                this.setPlaybackRate.timer = setTimeout(() => this.setPlaybackRate(newValue), 2000);
+                            }
+                        },
+                    );
+                    for (const e of this.audioTimeRanges) {
+                        e.addEventListener("change", (event) => {
+                            console.log(this.metadata.timing.current, ">", event.target.value);
+                            this.audio.currentTime = event.target.value;
+                        });
+                    }
+                }
+                isFavorite(song) {
+                    return AuthService.getUser()?.favorite?.includes(song.fileId);
+                }
+                setPlaybackRate(playbackRate) {
+                    if (this.audio.playbackRate == playbackRate) {
+                        return;
+                    }
+
+                    this.audio.pause();
+                    this.audio.playbackRate = playbackRate;
+                    setTimeout(() => this.audio.play(), 200);
+                }
+                setSpeakerValue(_val) {
+                    if (_val && (_val > 0 || _val <= 100)) {
+                        _val = parseFloat(_val);
+                        this.audio.volume = _val / 100;
+                    } else {
+                        this.audio.volume = 0;
+                    }
+                }
+                generateAudioEvent() {
+                    this.setSpeakerValue(this.metadata.volume.value);
+
+                    const audio = this.audio;
+                    let playTimer = {};
+
+                    audio.addEventListener("timeupdate", () => {
+                        // update current time metadata
+                        this.metadata.timing.current = audio.currentTime;
+                        // update to html Range Input
+                        for (const e of this.audioTimeRanges) {
+                            e.value = this.metadata.timing.current;
+                        }
+                        // updatye Lyrics
+                        this.updateLyrics(this.metadata.timing.current);
+
+                        // update player is Playing
+                        if (this.metadata.timing.current > 0) {
+                            this.isPlaying = true;
+                        }
+                        // prepare for next song current time play 75%
+                        if (!this.refresh.rdn && this.metadata.timing.current / audio.duration > 0.75) {
+                            this.refresh.rdn = true;
+                            this.prepareNextSong();
+                        }
+
+                        // update listens
+                        if (!playTimer.songInfo || playTimer.songInfo.fileId !== this.songInfo.fileId) {
+                            playTimer = {
+                                songInfo: this.songInfo,
+                                count: 0,
+                                lastT: 0,
+                                done: false,
+                            };
+                        } else {
+                            if (playTimer.songInfo && playTimer.songInfo.fileId === this.songInfo.fileId && audio.currentTime <= 1 && playTimer.lastT > audio.currentTime) {
+                                playTimer = {
+                                    songInfo: this.songInfo,
+                                    count: 0,
+                                    lastT: 0,
+                                    done: false,
+                                };
+                            }
+                        }
+                        playTimer.count += audio.currentTime - playTimer.lastT;
+                        playTimer.lastT = audio.currentTime;
+                        if (!playTimer.done && audio.duration / 2 < playTimer.count) {
+                            playTimer.done = true;
+                            this.DataService.addListens(playTimer.songInfo).then((result) => {
+                                if (result.fileId) {
+                                    this.apply();
+                                }
+                            });
+                            this.songInfo.listens++;
+                        }
+                        this.apply();
+                    });
+                    audio.addEventListener("ended", () => {
+                        this.next();
+                        this.apply();
+                    });
+                    audio.addEventListener("canplay", () => {
+                        this.metadata.timing.duration = audio.duration;
+                        this.loadMetadata();
+                        this.apply();
+                    });
+                    audio.addEventListener("pause", () => {
+                        this.isPlaying = false;
+                        this.apply();
+                    });
+                }
+                setPlaylist(songList) {
+                    this.playlist.set(songList);
+                }
+                next() {
+                    const { isFav, isRandom, loopMode } = this.config;
+
+                    this.clearLyrics();
+
+                    if (loopMode != 0 && this.songInfo) {
+                        console.log("next loop");
+                        this.audio.currentTime = 0;
+                        this.audio.play();
+                        if (this.loopMode == 1) {
+                            this.loopMode = 0;
+                        }
+                        return;
+                    }
+
+                    const nextSong = this.nextSong;
+
+                    if (nextSong?.songInfo && isRandom == nextSong.random && this.playlist.default.find((s) => s.fileId == nextSong.songInfo.fileId)) {
+                        console.log("next {nextSong}");
+                        this.refresh(nextSong.songInfo, nextSong.audio);
+                        nextSong.set({});
+                        return;
+                    }
+                    console.log("next default");
+                    this.playlist.getPlaylist(isFav).length > 0 ? this.refresh(this.playlist.getSong(isRandom, isFav)) : console.log("Playlist length is 0");
+                }
+
+                prev() {
+                    const { current, duration } = this.metadata.timing;
+                    if (current > 10) {
+                        this.restart();
+                    } else if (this.playlist.prevList.length > 0) {
+                        this.refresh(this.playlist.prevList.pop());
+                    }
+
+                    console.log("err: empty prev song");
+                }
+                clearLyrics() {
+                    const lyricElements = document.querySelectorAll("#lyric, #supLyric, #vnLyric, #enLyric");
+                    lyricElements.forEach((element) => (element.innerHTML = ""));
+                }
+                // play button handler
+                play(s) {
+                    this.refresh(s);
+                }
+                restart() {
+                    this.audio.currentTime = 0;
+                    setTimeout(() => this.audio.play(), 200);
+                }
+                updateLyrics(timeAt = 0) {
+                    const time = parseFloat(timeAt) + 0.25;
+                    const { origin, en, vs } = this.metadata.lyricLRCs;
+                    const { lyricAutoTranslate } = this.config;
+
+                    try {
+                        const originSub = origin?.getLyrics(time, lyricAutoTranslate);
+                        const vietsub = vs?.getLyrics(time, lyricAutoTranslate);
+
+                        if (originSub) {
+                            document.getElementById("lyric").innerHTML = originSub;
+
+                            if (/[\u4e00-\u9fff]/.test(originSub)) {
+                                const supLyrics = originSub
+                                    .split(".")
+                                    .map((s) =>
+                                        s
+                                            .split(",")
+                                            .map((_s) =>
+                                                pinyin
+                                                    .pinyin(_s, { segment: true, group: true })
+                                                    .map((p) => p[0])
+                                                    .join(" "),
+                                            )
+                                            .join(", ")
+                                            .trim(),
+                                    )
+                                    .join(". ")
+                                    .trim();
+                                document.getElementById("supLyric").innerHTML = supLyrics;
+                            } else {
+                                document.getElementById("supLyric").innerHTML = "";
+                            }
+                        } else {
+                            document.getElementById("lyric").innerHTML = "";
+                            document.getElementById("supLyric").innerHTML = "";
+                        }
+                        document.getElementById("vnLyric").innerHTML = vietsub && vietsub != originSub ? vietsub : "";
+                    } catch (error) {
+                        console.error("updateLyrics error", error);
+                    }
+                }
+                resetPlaylist() {
+                    this.playlist.reset();
+                }
+                setSongInfo(songInfo) {
+                    this.songInfo = songInfo;
+                    this.metadata.reset();
+                }
+                prepareNextSong() {
+                    const idx = (this.cache.prepareNextSongIndex = this.cache.prepareNextSongIndex + 1 || 1);
+                    const { isFav, isRandom, loopMode } = this.config;
+                    const songToPlay = this.playlist.getSong(isRandom, isFav);
+
+                    if (songToPlay && loopMode == 0) {
+                        return this.MSService.getAudioSource(songToPlay.fileId)
+                            .then((blob) => {
+                                if (this.cache.prepareNextSongIndex !== idx) return;
+                                console.log("nextSong.set");
+                                this.nextSong.set({
+                                    songInfo: songToPlay,
+                                    audio: new Audio(URL.createObjectURL(blob)),
+                                    random: isRandom,
+                                });
+                                this.apply();
+                            })
+                            .catch((err) => {
+                                console.error(err);
+                            });
+                    }
+                }
+                /**
+                 * @param {SongInfo} songInfo
+                 * @param {HTMLAudioElement} [audio]
+                 */
+                refresh(songInfo, audio) {
+                    const currentIndex = this.cache.refreshPlayIndex + 1;
+                    this.cache.refreshPlayIndex = currentIndex;
+
+                    if (!audio && songInfo.fileId === this.nextSong.songInfo?.fileId) {
+                        audio = this.nextSong.audio;
+                    }
+
+                    this.setSongInfo(songInfo);
+                    this.audio?.pause();
+                    this.audio?.remove();
+                    this.audio = new Audio("");
+                    this.clearLyrics();
+
+                    if (audio) {
+                        this.metadata.lyricLRCs.origin = new LyricLRC(songInfo.lyric);
+                        this.metadata.lyricLRCs.vs = new LyricLRC((songInfo.lyric_vn === "" || !songInfo.lyric_vn) && songInfo.lyric_vn_translated ? songInfo.lyric_vn_translated : songInfo.lyric_vn);
+
+                        this.audio = audio;
+                        this.audio.title = this.mainSongName || this.subSongName;
+                        this.generateAudioEvent();
+                        this.audio.load();
+                        this.audio.play();
+                        this.refresh.rdn = false;
+                        for (const [index, url] of this.audioObjectURLs.entries()) {
+                            if (url !== audio.src && url.startsWith("blob:")) {
+                                URL.revokeObjectURL(url);
+                                this.audioObjectURLs.splice(index, 1);
+                            }
+                        }
+                        if (audio.src.startsWith("blob:")) {
+                            this.audioObjectURLs.push(audio.src);
+                        }
+                    } else {
+                        clearTimeout(this.refresh.loadSongAudioTimer);
+                        this.refresh.loadSongAudioTimer = setTimeout(() => {
+                            this.MSService.getAudioSource(songInfo.fileId).then((blob) => {
+                                if (currentIndex !== this.cache.refreshPlayIndex) {
+                                    return blob;
+                                }
+                                this.refresh(songInfo, new Audio(URL.createObjectURL(blob)));
+                            });
+                        }, 2000);
+                    }
+                }
+                /**
+                 * @param {SongInfo} songInfo
+                 * @param {SongInfo[]} playlistObj
+                 */
+                playBtnHandler(songInfo, songList) {
+                    if (songList) this.setPlaylist(songList);
+                    if (!songInfo) {
+                        if (this.songInfo) {
+                            this.audio.paused ? this.audio.play() : this.audio.pause();
+                        } else {
+                            this.next();
+                        }
+                    } else {
+                        if (this.songInfo?.fileId === songInfo.fileId) {
+                            this.audio.paused ? this.audio.play() : this.audio.pause();
+                        } else {
+                            this.play(songInfo);
+                        }
+                    }
+                }
+
+                speakerBtnHandler(value) {
+                    if (value === undefined) {
+                        this.metadata.volume.isMuted = !this.metadata.volume.isMuted;
+                        this.setSpeakerVolume(this.metadata.volume.isMuted ? 0 : this.metadata.volume.value);
+                    } else {
+                        this.metadata.volume.isMuted = false;
+                        this.metadata.volume.value = value;
+                        this.setSpeakerVolume(value);
+                    }
+                }
+
+                setSpeakerVolume(volume) {
+                    if (volume === undefined || volume < 0 || volume > 100) {
+                        volume = 0;
+                    }
+                    this.audio.volume = volume / 100;
+                }
+
+                loadMetadata() {
+                    const processblob = (blob) => {
+                        jsmediatags.read(blob, {
+                            onSuccess: ({ tags }) => {
+                                const { picture } = tags;
+                                this.metadata.extension = mimeTypeToExt(blob.type);
+                                if (picture) {
+                                    this.metadata.coverSrc = `data:${picture.format};base64,${arrayBufferToBase64(picture.data)}`;
+                                    this.apply();
+                                }
+                            },
+                        });
+                    };
+                    fetch(this.audio.src)
+                        .then((response) => response.blob())
+                        .then((blob) => processblob(blob))
+                        .catch((error) => {
+                            console.error("Error fetching the file:", error);
+                        });
+                }
+                get mainSongName() {
+                    const { singer, name } = this.songInfo || {};
+                    return name ? `${singer} - ${name}` : "";
+                }
+                get subSongName() {
+                    const { vname, vsinger } = this.songInfo || {};
+                    return vname ? `${vsinger} - ${vname}` : "";
+                }
+                hideFc() {
+                    this.closeBootstrapPopovers();
+                    document.getElementById("player-fc").style.display = "none";
+                }
+                showFc() {
+                    this.closeBootstrapPopovers();
+                    document.getElementById("player-fc").style.display = "block";
+                }
+            }
+
             class Service {
                 constructor($http) {
                     this.$http = $http;
@@ -2221,9 +2359,17 @@
                 static _getAT() {
                     return localStorage.getItem("authToken");
                 }
-                static _getUS() {
+                /**
+                 * Try to get the user object from local storage and return it.
+                 * If anything goes wrong, log the error and return undefined.
+                 * @returns {{username: string, role: number, playlist:Playlist[], favorite: DriveFileID[]}} The user object if it exists, undefined if not.
+                 */
+                static getUser() {
                     try {
-                        return JSON.parse(localStorage.getItem("user"));
+                        let user = JSON.parse(localStorage.getItem("user"));
+                        user.favorite = user.favorite || [];
+                        user.playlist = user.playlist || [];
+                        return user;
                     } catch (e) {
                         console.log(e + "geet user err");
                     }
@@ -2246,7 +2392,7 @@
                 static getAuthToken() {
                     try {
                         let token = this._getAT();
-                        let user = this._getUS();
+                        let user = this.getUser();
                         if (token == null || token == "" || token == "undefined" || user == null || user == "") return this.logout();
                         if (new Date().getTime() > token.split("::").pop()) {
                             return this.logout();
@@ -2478,6 +2624,13 @@
                     return null;
                 }
                 return null;
+            }
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+                }
+                return array;
             }
         </script>
     </body>

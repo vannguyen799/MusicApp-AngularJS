@@ -63,7 +63,7 @@ function playSidebar() {
 }
 
 function playWeb() {
-  return SpreadsheetApp.getUi().showModalDialog(WebApp.renderTemplate('newTab', {
+  return SpreadsheetApp.getUi().showModalDialog(AppServer.renderTemplate('newTab', {
     url: `${testUrl}&sheet=${SpreadsheetApp.getActiveSheet().getName()}`
   }), 'playWeb')
 }

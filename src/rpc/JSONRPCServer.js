@@ -1,9 +1,11 @@
+'use strict'
 class JSONRPCServer extends WebApp.JSONRPCServer {
     constructor() {
         super();
         this.scriptApp = ScriptApp
     }
 
+    /** @returns {JSONRPCServer} */
     static get instance() {
         return instanceOf(this)
     }
@@ -85,5 +87,14 @@ class JSONRPCServer extends WebApp.JSONRPCServer {
             return Utilities.base64Encode(file.getBlob().getBytes());
         }
         return false;
+    }
+
+    admin_dbSingleSheetPush(sheetName, session) {
+        const u = UsersService.instance.getUser(session.user.username);
+        if (u.role != ROLE.ADMIN) {
+            throw new Error('Require Admin Role');
+        }
+        const songs = getAllSongAndId(sheetName)
+        return SongService.instance.updateSingleSongs(songs)
     }
 }

@@ -1,3 +1,4 @@
+'use strict'
 /**
  * @typedef {Object} Playlist
  * @property {number} id - The unique identifier for the playlist.

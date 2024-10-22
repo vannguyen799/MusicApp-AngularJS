@@ -1,13 +1,15 @@
+/** @type {typeof IWebApp} */
+globalThis.WebApp = WebApp
+
 /**
- * @alias WebApp
- * @namespace IWEBAPP_
+ * @namespace IWebApp
  */
-var IWEBAPP_ = {};
+var IWebApp = {};
 
 /**
  * @enum {string}
  */
-IWEBAPP_.HTTPMethod = {
+IWebApp.HTTPMethod = {
     POST: "POST",
     GET: "GET",
     PUT: "PUT",
@@ -16,28 +18,28 @@ IWEBAPP_.HTTPMethod = {
 };
 
 /**
- * @typedef {GoogleAppsScript.HTML.HtmlOutput} IWEBAPP_.HtmlOutput
+ * @typedef {GoogleAppsScript.HTML.HtmlOutput} IWebApp.HtmlOutput
  */
 
 /**
- * @typedef {GoogleAppsScript.Content.TextOutput} IWEBAPP_.TextResponse
+ * @typedef {GoogleAppsScript.Content.TextOutput} IWebApp.TextResponse
  */
 
 /**
- * @typedef {IWEBAPP_.HtmlOutput | IWEBAPP_.TextResponse} IWEBAPP_.HTTPResponse
+ * @typedef {IWebApp.HtmlOutput | IWebApp.TextResponse} IWebApp.HTTPResponse
  */
 
 /**
  * @template {string} Pattern
- * @typedef {`${string & { __brand: Pattern; }}`} IWEBAPP_.RegexMatchedString
+ * @typedef {`${string & { __brand: Pattern; }}`} IWebApp.RegexMatchedString
  */
 
 /**
- * @typedef {IWEBAPP_.RegexMatchedString<"/^/?[a-zA-Z0-9-/]*$/">} IWEBAPP_.HTTPPath
+ * @typedef {IWebApp.RegexMatchedString<"/^/?[a-zA-Z0-9-/]*$/">} IWebApp.HTTPPath
  */
 
 /**
- * @typedef {Object} IWEBAPP_.HTTPInput
+ * @typedef {Object} IWebApp.HTTPInput
  * @property {string} queryString - The query string of the URL or null if no query string is specified.
  * @property {Object<string, string>} parameter - An object of key/value pairs corresponding to the request parameters. 
  *      Only the first value is returned for parameters with multiple values.
@@ -53,18 +55,18 @@ IWEBAPP_.HTTPMethod = {
  */
 
 /**
- * @typedef {Object} IWEBAPP_.HTTPRequest
- * @property {IWEBAPP_.HTTPMethod} [method]
+ * @typedef {Object} IWebApp.HTTPRequest
+ * @property {IWebApp.HTTPMethod} [method]
  * @property {Object} [parameter]
- * @property {IWEBAPP_.HTTPInput['postData']} [data]
- * @property {IWEBAPP_.HTTPInput} [httpInput]
+ * @property {IWebApp.HTTPInput['postData']} [data]
+ * @property {IWebApp.HTTPInput} [httpInput]
  */
 
 /**
- * @typedef {Object} IWEBAPP_.ControllerMethod
+ * @typedef {Object} IWebApp.ControllerMethod
  * @property {string} path
- * @property {function(IWEBAPP_.HTTPRequest): IWEBAPP_.HTTPResponse} execute
- * @property {IWEBAPP_.HTTPMethod | IWEBAPP_.HTTPMethod[]} allowedMethods
+ * @property {function(IWebApp.HTTPRequest): IWebApp.HTTPResponse} execute
+ * @property {IWebApp.HTTPMethod | IWebApp.HTTPMethod[]} allowedMethods
  */
 
 /**
@@ -105,7 +107,7 @@ IWEBAPP_.HTTPMethod = {
 /**
  * @class
  */
-IWEBAPP_.MongoDBAtlasClient = class {
+IWebApp.MongoDBAtlasClient = class {
     /**
      * @param {MongoDBAtlasCollectionOptions} options
      */
@@ -135,7 +137,7 @@ IWEBAPP_.MongoDBAtlasClient = class {
 /**
  * @class
  */
-IWEBAPP_.MongoDBAtlasDatabase = class {
+IWebApp.MongoDBAtlasDatabase = class {
     /**
      * @param {MongoDBAtlasDatabaseOptions} options
      */
@@ -158,7 +160,7 @@ IWEBAPP_.MongoDBAtlasDatabase = class {
 /**
  * @class
  */
-IWEBAPP_.BaseMongoDBAtlasQuery = class {
+IWebApp.BaseMongoDBAtlasQuery = class {
     /**
      * @param {string} apiKey
      * @param {string} endpoint
@@ -205,10 +207,10 @@ IWEBAPP_.BaseMongoDBAtlasQuery = class {
 
 /**
  * @class
- * @extends IWEBAPP_.BaseMongoDBAtlasQuery
+ * @extends IWebApp.BaseMongoDBAtlasQuery
  * @template T
  */
-IWEBAPP_.MongoDBAtlasCollection = class extends IWEBAPP_.BaseMongoDBAtlasQuery {
+IWebApp.MongoDBAtlasCollection = class extends IWebApp.BaseMongoDBAtlasQuery {
     /**
      * @param {MongoDBAtlasCollectionOptions} options
      */
@@ -329,7 +331,7 @@ IWEBAPP_.MongoDBAtlasCollection = class extends IWEBAPP_.BaseMongoDBAtlasQuery {
 /**
  * @class
  */
-IWEBAPP_.Controller = class {
+IWebApp.Controller = class {
     /**
      * @constructor
      */
@@ -339,8 +341,8 @@ IWEBAPP_.Controller = class {
     }
 
     /**
-     * @param {IWEBAPP_.HTTPRequest} [request]
-     * @returns {IWEBAPP_.HTTPResponse}
+     * @param {IWebApp.HTTPRequest} [request]
+     * @returns {IWebApp.HTTPResponse}
      */
     index(request) {
         // Implementation here
@@ -348,7 +350,7 @@ IWEBAPP_.Controller = class {
 
     /**
      * @param {any} request
-     * @returns {IWEBAPP_.HTTPResponse}
+     * @returns {IWebApp.HTTPResponse}
      */
     error404(request) {
         // Implementation here
@@ -363,18 +365,18 @@ IWEBAPP_.Controller = class {
     }
 
     /**
-     * @param {IWEBAPP_.HTTPMethod} [method]
+     * @param {IWebApp.HTTPMethod} [method]
      * @param {string} [path]
-     * @param {IWEBAPP_.HTTPInput} [e]
-     * @returns {IWEBAPP_.HTTPResponse}
+     * @param {IWebApp.HTTPInput} [e]
+     * @returns {IWebApp.HTTPResponse}
      */
     execute(method, path, e) {
         // Implementation here
     }
 
     /**
-     * @param {IWEBAPP_.HTTPMethod} [method]
-     * @returns {Array<IWEBAPP_.ControllerMethod>}
+     * @param {IWebApp.HTTPMethod} [method]
+     * @returns {Array<IWebApp.ControllerMethod>}
      */
     allMethod(method) {
         // Implementation here
@@ -386,7 +388,7 @@ IWEBAPP_.Controller = class {
  */
 
 /**
- * @typedef {Object} IWEBAPP_.ISession
+ * @typedef {Object} IWebApp.ISession
  * @property {string} token
  * @property {Object} user
  * @property {string} user.username
@@ -394,7 +396,7 @@ IWEBAPP_.Controller = class {
  */
 
 /**
- * @typedef {Object} IWEBAPP_.IJSONRPCRequest
+ * @typedef {Object} IWebApp.IJSONRPCRequest
  * @property {string} jsonrpc
  * @property {any} [id]
  * @property {string} method
@@ -403,7 +405,7 @@ IWEBAPP_.Controller = class {
  */
 
 /**
- * @typedef {Object} IWEBAPP_.IJSONRPCResponseError
+ * @typedef {Object} IWebApp.IJSONRPCResponseError
  * @property {string} jsonrpc
  * @property {any} [id]
  * @property {Object} [error]
@@ -412,20 +414,20 @@ IWEBAPP_.Controller = class {
  */
 
 /**
- * @typedef {Object} IWEBAPP_.IJSONRPCResponseSuccess
+ * @typedef {Object} IWebApp.IJSONRPCResponseSuccess
  * @property {string} jsonrpc
  * @property {any} [id]
  * @property {any} [result]
  */
 
 /**
- * @typedef {IWEBAPP_.IJSONRPCResponseSuccess & IWEBAPP_.IJSONRPCResponseError} IWEBAPP_.IJSONRPCResponse
+ * @typedef {IWebApp.IJSONRPCResponseSuccess & IWebApp.IJSONRPCResponseError} IWebApp.IJSONRPCResponse
  */
 
 /**
  * @class
  */
-IWEBAPP_.JSONRPCServer = class {
+IWebApp.JSONRPCServer = class {
     /**
      * @param {Object<string, Function>} [methodInfos]
      */
@@ -443,8 +445,8 @@ IWEBAPP_.JSONRPCServer = class {
     }
 
     /**
-     * @param {IWEBAPP_.IJSONRPCRequest} request
-     * @returns {IWEBAPP_.IJSONRPCResponse}
+     * @param {IWebApp.IJSONRPCRequest} request
+     * @returns {IWebApp.IJSONRPCResponse}
      */
     execute(request) {
         // Implementation here
@@ -459,7 +461,7 @@ IWEBAPP_.JSONRPCServer = class {
 
     /**
      * @param {string} authToken
-     * @returns {IWEBAPP_.ISession | false}
+     * @returns {IWebApp.ISession | false}
      */
     verifyAuthToken(authToken) {
         // Implementation here
@@ -469,7 +471,7 @@ IWEBAPP_.JSONRPCServer = class {
      * @param {string} method
      * @param {Array<any>} params
      * @param {string} [authToken]
-     * @returns {IWEBAPP_.HTTPInput | any}
+     * @returns {IWebApp.HTTPInput | any}
      */
     genRPCHTTPInput(method, params, authToken) {
         // Implementation here
@@ -486,7 +488,7 @@ IWEBAPP_.JSONRPCServer = class {
     }
 
     /**
-     * @param {IWEBAPP_.HTTPInput} httpInput
+     * @param {IWebApp.HTTPInput} httpInput
      * @returns {boolean}
      */
     isRPCHTTPInput(httpInput) {
@@ -494,7 +496,7 @@ IWEBAPP_.JSONRPCServer = class {
     }
 
     /**
-     * @param {IWEBAPP_.HTTPInput} httpInput
+     * @param {IWebApp.HTTPInput} httpInput
      * @returns {any}
      */
     doPost(httpInput) {
@@ -505,7 +507,7 @@ IWEBAPP_.JSONRPCServer = class {
      * @param {string} method
      * @param {Array<any>} params
      * @param {string} [authToken]
-     * @returns {IWEBAPP_.IJSONRPCResponse}
+     * @returns {IWebApp.IJSONRPCResponse}
      */
     callWithAPI(method, params, authToken) {
         // Implementation here
@@ -517,7 +519,7 @@ IWEBAPP_.JSONRPCServer = class {
  */
 
 /**
- * @typedef {Object} IWEBAPP_.WebAppOptions
+ * @typedef {Object} IWebApp.WebAppOptions
  * @property {GoogleAppsScript.HTML.HtmlService} htmlService
  * @property {GoogleAppsScript.Script.ScriptApp} scriptApp
  * @property {GoogleAppsScript.Properties.Properties} propertyScope
@@ -526,9 +528,9 @@ IWEBAPP_.JSONRPCServer = class {
 /**
  * @class
  */
-IWEBAPP_.WebApp = class {
+IWebApp.WebApp = class {
     /**
-     * @param {IWEBAPP_.WebAppOptions} options
+     * @param {IWebApp.WebAppOptions} options
      */
     constructor({ htmlService, scriptApp, propertyScope }) {
         this.scriptApp = scriptApp;
@@ -539,32 +541,32 @@ IWEBAPP_.WebApp = class {
     }
 
     /**
-     * @param {IWEBAPP_.HTTPInput} e
-     * @returns {IWEBAPP_.HTTPResponse}
+     * @param {IWebApp.HTTPInput} e
+     * @returns {IWebApp.HTTPResponse}
      */
     doGet(e) {
         // Implementation here
     }
 
     /**
-     * @param {IWEBAPP_.HTTPInput} e
-     * @returns {IWEBAPP_.HTTPResponse}
+     * @param {IWebApp.HTTPInput} e
+     * @returns {IWebApp.HTTPResponse}
      */
     doPost(e) {
         // Implementation here
     }
 
     /**
-     * @param {IWEBAPP_.HTTPMethod} method
-     * @param {IWEBAPP_.HTTPInput} e
-     * @returns {IWEBAPP_.HTTPResponse}
+     * @param {IWebApp.HTTPMethod} method
+     * @param {IWebApp.HTTPInput} e
+     * @returns {IWebApp.HTTPResponse}
      */
     controllerExecute(method, e) {
         // Implementation here
     }
 
     /**
-     * @param {Object<string, typeof IWEBAPP_.Controller>} ctrlMap
+     * @param {Object<string, typeof IWebApp.Controller>} ctrlMap
      */
     registerControllerPath(ctrlMap) {
         // Implementation here
@@ -572,7 +574,7 @@ IWEBAPP_.WebApp = class {
 
     /**
      * @param {string} txt
-     * @returns {IWEBAPP_.HTTPResponse}
+     * @returns {IWebApp.HTTPResponse}
      */
     textResponse(txt) {
         // Implementation here
@@ -580,14 +582,14 @@ IWEBAPP_.WebApp = class {
 
     /**
      * @param {any} object
-     * @returns {IWEBAPP_.HTTPResponse}
+     * @returns {IWebApp.HTTPResponse}
      */
     jsonResponse(object) {
         // Implementation here
     }
 
     /**
-     * @param {Array<typeof IWEBAPP_.Controller>} controllers
+     * @param {Array<typeof IWebApp.Controller>} controllers
      */
     registerController(...controllers) {
         // Implementation here
@@ -596,7 +598,7 @@ IWEBAPP_.WebApp = class {
     /**
      * @param {GoogleAppsScript.HTML.HtmlTemplate|string} template
      * @param {Object<string, any>} [parameter]
-     * @returns {IWEBAPP_.HTTPResponse}
+     * @returns {IWebApp.HTTPResponse}
      */
     renderTemplate(template, parameter) {
         // Implementation here
@@ -604,7 +606,7 @@ IWEBAPP_.WebApp = class {
 
     /**
      * @param {string} pathName
-     * @returns {IWEBAPP_.Controller|null}
+     * @returns {IWebApp.Controller|null}
      */
     getController(pathName) {
         // Implementation here
@@ -621,7 +623,7 @@ IWEBAPP_.WebApp = class {
 /**
  * @class
  */
-IWEBAPP_.HTTPPathResolve = class {
+IWebApp.HTTPPathResolve = class {
     /**
      * @param {string} path
      */
@@ -632,10 +634,10 @@ IWEBAPP_.HTTPPathResolve = class {
     /**
      * @static
      * @param {string} path
-     * @returns {IWEBAPP_.HTTPPathResolve}
+     * @returns {IWebApp.HTTPPathResolve}
      */
     static create(path) {
-        return new IWEBAPP_.HTTPPathResolve(path);
+        return new IWebApp.HTTPPathResolve(path);
     }
 
     /**
@@ -664,11 +666,11 @@ IWEBAPP_.HTTPPathResolve = class {
 
 /**
  * @function
- * @param {IWEBAPP_.WebAppOptions} params
- * @returns {IWEBAPP_.WebApp}
+ * @param {IWebApp.WebAppOptions} params
+ * @returns {IWebApp.WebApp}
  */
-IWEBAPP_.create = function (params) {
-    return new IWEBAPP_.WebApp(params);
+IWebApp.create = function (params) {
+    return new IWebApp.WebApp(params);
 };
 
 

@@ -1,6 +1,5 @@
-
-
-/** @type {IWEBAPP_.WebApp} */
+'use strict'
+/** @type {IWebApp.WebApp} */
 var AppServer = WebApp.create({
   htmlService: HtmlService,
   scriptApp: ScriptApp,
@@ -60,11 +59,19 @@ function getAllSheetName() {
 }
 
 function updateSongDb() {
-  const songs = getAllSongAndId()
-  console.log('all song get sheet')
-  // RETURN _ID LIST
-  console.log('updating')
-  SongService.instance.updateAllSongs(songs)
-  console.log('all song ypdate db', songs.length)
+  const sheetNames = getAllSheetName()
+  const requests = []
+  const token = AuthService.instance.generateAuthToken({ username: 'admin', role: '0' })
+  for (const name of sheetNames) {
+    requests.push({
+      ...JSONRPCServer.instance.genRPCRequest('admin_dbSingleSheetPush', [name], token),
+      url: 'https://script.google.com/macros/s/AKfycbz1FHLLdtpW5hba-4NlD0l-tqqBpdZ4EbvYuRAC2GfTU5g_RR6pHgti3trJ0nWkwoVOFA/exec'
+      // ScriptApp.getService().getUrl()
+    })
+  }
+  // console.log(requests)
+  const ress = UrlFetchApp.fetchAll(requests)
+  // console.log(JSON.stringify(ress.map(r => r.getContentText())))
+  return ress
 }
 

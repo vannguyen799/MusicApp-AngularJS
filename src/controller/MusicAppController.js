@@ -1,3 +1,4 @@
+'use strict'
 class MusicAppController extends WebApp.Controller {
   constructor() {
     super()
@@ -6,7 +7,7 @@ class MusicAppController extends WebApp.Controller {
   /** @param {HTTPRequest} request */
   index(request) {
     let { mode, sheet, fileId } = request.parameter
-
+    let qSongInfo = undefined
     if (getAllSheetName().find(n => n == sheet)) {
       // try {
       //   if (sheet && sheet != '') {
@@ -23,11 +24,14 @@ class MusicAppController extends WebApp.Controller {
         sheet = ''
       }
     }
+    if (isDriveId(fileId)) {
+      qSongInfo = SongService.instance.fromFileId(fileId)
+    }
 
     return AppServer.renderTemplate('audioPlayer', {
       title: 'Music App',
-      sheet: sheet ?? '',
-      fileId: isDriveId(fileId) ? fileId : '',
+      sheet: sheet || qSongInfo?.sheet || '',
+      qSongInfo: qSongInfo,
     })
   }
 }

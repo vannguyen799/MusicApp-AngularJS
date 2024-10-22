@@ -1,6 +1,14 @@
-
+'use strict'
 /** @extends {ISheetManager} */
 class SongFileManager extends SM.Sheet.SheetManager {
+  static fromFileId(fileId) {
+    let file = DriveApp.getFileById(fileId)
+    if (file) {
+      let song = SongInfo.try(file.getName())
+      song.fileId = file.getId()
+      return song
+    }
+  }
   constructor(sheetName, folderId, mode) {
     super(sheetName)
     this.sheetName = sheetName

@@ -223,6 +223,10 @@
                 /* background-color: rgba(0, 0, 0, 0.1); */
                 transform: scale(1.1);
             }
+
+            .icon-copy-link {
+                background-image: url("https://www.svgrepo.com/download/512415/link-round-1110.svg");
+            }
         </style>
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-sanitize.min.js"></script>
@@ -250,6 +254,18 @@
                         .withSuccessHandler(resolve)
                         .withFailureHandler(reject)
                         [functionName](...args);
+                });
+            }
+
+            async function googleGetLocation() {
+                return new Promise((resolve, reject) => {
+                    google.script.url.getLocation((location) => {
+                        if (location) {
+                            resolve(location);
+                        } else {
+                            reject("Failed to get location");
+                        }
+                    });
                 });
             }
             const isAppsScript = window.location.host.endsWith("-script.googleusercontent.com");
@@ -386,7 +402,7 @@
                                         <th style="width: 40%">Name</th>
                                         <th class="w-25">Singer</th>
                                         <th style="width: 5%">Listens</th>
-                                        <th class="" style="width: 13%">Action</th>
+                                        <th style="width: 13%">Action</th>
                                     </tr>
                                     <tr ng-repeat="s in ctrl.songTable" ng-dblclick="ctrl.form.manageSong.init(s).show()">
                                         <td>
@@ -418,18 +434,8 @@
                                                     }"
                                                     title="PlayList"
                                                 ></button>
-
-                                                <button
-                                                    class="icon"
-                                                    title="Favorite"
-                                                    ng-if="ctrl.user"
-                                                    ng-class="{
-                                                        'icon-unfav': ctrl.user.favorite && ctrl.user.favorite.includes(s.fileId) && !s.isLoadingFav,
-                                                        'icon-loading': s.isLoadingFav,
-                                                        'icon-fav': !ctrl.user.favorite || !ctrl.user.favorite.includes(s.fileId) && !s.isLoadingFav
-                                                    }"
-                                                    ng-click="ctrl.favoriteBtnHandler(s)"
-                                                ></button>
+                                                <songfav class="icon" song="s"> </songfav>
+                                                <button class="icon" title="Favorite" ng-if="ctrl.user" ng-class="ctrl.songIsFavCss(s)" ng-click="ctrl.favoriteBtnHandler(s)"></button>
                                                 <!-- <button ng-click="ctrl.form.manageSong.init(s).show()" class="icon icon-select" title="Update"></button> -->
                                             </div>
                                         </td>
@@ -556,11 +562,8 @@
 
                                             <!-- <button
                                                 ng-click="ctrl.favoriteBtnHandler(s)"
-                                                ng-class="{
-                                                    'icon icon-fav': !s.isFavorite && !s.isLoadingFav,
-                                                    'icon icon-unfav': s.isFavorite && !s.isLoadingFav,
-                                                    'icon icon-loading': s.isLoadingFav,
-                                                }"
+                                                                                    ng-class="{{ctrl.songIsFavCss(player.songInfo)}}"
+
                                                 title="Favorite"
                                             ></button> -->
                                         </div>
@@ -611,17 +614,22 @@
                 border-radius: 6px;
             }
         </style>
-        <div id="player-pro" --n-g-if="player.playlist.default.length > 0">
-            <div class="container-fluid fixed-bottom px-2" style="background-color: #333; z-index: 1">
+        <div id="player-pro" class="container-fluid fixed-bottom px-2" style="background-color: #333; z-index: 1" --n-g-if="player.playlist.default.length > 0">
+            <audio id="playerAudio" autoplay playsinline hidden>Your browser does not support the audio element.</audio>
+            <div>
                 <div class="row p-2">
                     <div class="col-sm-4" ng-dblclick="ctrl.form.manageSong.init(player.songInfo).show()">
-                        <div class="">
+                        <div>
                             <div class="d-flex align-items-center mx-1">
                                 <div class="flex-shrink-0">
-                                    <img ng-src="{{ player.metadata.coverSrc ?  player.metadata.coverSrc : player.defaultCoverSrc }}" style="width: 60px; height: 60px" class="align-self-center mr-3" alt="..." />
+                                    <img ng-src="{{  player.metadata.coverImg}}" style="width: 60px; height: 60px" class="align-self-center mr-3" alt="..." />
                                 </div>
                                 <div class="ms-2 align-items-center">
-                                    <div class="text-truncate fs-5" style="max-width: 450px">{{player.songInfo.vname ? player.songInfo.vname + ' / ' + player.songInfo.name : player.songInfo.name}} <span class="badge fs-6">{{player.metadata.extension.toUpperCase()}}</span></div>
+                                    <div class="text-truncate fs-5" style="max-width: 450px">
+                                        {{player.songInfo.vname ? player.songInfo.vname + ' / ' + player.songInfo.name : player.songInfo.name}}
+
+                                        <span class="badge fs-6">{{player.metadata.extension.toUpperCase()}}</span>
+                                    </div>
                                     <div class="text-truncate fs-6 fst-normal" style="max-width: 450px">{{player.songInfo.vsinger ? player.songInfo.vsinger + ' - ' + player.songInfo.singer: player.songInfo.singer}}</div>
                                 </div>
                             </div>
@@ -687,6 +695,7 @@
                             background-image: url("data:image/svg+xml,%3Csvg width='800px' height='800px' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M16 5V18M16 18C16 19.1046 14.6569 20 13 20C11.3431 20 10 19.1046 10 18C10 16.8954 11.3431 16 13 16C14.6569 16 16 16.8954 16 18ZM4 5H12M4 9H12M4 13H8M16 4L20 3V7L16 8V4Z' stroke='%23000000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
                         }
                     </style>
+                    <!-- control audio -->
                     <div class="col-sm-4 align-items-end pb-0">
                         <div class="play-icons text-white align-items-center d-flex justify-content-center">
                             <button
@@ -720,7 +729,7 @@
                         <div class="d-flex align-items-center justify-content-center">
                             <div class="mx-1">{{ secToMin(player.metadata.timing.current) }}</div>
                             <div class="mx-1" style="margin-top: -8px">
-                                <input class="range" id="audioTimeRange" style="width: 25vw; height: 2px" type="range" step="0.1" min="0" max="{{ player.metadata.timing.duration }}" aria-valuemin="0" aria-valuemax="{{ player.metadata.timing.duration }}" aria-valuenow="{{ player.metadata.timing.current }}" value="0" />
+                                <input id="audioTimeRange" style="width: 25vw; height: 2px" type="range" step="0.1" min="0" max="{{ player.metadata.timing.duration }}" aria-valuemin="0" aria-valuemax="{{ player.metadata.timing.duration }}" aria-valuenow="{{ player.metadata.timing.current }}" value="0" />
                             </div>
                             <div class="mx-1">{{ secToMin(player.metadata.timing.duration) }}</div>
                         </div>
@@ -728,6 +737,7 @@
                             <div class="" style="font-size: smaller">{{ player.metadata.string }}</div>
                         </div> -->
                     </div>
+                    <!-- config audio -->
                     <div class="col-sm-4 text-white d-inline-flex flex-row-reverse align-items-center">
                         <div class="ml-2 mx-1"><button class="player-icon i-player-setting" id="settingBtn"></button></div>
                         <div class="ml-2 mx-1">
@@ -742,17 +752,27 @@
                         </div>
                         <div class="ml-2 mx-1"><button id="playlistBtn" class="player-icon i-player-playlist"></button></div>
                         <div class="ml-2 mx-1"><button class="player-icon i-player-fullscreen" id="fullScreebBtn" ng-click="player.showFc()"></button></div>
+                        <div class="ml-2 mx-1">
+                            <button class="player-icon" title="Favorite" style="scale: 0.9" ng-if="player.songInfo" ng-class="{{ctrl.songIsFavCss(player.songInfo)}}" ng-click="ctrl.favoriteBtnHandler(player.songInfo)"></button>
+                        </div>
+                        <div class="ml-2 mx-1">
+                            <button class="player-icon icon-copy-link" title="Favorite" ng-if="player.songInfo" ng-click="ctrl.copyShareLink(player.songInfo)"></button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
         <style>
+            :root {
+                --player-fc-color: #008da3;
+            }
             /* Make the div take up 100% of the viewport width and height */
             #player-fc {
                 width: 100vw;
                 height: 100vh;
                 padding: 2%;
-                background-color: #008da3;
+                /* background-color: var(--player-fc-color); */
+                background-color: #3b3b3b;
                 color: white;
                 font-size: 24px;
                 display: none;
@@ -762,10 +782,30 @@
                 z-index: 1000; /* Ensure it appears on top */
             }
 
+            #player-fc .bg-cover {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-size: cover;
+                background-position: center;
+                filter: blur(170px) brightness(0.7) saturate(1.2) contrast(0.7); /* Your specified filters */
+                z-index: -1;
+            }
+
             #player-fc img.song-cover {
                 border-radius: 16px;
                 box-shadow: 5px 5px 5px 5px #45454563;
                 border: 2px solid #45454563;
+                /* position: relative; */
+                width: 300px;
+                height: 300px;
+                object-fit: cover;
+                /* z-index: 1; */
+                border-radius: 15px; /* More pronounced rounded corners */
+                box-shadow: 0px 15px 35px rgba(0, 0, 0, 0.5); /* Shadow for 3D effect */
+                transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions for hover effect */
             }
             #player-fc .player-icon {
                 /* width: 25px; */
@@ -774,6 +814,10 @@
                 /* margin: 15px; */
                 background-size: 60% 60%;
             }
+            #player-fc .player-icon.i-selected {
+                background-color: #1a73e8a2;
+            }
+
             #player-fc .i-player-playlist,
             #player-fc .i-player-speaker,
             #player-fc .i-player-speaker-muted,
@@ -782,10 +826,11 @@
             }
         </style>
         <div id="player-fc">
+            <div class="bg-cover" style="background-image: url({{player.metadata.defaultCoverSrc}});"></div>
             <div class="row w-100" style="height: 85%">
                 <div class="col-sm-4 d-flex justify-content-end align-items-end p-4">
                     <div class="">
-                        <img class="song-cover" ng-src="{{ player.metadata.coverSrc ?  player.metadata.coverSrc : player.metadata.defaultCoverSrc }}" style="width: 333px; height: 333px" />
+                        <img class="song-cover" ng-src="{{ player.metadata.coverImg }}" style="width: 300px; height: 300px" />
                     </div>
                 </div>
                 <div class="col-sm-8 position-relative p-4">
@@ -807,13 +852,14 @@
                     </div>
                 </div>
             </div>
+
             <div class="row h-auto w-100">
                 <div class="col-sm-12 align-items-end pb-0">
-                    <div class="row w-100">
+                    <div class="row vw-100">
                         <div class="d-flex align-items-center justify-content-center fs-5">
                             <div class="mx-1">{{ secToMin(player.metadata.timing.current) }}</div>
                             <div class="range mx-1">
-                                <input id="audioTimeRange-fc" style="width: 80vw; height: 4px" type="range" step="0.3" min="0" max="{{ player.metadata.timing.duration }}" aria-valuemin="0" aria-valuemax="{{ player.metadata.timing.duration }}" aria-valuenow="{{ player.metadata.timing.current }}" value="0" />
+                                <input id="audioTimeRange-fc" style="width: 82vw; height: 4px" type="range" step="0.3" min="0" max="{{ player.metadata.timing.duration }}" aria-valuemin="0" aria-valuemax="{{ player.metadata.timing.duration }}" aria-valuenow="{{ player.metadata.timing.current }}" value="0" />
                             </div>
                             <div class="mx-1">{{ secToMin(player.metadata.timing.duration) }}</div>
                         </div>
@@ -855,6 +901,12 @@
                         </div>
                         <!-- setting  -->
                         <div class="col-sm-4 play-icons text-white align-items-center d-flex justify-content-end">
+                            <div class="ml-e">
+                                <button class="player-icon icon-copy-link" title="Copy share link" ng-if="player.songInfo" ng-click="ctrl.copyShareLink(player.songInfo)"></button>
+                            </div>
+                            <div class="mx-3">
+                                <button class="player-icon" title="Favorite" style="scale: 0.9" ng-if="player.songInfo" ng-class="{{ctrl.songIsFavCss(player.songInfo)}}" ng-click="ctrl.favoriteBtnHandler(player.songInfo)"></button>
+                            </div>
                             <div class="mx-3"><button class="player-icon i-player-setting" id="settingBtn-fc"></button></div>
                             <div class="mx-3">
                                 <button
@@ -917,7 +969,7 @@
                             <th style="max-width: 200px">Name</th>
                             <th style="max-width: 20%">Singer</th>
                         </tr>
-                        <tr ng-repeat="s in player.playlist.getPlaylist(player.config.isFav)">
+                        <tr ng-repeat="s in player.playlist.curList">
                             <!-- <td>{{i + 1}}</td> -->
                             <td>
                                 <div class="song-action">
@@ -948,6 +1000,9 @@
             </div>
         </div>
         <div class="">
+            <!-- Toast container (for multiple toasts) -->
+            <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastContainer" ng-style="{'margin-bottom': player.elem.playerBot.offsetHeight + 'px'}"></div>
+
             <!-- Sign-Up Modal -->
             <div class="modal fade" id="signupModal" tabindex="-1" aria-labelledby="signupModalLabel" aria-hidden="true">
                 <div class="modal-dialog">
@@ -1003,26 +1058,30 @@
                     </div>
                 </div>
             </div>
-        </div>
-        <!-- Loading Modal -->
-        <div class="modal fade" id="loadingModal" tabindex="-1" aria-labelledby="loadingModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content text-center">
-                    <div class="modal-body">
-                        <div class="spinner-border" role="status">
-                            <span class="visually-hidden">Loading...</span>
+
+            <!-- Loading Modal -->
+            <div class="modal fade" id="loadingModal" tabindex="-1" aria-labelledby="loadingModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content text-center">
+                        <div class="modal-body">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Loading, please wait...</p>
                         </div>
-                        <p class="mt-2">Loading, please wait...</p>
                     </div>
                 </div>
             </div>
         </div>
+
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
         <!-- <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script> -->
         <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js" integrity="sha512-YsR46MmyChktsyMMou+Bs74oCa/CDdwft7rJ5wlnmDzMj1mzqncsfJamEEf99Nk7IB0JpTMo5hS8rxB49FUktQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         <script src="https://cdn.jsdelivr.net/npm/pinyin@4.0.0-alpha.2/dist/pinyin.js"></script>
         <script>
+            "use strict";
+
             // var exports = {};
             document.addEventListener("DOMContentLoaded", function () {
                 const spkPopover = configPopover("#speakerBtn", "#speakerPopover");
@@ -1165,6 +1224,7 @@
             }
         </script>
         <script>
+            "use strict";
             /**
              * @typedef {Object} SongInfo
              * @property {string} [name='']
@@ -1184,7 +1244,6 @@
 
             /** @typedef {{name: string, description:string, songList: SongInfo[]}} Playlist */
 
-            // const audioContext = new (window.AudioContext || window.webkitAudioContext)();
             const loadingModal = new bootstrap.Modal(document.getElementById("loadingModal"));
 
             const cfg = {
@@ -1192,8 +1251,97 @@
                 preloadRate: 0.75,
                 preload: true,
             };
-            class ControllerHepler {
+
+            class AppsScriptHepler {
+                constructor() {
+                    this.host = this.getTemplateInput("<?= host?>");
+                }
+                /** @param {string} value @returns {string | {} | undefined} */
+                getTemplateInput(value) {
+                    const rgx = /<\?=\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\?>/;
+                    const rgxFn = /<\?\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\?>/;
+                    if (value && typeof value == "string") {
+                        if (rgx.test(value) || rgxFn.exec(value)) {
+                            return undefined;
+                        }
+                        // if (value == "") {
+                        //     return undefined;
+                        // }
+                        if (value.startsWith("{") && value.endsWith("}")) {
+                            return JSON.parse(value);
+                        }
+                    }
+
+                    return value;
+                }
+
+                appsScriptRun({
+                    funtionName,
+                    input = [],
+                    userObj,
+                    onSuccess = (result, userObj = undefined) => {
+                        console.log("success" + result);
+                    },
+                    onError = (result, userObj = undefined) => {
+                        console.log("fail" + result);
+                    },
+                }) {
+                    let runner = google.script.run.withSuccessHandler(onSuccess).withFailureHandler(onError);
+                    if (userObj) {
+                        runner.withUserObject(userObj);
+                    }
+                    runner[funtionName](...input);
+                }
+                async appsScriptRunAsync(functionName, args) {
+                    return new Promise((resolve, reject) => {
+                        google.script.run
+                            .withSuccessHandler(resolve)
+                            .withFailureHandler(reject)
+                            [functionName](...args);
+                    });
+                }
+                async googleGetLocation() {
+                    return new Promise((resolve, reject) => {
+                        google.script.url.getLocation((location) => {
+                            if (location) {
+                                resolve(location);
+                            } else {
+                                reject("Failed to get location");
+                            }
+                        });
+                    });
+                }
+                get isAppsScript() {
+                    return window.location.host.endsWith("-script.googleusercontent.com");
+                }
+                get isiOS() {
+                    return ["iPad Simulator", "iPhone Simulator", "iPod Simulator", "iPad", "iPhone", "iPod"].includes(navigator.platform) || (navigator.userAgent.includes("Mac") && "ontouchend" in document);
+                }
+            }
+            class ControllerHepler extends AppsScriptHepler {
+                /** @param {Function} cls  @returns {Array<string | Function>}               */
+                static injectOf(cls) {
+                    // Convert the constructor function to a string
+                    const constructorStr = cls.prototype.constructor
+                        .toString()
+                        .replace(/[/][/].*$/gm, "") // Remove single-line comments
+                        .replace(/\s+/g, "") // Remove spaces
+                        .replace(/[/][*][^/*]*[*][/]/g, ""); // Remove multi-line comments
+
+                    // Use regex to find the constructor parameters
+                    const paramsMatch = constructorStr.match(/constructor\((.*?)\)/);
+
+                    // Check if we found a match and extract parameters
+                    if (paramsMatch) {
+                        const paramsStr = paramsMatch[1];
+                        const params = paramsStr ? paramsStr.split(",") : []; // Split by comma if there are parameters
+                        return params.map((param) => param.trim()).concat(cls); // Trim and return with class
+                    }
+
+                    return [cls]; // If no parameters, return class itself
+                }
                 constructor($scope) {
+                    super();
                     /** @type {ngScope} */
                     this.$scope = $scope;
                     /** @type {typeof $http} */
@@ -1337,7 +1485,35 @@
                      */
                     $http.delete = function (url, config) {};
                 }
+                showToastNotification(message, delay = 3000) {
+                    const toastElement = document.createElement("div");
+                    toastElement.classList.add("toast", "align-items-center", "text-white", "bg-primary", "border-0");
+                    toastElement.setAttribute("role", "alert");
+                    toastElement.setAttribute("aria-live", "assertive");
+                    toastElement.setAttribute("aria-atomic", "true");
+                    toastElement.setAttribute("data-bs-delay", delay); // Set auto-hide delay
 
+                    // Toast content
+                    toastElement.innerHTML = `
+              <div class="d-flex">
+                <div class="toast-body">
+                  ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+              </div>
+            `;
+
+                    // Append the toast to the container
+                    document.getElementById("toastContainer").appendChild(toastElement);
+
+                    // Show the toast
+                    const toast = new bootstrap.Toast(toastElement);
+                    toast.show();
+                }
+                log(message, loglevel) {
+                    console.log(message);
+                    this.showToastNotification(message);
+                }
                 apply(fn) {
                     try {
                         this.$scope.$apply(fn);
@@ -1356,11 +1532,40 @@
                     }
                 }
             }
+            /**
+             * @typedef {Object} DirectiveOptions
+             * @property {string} template - The HTML template rendered by the directive.
+             * @property {"E" | "A" | "C" | "M" | "EA" | "EAC" | "AACE"} restrict - Specifies how the directive can be used.
+             * @property {function(scope: Object, element: JQLite, attrs: Object, ctrl: Object): void} link - Link function for the directive.
+             * @property {{[key:string]: "@" | "=" | "&"}} scope - Defines the isolated scope for the directive.
+             * @property {string} templateUrl - The URL of the HTML template to be loaded.
+             * @property {boolean} replace - If true, replaces the original element with the template.
+             * @property {function} controller - A controller function for the directive.
+             * @property {function} compile - A compile function that can return a linking function or new scope.
+             * @property {boolean} transclude - If true, allows content to be transcluded from the parent scope.
+             * @property {boolean} bindToController - If true, binds the directive’s scope properties to the controller.
+             * @property {number} priority - The priority of the directive; higher values are executed first.
+             * @property {string} require - Specifies that the directive requires another directive.
+             * @property {boolean} multiElement - If true, allows the directive to be applied to multiple elements.
+             * @property {boolean} terminal - If true, prevents other directives from processing after this directive.
+             */
 
             class MusicAppController extends ControllerHepler {
-                constructor($scope, $sce, $timeout, $http, DataService, AuthService) {
+                static get controllerAs() {
+                    return "ctrl";
+                }
+
+                static get controllerName() {
+                    return MusicAppController.name;
+                }
+                /** @param {DirectiveOptions} params @returns {DirectiveOptions} */
+
+                constructor($scope, $sce, $timeout, $http, DataService, AuthService, $rootScope) {
                     super($scope);
+                    $rootScope.MusicAppController = this;
+
                     const ctrl = this;
+                    $scope.ctrl = ctrl;
                     cfg.ins = ctrl;
                     this.$sce = $sce;
                     this.$timeout = $timeout;
@@ -1372,13 +1577,17 @@
                     this.AuthService = AuthService;
                     this.menu = document.getElementById("menu");
                     this.sortBy = "";
+                    /** @type {Playlist[]} */
                     this.playlist = [];
-                    // this.fileId = "<?= fileId?>";
-                    this.sheet = "<?= sheet?>";
+                    /** @type {SongInfo} */
+                    this.qSongInfo = this.getTemplateInput("<?= qSongInfo?>");
+                    this.sheet = this.getTemplateInput("<?= sheet ?>");
                     this.message = "";
                     this.keyList = [];
+                    /** @type {SongInfo[]} */
                     this.songList = undefined;
                     const player = new PlayerController($scope, $http);
+
                     player.DataService = DataService;
                     player.MSService = this.MSService;
                     this.player = player;
@@ -1542,6 +1751,14 @@
 
                 init($scope) {
                     $scope.loading = true;
+                    const loadingPromise = [
+                        this.loadAllDrvAK(),
+                        googleGetLocation()
+                            .then((l) => (this.location = l))
+                            .catch((e) => {
+                                console.log(e);
+                            }),
+                    ];
                     $scope.isSyncedLRC = (lrcString) => {
                         return new LyricLRC(lrcString).lyrics.data.length > 5;
                     };
@@ -1564,18 +1781,26 @@
                     }
 
                     this.loadSongCategory();
-                    this.loadAllDrvAK();
                     // this.loadPlaylist();
 
-                    if (this.sheet != "" && !this.sheet.startsWith("<") && !this.sheet.endsWith(">")) {
+                    if (this.sheet) {
                         this.loadSongTable();
                     }
 
-                    setTimeout(() => {
+                    if (!this.isAppsScript && !this.sheet) {
+                        this.sheet = "Chinese";
+                        this.loadSongTable();
+                    }
+
+                    Promise.all(loadingPromise).then(() => {
+                        if (this.qSongInfo && this.qSongInfo.fileId) {
+                            this.player.refresh(this.qSongInfo);
+                        }
                         $scope.loading = false; // Hide the loader once data is loaded
                         this.apply();
-                    }, 2000);
+                    });
                 }
+
                 get songTable() {
                     if (!Array.isArray(this.songList)) {
                         this._lastSongTable = {};
@@ -1649,7 +1874,7 @@
                     });
                 }
                 loadSongCategory() {
-                    this.DataService.getAllCategory().then((result) => {
+                    return this.DataService.getAllCategory().then((result) => {
                         this.sheetNames = result;
                         this.apply();
                     });
@@ -1661,7 +1886,7 @@
                     document.body.style.cursor = "wait";
                     this.sortBy = "";
                     let __w = this.sheet;
-                    this.DataService.getSongsByCategory(__w, cfg.translateLyric).then((result) => {
+                    return this.DataService.getSongsByCategory(__w, cfg.translateLyric).then((result) => {
                         this.message = ``;
                         if (__w == this.sheet) {
                             this._songList = [...result];
@@ -1672,9 +1897,11 @@
                     });
                 }
                 loadAllDrvAK() {
-                    this.DataService.getAllKeys().then((result) => {
+                    return this.DataService.getAllKeys().then((result) => {
                         this.keyList = result;
                         this.MSService.keyList = result;
+
+                        this.apply();
                     });
                 }
 
@@ -1693,6 +1920,16 @@
                         return;
                     }
                     if (id) alert("invalid folder got ", id);
+                }
+                copyShareLink(song) {
+                    return navigator.clipboard
+                        .writeText(`${this.host}?fileId=${song.fileId}`)
+                        .then(() => {
+                            this.log("Text copied to clipboard!");
+                        })
+                        .catch((err) => {
+                            this.log("Failed to copy text: " + err);
+                        });
                 }
                 playSongList() {
                     this.player.setPlaylist([...this.songList]);
@@ -1770,6 +2007,13 @@
                 homeSelectCategoryHandler(name) {
                     this.selectSheetBtnHandler(name);
                 }
+                songIsFavCss(song) {
+                    return {
+                        "icon-unfav": this.user?.favorite && this.user?.favorite.includes(song.fileId) && !song.isLoadingFav,
+                        "icon-loading": song.isLoadingFav,
+                        "icon-fav": !this.user?.favorite || (!this.user?.favorite.includes(song.fileId) && !song.isLoadingFav),
+                    };
+                }
                 selectKeyA_() {
                     if (this.keyList) {
                         this.selectKeyA_.lastKeyIdx = ((this.selectKeyA_.lastAudioIndex ?? -1) + 1) % this.keyList.length;
@@ -1825,8 +2069,12 @@
             class PlayerController extends ControllerHepler {
                 constructor($scope, $http) {
                     super($scope);
-
+                    this.elem = {
+                        playerBot: document.getElementById("player-pro"),
+                        playerFC: document.getElementById("player-fc"),
+                    };
                     const player = this;
+
                     /** @type {MusicSourceService} */
                     this.MSService = undefined;
                     /** @type {DataService} */
@@ -1835,12 +2083,15 @@
                     this.songInfo = undefined;
 
                     this.metadata = {
+                        get coverImg() {
+                            return this.coverSrc || this.defaultCoverSrc;
+                        },
                         defaultCoverSrc: "https://i.pinimg.com/736x/5a/e1/58/5ae15822d73ac828599044153fb91fed.jpg",
                         extension: "",
                         coverSrc: "https://i.pinimg.com/736x/5a/e1/58/5ae15822d73ac828599044153fb91fed.jpg",
                         volume: {
                             isMuted: false,
-                            value: 75,
+                            value: 50,
                         },
                         timing: {
                             current: 0,
@@ -1861,7 +2112,12 @@
                         },
                     };
                     /** @type {HTMLAudioElement} */
-                    this.audio = new Audio();
+                    this.audio = document.getElementById("playerAudio");
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+                    this.audioSource = this.audioContext.createMediaElementSource(this.audio);
+                    this.audioSource.connect(this.audioContext.destination);
+                    this.generateAudioEvent();
 
                     this.audioTimeRanges = document.querySelectorAll("#audioTimeRange, #audioTimeRange-fc");
 
@@ -1880,15 +2136,12 @@
 
                     this.nextSong = {
                         songInfo: undefined,
-                        audio: undefined,
+                        blob: undefined,
                         random: undefined,
-                        set({ songInfo, audio, random }) {
+                        set({ songInfo, blob, random }) {
                             this.songInfo = songInfo;
-                            this.audio = audio;
+                            this.blob = blob;
                             this.random = random;
-                            if (audio) {
-                                this.audio.load();
-                            }
                         },
                     };
 
@@ -1930,19 +2183,19 @@
                     this.isPlaying = false;
 
                     this.document = document;
-                    this.document.addEventListener("keydown", (event) => {
-                        if (["ArrowLeft", "ArrowRight", " "].includes(event.key)) {
-                            event.preventDefault(); // Prevents the default behavior (like scrolling)
+                    // this.document.addEventListener("keydown", (event) => {
+                    //     if (["ArrowLeft", "ArrowRight", " "].includes(event.key)) {
+                    //         event.preventDefault(); // Prevents the default behavior (like scrolling)
 
-                            if (event.key === "ArrowLeft") {
-                                this.prev();
-                            } else if (event.key === "ArrowRight") {
-                                this.next();
-                            } else if (event.key === " ") {
-                                this.playToggle();
-                            }
-                        }
-                    });
+                    //         if (event.key === "ArrowLeft") {
+                    //             this.prev();
+                    //         } else if (event.key === "ArrowRight") {
+                    //             this.next();
+                    //         } else if (event.key === " ") {
+                    //             this.playToggle();
+                    //         }
+                    //     }
+                    // });
 
                     this.init($scope);
                 }
@@ -1995,10 +2248,51 @@
                         this.audio.volume = 0;
                     }
                 }
+
+                genNotification() {
+                    if ("Notification" in window) {
+                        Notification.requestPermission().then((permission) => {
+                            if (permission === "granted") {
+                                // Create and display the notification
+                                const notification = new Notification("Music App", {
+                                    body: this.audio.title,
+                                    icon: this.metadata.coverSrc || this.metadata.defaultCoverSrc,
+                                    actions: [
+                                        { action: "prev", title: "Previous" },
+                                        { action: "next", title: "Next" },
+                                        { action: "close", title: "Close" },
+                                    ],
+                                });
+
+                                notification.onshow = () => {
+                                    this.audio.play();
+                                };
+
+                                notification.onclick = () => {
+                                    if (event.action === "prev") {
+                                        this.prev();
+                                    } else if (event.action === "next") {
+                                        this.next();
+                                    } else if (event.action === "close") {
+                                        notification.close;
+                                    } else {
+                                        window.focus();
+                                    }
+                                };
+                                this.cache.notificationInstance = notification;
+                            } else {
+                                this.log("Notification permission denied.");
+                            }
+                        });
+                    } else {
+                        this.log("This browser does not support notifications.");
+                    }
+                }
                 generateAudioEvent() {
                     this.setSpeakerValue(this.metadata.volume.value);
 
                     const audio = this.audio;
+
                     let playTimer = {};
 
                     audio.addEventListener("timeupdate", () => {
@@ -2058,18 +2352,29 @@
                     });
                     audio.addEventListener("canplay", () => {
                         this.metadata.timing.duration = audio.duration;
-                        this.loadMetadata();
+                        // this.loadMetadata();
                         this.apply();
                     });
                     audio.addEventListener("pause", () => {
+                        if (this.audioContext?.state === "running") {
+                            this.audioContext.suspend();
+                        }
                         this.isPlaying = false;
                         this.apply();
+                    });
+
+                    audio.addEventListener("play", () => {
+                        if (this.audioContext.state === "suspended") {
+                            this.audioContext.resume();
+                        }
+                        audio.play();
                     });
                 }
                 setPlaylist(songList) {
                     this.playlist.set(songList);
                 }
                 next() {
+                    this.cache.notificationInstance?.close();
                     const { isFav, isRandom, loopMode } = this.config;
 
                     this.clearLyrics();
@@ -2088,7 +2393,7 @@
 
                     if (nextSong?.songInfo && isRandom == nextSong.random && this.playlist.default.find((s) => s.fileId == nextSong.songInfo.fileId)) {
                         console.log("next {nextSong}");
-                        this.refresh(nextSong.songInfo, nextSong.audio);
+                        this.refresh(nextSong.songInfo, nextSong.blob);
                         nextSong.set({});
                         return;
                     }
@@ -2179,7 +2484,7 @@
                                 console.log("nextSong.set");
                                 this.nextSong.set({
                                     songInfo: songToPlay,
-                                    audio: new Audio(URL.createObjectURL(blob)),
+                                    blob: blob,
                                     random: isRandom,
                                 });
                                 this.apply();
@@ -2191,41 +2496,41 @@
                 }
                 /**
                  * @param {SongInfo} songInfo
-                 * @param {HTMLAudioElement} [audio]
+                 * @param {Blob} [blob]
                  */
-                refresh(songInfo, audio) {
+                refresh(songInfo, blob) {
                     const currentIndex = this.cache.refreshPlayIndex + 1;
                     this.cache.refreshPlayIndex = currentIndex;
 
-                    if (!audio && songInfo.fileId === this.nextSong.songInfo?.fileId) {
-                        audio = this.nextSong.audio;
+                    if (!blob && songInfo.fileId === this.nextSong.songInfo?.fileId) {
+                        blob = this.nextSong.blob;
                     }
-
                     this.setSongInfo(songInfo);
-                    this.audio?.pause();
-                    this.audio?.remove();
-                    this.audio = new Audio("");
+                    this.audio.pause();
                     this.clearLyrics();
 
-                    if (audio) {
+                    if (blob) {
                         this.metadata.lyricLRCs.origin = new LyricLRC(songInfo.lyric);
                         this.metadata.lyricLRCs.vs = new LyricLRC((songInfo.lyric_vn === "" || !songInfo.lyric_vn) && songInfo.lyric_vn_translated ? songInfo.lyric_vn_translated : songInfo.lyric_vn);
 
-                        this.audio = audio;
+                        const url = URL.createObjectURL(blob);
+                        this.audio.src = url;
                         this.audio.title = this.mainSongName || this.subSongName;
-                        this.generateAudioEvent();
+                        // this.generateAudioEvent();
                         this.audio.load();
                         this.audio.play();
                         this.refresh.rdn = false;
-                        for (const [index, url] of this.audioObjectURLs.entries()) {
-                            if (url !== audio.src && url.startsWith("blob:")) {
-                                URL.revokeObjectURL(url);
+                        for (const [index, url_] of this.audioObjectURLs.entries()) {
+                            if (url_ !== blob && url_.startsWith("blob:")) {
+                                URL.revokeObjectURL(url_);
                                 this.audioObjectURLs.splice(index, 1);
                             }
                         }
-                        if (audio.src.startsWith("blob:")) {
-                            this.audioObjectURLs.push(audio.src);
+                        if (url.startsWith("blob:")) {
+                            this.audioObjectURLs.push(url);
                         }
+
+                        this.metadataFromBlob(blob);
                     } else {
                         clearTimeout(this.refresh.loadSongAudioTimer);
                         this.refresh.loadSongAudioTimer = setTimeout(() => {
@@ -2233,7 +2538,7 @@
                                 if (currentIndex !== this.cache.refreshPlayIndex) {
                                     return blob;
                                 }
-                                this.refresh(songInfo, new Audio(URL.createObjectURL(blob)));
+                                this.refresh(songInfo, blob);
                             });
                         }, 2000);
                     }
@@ -2277,18 +2582,37 @@
                     this.audio.volume = volume / 100;
                 }
 
+                resetFcBg() {
+                    const bgCover = this.document.querySelector("#player-fc .bg-cover");
+                    // bgCover.hidden = true;
+                    // const pfc = this.document.querySelector("#player-fc");
+                    // pfc.style.backgroundColor = "var(--player-fc-color)";
+                }
+
+                metadataFromBlob(blob) {
+                    return jsmediatags.read(blob, {
+                        onSuccess: ({ tags }) => {
+                            const { picture } = tags;
+                            this.metadata.extension = mimeTypeToExt(blob.type);
+                            if (picture) {
+                                this.metadata.coverSrc = `data:${picture.format};base64,${arrayBufferToBase64(picture.data)}`;
+                                const bgCover = this.document.querySelector("#player-fc .bg-cover");
+                                const pfc = this.document.querySelector("#player-fc");
+                                // bgCover.hidden = false;
+                                bgCover.style.backgroundImage = `url(${this.metadata.coverSrc})`;
+                                pfc.style.backgroundColor = "#3b3b3b";
+                                this.apply();
+                            } else {
+                                this.resetFcBg();
+                            }
+                        },
+                        onError: this.resetFcBg,
+                    });
+                }
+
                 loadMetadata() {
                     const processblob = (blob) => {
-                        jsmediatags.read(blob, {
-                            onSuccess: ({ tags }) => {
-                                const { picture } = tags;
-                                this.metadata.extension = mimeTypeToExt(blob.type);
-                                if (picture) {
-                                    this.metadata.coverSrc = `data:${picture.format};base64,${arrayBufferToBase64(picture.data)}`;
-                                    this.apply();
-                                }
-                            },
-                        });
+                        this.metadataFromBlob(blob);
                     };
                     fetch(this.audio.src)
                         .then((response) => response.blob())
@@ -2315,10 +2639,12 @@
                 }
             }
 
-            class Service {
+            class Service extends AppsScriptHepler {
                 constructor($http) {
+                    super();
                     this.$http = $http;
-                    this.rpcServer = "https://script.google.com/macros/s/AKfycbz1FHLLdtpW5hba-4NlD0l-tqqBpdZ4EbvYuRAC2GfTU5g_RR6pHgti3trJ0nWkwoVOFA/exec";
+                    const deployment_id = "AKfycbz1FHLLdtpW5hba-4NlD0l-tqqBpdZ4EbvYuRAC2GfTU5g_RR6pHgti3trJ0nWkwoVOFA";
+                    this.rpcServer = this.host || "https://script.google.com/macros/s/AKfycbz1FHLLdtpW5hba-4NlD0l-tqqBpdZ4EbvYuRAC2GfTU5g_RR6pHgti3trJ0nWkwoVOFA/exec";
                 }
 
                 query(methodName, params) {
@@ -2371,7 +2697,7 @@
                         user.playlist = user.playlist || [];
                         return user;
                     } catch (e) {
-                        console.log(e + "geet user err");
+                        // console.log(e + "geet user err");
                     }
                 }
                 static _setAT(v) {
@@ -2493,6 +2819,10 @@
                     super($http);
                     this.keyList = keyList;
                 }
+                /**
+                 * @param {DriveFileID} fileId
+                 * @return {Promise<Blob>}
+                 */
                 getAudioSource(fileId) {
                     if (true) {
                         // if (isAppsScript) {
@@ -2513,11 +2843,13 @@
                 }
             }
             var app = angular.module("musicApp", ["ngSanitize"]);
-            app.service("DataService", ["$http", DataService]);
-            app.service("AuthService", ["$http", AuthService]);
-            app.controller("MusicAppController", ["$scope", "$sce", "$timeout", "$http", "DataService", "AuthService", MusicAppController]);
+            app.service(DataService.name, ControllerHepler.injectOf(DataService));
+            app.service(AuthService.name, ControllerHepler.injectOf(AuthService));
+            app.service(MusicSourceService.name, ControllerHepler.injectOf(MusicSourceService));
+            app.controller(MusicAppController.controllerName, ControllerHepler.injectOf(MusicAppController));
         </script>
         <script>
+            "use strict";
             // utils
             function popRandomElement(arr) {
                 if (arr.length === 0) return undefined;

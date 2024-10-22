@@ -27,6 +27,7 @@ function selectDriveAPIKey() {
   return driveApiKey[i] ?? driveApiKey[0]
 }
 
+
 function instanceOf(constructor, args) {
   // hmm TODO
   if (args) {
@@ -137,62 +138,67 @@ function translate(lrcText) {
 
 
 function chineseNameParse() {
-  const allsong = SongService.instance.getSongs('Chinese')
-  let songNameMap = {}, singerMap = {}
-  for (const song of allsong) {
-    if (song.vname && song.vname != '' && song.name && song.name != '') {
-      songNameMap[song.name] = song.vname
+  const allSongs = SongService.instance.getSongs('Chinese')
+  const songNameMap = {}
+  const singerMap = {}
+  for (const song of allSongs) {
+    if (song.vname && song.name && song.name != song.vname) {
+      let nameKey = song.name.split('(')[0].trim()
+      if (song.vname != nameKey) {
+        songNameMap[nameKey] = song.vname
+      }
     }
-    if (song.vsinger && song.singer && song.vsinger != '' && song.singer != '') {
+    if (song.vsinger && song.singer && song.vsinger != song.singer) {
       singerMap[song.singer] = song.vsinger
     }
   }
-  /** @param {string} singer  */
-  function psinger(singer) {
-    let sg = singer.replace('&', ',').replace('，', ',').replace('/', ',').split(',')
-    return sg.map(s => {
-      s = singerMap[s.trim()] || s.trim()
-      return s
-    }).join(', ')
-  }
-  /** @param {string} name  */
-  function pname(name) {
-    let ns = name.split('(')
-    ns[0] = songNameMap[ns[0].trim()] || ns[0].trim()
-    return ns.join(' (')
+
+  /**
+   * Convert a singer string in the format of 'A & B' to 'A,B'
+   * @param {string} singer - The singer string
+   * @returns {string} The converted string
+   */
+  function convertSinger(singer) {
+    const singers = singer
+      .replace(/&|，|\//g, ',')
+      .split(',').map(s => s.trim())
+    const vsinger = []
+    for (const s of singers) {
+      vsinger.push(singerMap[s] || s)
+    }
+    if (vsinger.join(', ') !== singers.join(', ')) {
+      return vsinger.join(', ')
+    }
   }
 
-  // console.log(singerMap)
-  // console.log(songNameMap)
-  for (const song of allsong) {
-    let check = false
-    if (song.vname == '' || song.vsinger == '') {
-      if (song.vname == '') {
-        song.vname = pname(song.name) || ''
-        if (song.vname == song.name) {
+  /** @param {string} name @returns {string|false}   */
+  function convertName(name) {
+    const [mainName, ...subName] = name.split('(')
+    return songNameMap[mainName.trim()] ? songNameMap[mainName.trim()] + (subName.length > 0 ? ` (${subName.join(' (')}` : '') : false
+  }
+
+  for (const song of allSongs) {
+    if (!song.vname || !song.vsinger) {
+      let updated = false
+      if (!song.vname) {
+        song.vname = convertName(song.name) || ''
+        if (song.vname === song.name) {
           song.vname = ''
-          check = false
-        }
-        else {
-          check = true
-
-          console.log(song.singer, '>>>>', song.vsinger)
+        } else {
+          updated = true
         }
       }
-      if (song.vsinger == '') {
-        song.vsinger = psinger(song.singer) || ''
-        if (song.vsinger == song.singer) {
-          check = false
+      if (!song.vsinger) {
+        song.vsinger = convertSinger(song.singer) || ''
+        if (song.vsinger === song.singer) {
           song.vsinger = ''
-        }
-        else {
-          check = true
-          console.log(song.singer, '>>>>', song.vsinger)
+        } else {
+          updated = true
         }
       }
-      if (check) {
-        SongService.instance.updateSong(song)
-        console.log('--------------')
+      if (updated) {
+        console.log(SongService.instance.updateSong(song)
+        )
       }
     }
   }

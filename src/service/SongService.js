@@ -4,6 +4,10 @@ class SongService {
     static get instance() {
         return instanceOf(this)
     }
+    fromFileId(fileId) {
+        let song = db.Songs.findOne({ fileId: fileId })
+        return song || SongFileManager.fromFileId(fileId)
+    }
     /** @param {string | DriveFolderID} categoryName  @returns {SongInfo[]} */
     getSongs(categoryName) {
         if (isDriveId(categoryName)) {
@@ -11,14 +15,20 @@ class SongService {
         }
         let filter = categoryName ? { sheet: categoryName } : {}
         if (categoryName == 'Chinese') {
-            filter.sheet = {
-                '$in': [
-                    'Chinese',
-                    'LanXinyu',
-                    'XuLanxin',
-                    'Dengshenmejun',
-                    'AYueYue',
-                    'RenRan'
+
+            filter = {
+                sheet: {
+                    '$in': [
+                        'Chinese',
+                        'LanXinyu',
+                        'XuLanxin',
+                        'Dengshenmejun',
+                        'AYueYue',
+                        'RenRan'
+                    ],
+                }, $and: [
+                    { name: { $not: { $regex: 'DJ', $options: 'i' } } },
+                    { name: { $not: { $regex: 'Remix', $options: 'i' } } }
                 ]
             }
         }
@@ -66,12 +76,18 @@ class SongService {
             if (song.lyric != '' && song.lyric_vn == '' && (!song.lyric_vn_translated || song.lyric_vn_translated == '')) {
                 song.lyric_vn_translated = translate(song.lyric)?.lrc || undefined
             }
-            return db.Songs.replaceOne({
-                _id: song._id,
+            delete song._id
+            let dbRes = db.Songs.replaceOne({
+                _id: {
+                    $oid: song._id
+                },
                 fileId: song.fileId
             }, song)
 
-        } else throw new Error('update song err on sheet')
+            console.log(dbRes)
+            return dbRes
+        }
+
     }
 
     addListens(song) {

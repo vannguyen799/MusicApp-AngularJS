@@ -1,3 +1,4 @@
+'use strict';
 const ROLE = {
     "ADMIN": 0,
     'USER': 1,
@@ -48,7 +49,7 @@ class AuthService {
         }
     }
     generateAuthToken(user) {
-        const exprieTime = new Date().getTime() + 1000 * 60 * 60 * 24 * 7; //7 days
+        const exprieTime = new Date().getTime() + 1000 * 60 * 60 * 24 * 365; //365 days
         const dataToHash = `${user.username}::${user.role}::${exprieTime}::${this.secrectKey}`;
         const authKey = Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, dataToHash));
         // return Utilities.base64Encode(`${authKey}::${user.username}::${user.role}::${exprieTime}`);

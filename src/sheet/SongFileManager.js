@@ -426,6 +426,8 @@ class SongInfo {
         filename = tmp.join('.')
       }
     }
+    filename = filename.replace('+', ' ')
+
     return filename.trim()
   }
 
@@ -433,18 +435,15 @@ class SongInfo {
   static fromUploadFilename(filename) {
     filename = this._removeExt(filename)
 
-    /** @param {string} p @param {string} s @returns {string[]} */
+    /** @param {string} p @param {string} s @returns {string[] | undefined} */
     function test(p, s) {
-      if (s.includes(p)) {
+      if (containOne(s, p)) {
         return s.split(p)
       }
       return undefined
     }
-    let res = test('+-+', filename)
-    if (!res && filename.indexOf('-') == filename.lastIndexOf('-')) {
-      res = test('-', filename)
-    }
-    res = res || test(' - ', filename) || ['', filename]
+    let res = test('+-+', filename) || test('-', filename) || test(' - ', filename) || ['', filename]
+
 
     return new SongInfo({
       name: res[1],
@@ -485,3 +484,4 @@ class SongInfo {
     return testSplit('ǁ') || testSplit('|') || testSplit("   ") || testSplit()
   }
 }
+

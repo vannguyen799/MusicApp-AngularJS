@@ -1,13 +1,4 @@
 'use strict'
-/**
- * @typedef {Object} Playlist
- * @property {number} id - The unique identifier for the playlist.
- * @property {string} name - The name of the playlist.
- * @property {string} notes - The creator of the playlist.
- * @property {boolean} hidden - The creator of the playlist.
- * @property {SongInfo[]} songList - An array of songs in the playlist.
- */
-
 class PlaylistService {
     constructor() { }
 
@@ -101,3 +92,12 @@ class PlaylistService {
         return true
     }
 }
+
+/**
+ * @typedef {Object} Playlist
+ * @property {number} id - The unique identifier for the playlist.
+ * @property {string} name - The name of the playlist.
+ * @property {string} notes - The creator of the playlist.
+ * @property {boolean} hidden - The creator of the playlist.
+ * @property {SongInfo[]} songList - An array of songs in the playlist.
+ */

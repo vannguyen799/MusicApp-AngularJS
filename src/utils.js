@@ -12,6 +12,11 @@ function isDriveId(id) {
   return /^[a-zA-Z0-9-_]{33}$/.test(id)
 }
 
+/** @param {string} stra @param {string} strtest @returns {boolean} */
+function containOne(stra, strtest) {
+  return stra.lastIndexOf(strtest) == stra.indexOf(strtest) && stra.indexOf(strtest) != -1
+}
+
 function isAudioMimeType(mimeType) {
   return mimeType.startsWith('audio') || mimeType == 'application/x-flac'
 }

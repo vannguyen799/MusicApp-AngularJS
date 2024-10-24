@@ -16,6 +16,7 @@ function onOpen() {
 
   ui.createMenu('AppsciptMenu')
     .addItem('process', process.name)
+    .addItem('processAll', processAll.name)
     // .addItem('play', playSidebar.name)
     .addItem('openWeb', playWeb.name)
     .addItem('db push', updateSongDb.name)
@@ -52,6 +53,22 @@ function process() {
     manager.flush()
     SongService.instance.updateSingleSongs(manager.getAllSongs())
   }
+}
+
+function processAll() {
+  const sheetNames = getAllSheetName()
+  const requests = []
+  const token = AuthService.instance.generateAuthToken({ username: 'admin', role: '0' })
+  for (const name of sheetNames) {
+    requests.push({
+      ...JSONRPCServer.instance.genRPCRequest(JSONRPCServer.prototype.admin_processSheet.name, [name], token),
+      url: 'https://script.google.com/macros/s/AKfycbyU__zRkoR1drKWRZGROuO4CCW43wDbIpyIcspQnnLiD-YTA-aVcxlgjHN-HBc_6LxWMw/exec'
+    })
+  }
+  const ress = UrlFetchApp.fetchAll(requests)
+  console.log(ress.map(r => r.getContentText()))
+  return ress
+
 }
 
 function playSidebar() {

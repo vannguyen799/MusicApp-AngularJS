@@ -8,9 +8,11 @@
         <style>
             :root {
                 --bg-color: rgb(37, 39, 40);
+                ---bg-color: rgb(37, 39, 40);
                 --txt-color: rgb(212, 212, 212);
                 --header-h: 40px;
                 --line-color: #1a73e8;
+                --player-pro-h: 75px;
             }
             /* Full-page overlay for the loader */
             #loading-overlay {
@@ -19,7 +21,7 @@
                 left: 0;
                 width: 100%;
                 height: 100%;
-                background-color: var(--bg-color); /* Dark background */
+                background-color: var(---bg-color); /* Dark background */
                 z-index: 9999;
                 display: flex;
                 justify-content: center;
@@ -39,9 +41,12 @@
                 margin: 0;
                 padding: 0;
                 height: 100%;
+                width: 100%;
                 color: var(--txt-color);
                 background-color: var(--bg-color);
                 overflow: hidden;
+                color: white;
+                position: fixed;
             }
             .text-truncate {
                 overflow: hidden;
@@ -56,52 +61,10 @@
                 width: auto;
                 text-align: left;
             }
-            .header {
-                position: sticky;
-                top: 0;
-                z-index: 1000;
-                width: 100%;
-                text-align: center;
-                align-items: center;
-                background-color: #333;
-                height: var(--header-h);
-            }
-            .playlist-container {
-                flex: 1;
-                width: 100%;
-                padding-top: 10px;
-                padding-left: 20px;
-                right: 0;
-                overflow-x: hidden;
-                overflow-y: auto;
-                max-height: 82vh;
-            }
-            .playlist-container::-webkit-scrollbar {
-                width: 0;
-                /* Ẩn thanh cuộn ngang */
-                height: 0;
-                /* Ẩn thanh cuộn dọc */
-            }
-            .playlist-container::-webkit-scrollbar-thumb {
-                background: transparent;
-                /* Ẩn phần tay cầm của thanh cuộn */
-            }
-            .playlist-container::-webkit-scrollbar-track {
-                background: transparent;
-                /* Ẩn phần nền của thanh cuộn */
-            }
-            .playlist-top {
-                position: sticky;
-                top: 0;
-                /* Định vị tiêu đề bảng cố định khi cuộn */
-                z-index: 1;
-                /* Đảm bảo tiêu đề nằm trên nội dung */
-                fill: inherit;
-            }
+
             .song-table {
                 overflow-x: hidden;
                 overflow-y: auto;
-                max-height: 300px;
             }
             .song-table::-webkit-scrollbar {
                 width: 10px;
@@ -127,7 +90,7 @@
                 top: 0;
                 z-index: 2;
                 fill: inherit;
-                background-color: var(--bg-color);
+                background-color: inherit;
             }
             .song-table tr:hover {
                 background-color: #90909040;
@@ -151,8 +114,7 @@
                 justify-self: end;
                 margin-left: auto;
             }
-        </style>
-        <style>
+
             .footer > button {
                 z-index: 11000;
                 position: fixed;
@@ -160,8 +122,7 @@
                 left: auto;
                 bottom: 3%;
             }
-        </style>
-        <style>
+
             /* Base styles for all icons */
             .icon {
                 width: 23px;
@@ -226,63 +187,37 @@
 
             .icon-copy-link {
                 background-image: url("https://www.svgrepo.com/download/512415/link-round-1110.svg");
+                scale: 0.9;
             }
         </style>
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-sanitize.min.js"></script>
-        <script>
-            function appsScriptRun({
-                funtionName,
-                input = [],
-                userObj,
-                onSuccess = (result, userObj = undefined) => {
-                    console.log("success" + result);
-                },
-                onError = (result, userObj = undefined) => {
-                    console.log("fail" + result);
-                },
-            }) {
-                let runner = google.script.run.withSuccessHandler(onSuccess).withFailureHandler(onError);
-                if (userObj) {
-                    runner.withUserObject(userObj);
-                }
-                runner[funtionName](...input);
-            }
-            async function appsScriptRunAsync(functionName, args) {
-                return new Promise((resolve, reject) => {
-                    google.script.run
-                        .withSuccessHandler(resolve)
-                        .withFailureHandler(reject)
-                        [functionName](...args);
-                });
-            }
-
-            async function googleGetLocation() {
-                return new Promise((resolve, reject) => {
-                    google.script.url.getLocation((location) => {
-                        if (location) {
-                            resolve(location);
-                        } else {
-                            reject("Failed to get location");
-                        }
-                    });
-                });
-            }
-            const isAppsScript = window.location.host.endsWith("-script.googleusercontent.com");
-            const isiOS = ["iPad Simulator", "iPhone Simulator", "iPod Simulator", "iPad", "iPhone", "iPod"].includes(navigator.platform) || (navigator.userAgent.includes("Mac") && "ontouchend" in document);
-        </script>
     </head>
 
-    <body ng-controller="MusicAppController as ctrl">
+    <body ng-controller="MusicAppController as ctrl" class="">
         <!-- Loading Overlay -->
         <div id="loading-overlay" ng-show="loading">
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
         </div>
-        <div class="header">
+        <div class="bg-cover" style="background-image: url({{player.metadata.defaultCoverSrc}});"></div>
+        <style>
+            .header {
+                position: sticky;
+                top: 0;
+                width: 100%;
+                text-align: center;
+                align-items: center;
+                /* background-color: #333; */
+                height: var(--header-h);
+                z-index: 1;
+                border-bottom: #c9c9c9 thin solid;
+            }
+        </style>
+        <div class="header" id="header">
             <!-- <nav class="navbar navbar-expand-lg navbar-dark d-none d-lg-block px-4" style="z-index: 2000"> -->
-            <nav class="navbar navbar-expand-lg navbar-dark px-4" style="z-index: 2000">
+            <nav class="navbar navbar-expand-lg navbar-dark px-4">
                 <div class="container-fluid">
                     <!-- Toggle button -->
                     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -290,7 +225,7 @@
                     </button>
                     <!-- Navbar content with collapse -->
                     <div class="collapse navbar-collapse" id="navbarNav">
-                        <ul class="navbar-nav me-auto mb-2 mb-lg-0" style="background-color: #333">
+                        <ul class="navbar-nav me-auto mb-2 mb-lg-0" style="background-color: transparent">
                             <li class="nav-item mx-1 text-truncate">
                                 <button class="nav-link" ng-click="ctrl.selectSheetBtnHandler('')">All Song</button>
                             </li>
@@ -298,7 +233,7 @@
                                 <button ng-class="{ 'nav-link active': name == ctrl.sheet, 'nav-link': name != ctrl.sheet }" ng-click="ctrl.selectSheetBtnHandler(name)">{{name}}</button>
                             </li>
                         </ul>
-                        <ul class="navbar-nav list-inline" style="background-color: #333">
+                        <ul class="navbar-nav list-inline" style="background-color: transparent">
                             <li class="nav-item mx-1">
                                 <button class="nav-link" ng-click="ctrl.selectByDriveFolderHandler()">ByDriveFolder</button>
                             </li>
@@ -321,22 +256,30 @@
         </div>
         <style>
             .container.self-container {
-                padding-top: 15px;
-                padding-left: 3%;
-                padding-right: 3%;
-                max-width: 100%;
+                padding-left: 5%;
+                padding-right: 5%;
+                margin: 0;
+                width: 100vw;
+                max-width: 100vw;
+                height: calc(100vh - var(--header-h) - var(--footer-h));
+                max-height: calc(100vh - var(--header-h) - var(--footer-h));
                 position: relative;
             }
+            .container.self-container .row .col-sm-8 {
+                height: calc(100vh - var(--header-h) - var(--player-pro-h));
+                max-height: calc(100vh - var(--header-h) - var(--player-pro-h));
+                border-right: #a0a0a0 thin solid;
+            }
         </style>
-        <div class="container self-container">
+        <div id="container" class="container self-container">
             <div class="row">
-                <div class="col-sm-8" style="border-right: #a0a0a0 thin solid; min-height: 75vh">
+                <div id="song-container" class="col-sm-8 d-flex flex-column">
                     <style>
                         #menu .card {
                             border-radius: 8px;
                             width: 25%;
                             height: 80px;
-                            background-color: var(--bg-color);
+                            /* background-color: var(--bg-color); */
                             color: var(--txt-color);
                             border: 1px solid var(--txt-color);
                         }
@@ -345,6 +288,7 @@
                             transform: scale(1.04);
                         }
                     </style>
+                    <!-- Menu container -->
                     <div id="menu">
                         <h1 ng-click="ctrl.menu.hidden = true">Category</h1>
                         <div class="w-100 mx-4" style="display: flex; flex-wrap: wrap">
@@ -362,88 +306,84 @@
                             </div>
                         </div>
                     </div>
-                    <div>
-                        <h1 style="align-items: center; justify-items: center; display: flex" title="{{ctrl.songList.length}}">{{ctrl.sheet}} <button style="margin-left: 10px" ng-click="ctrl.playSongList()" ng-if="ctrl.songList" class="icon icon-play"></button></h1>
-                        <div style="margin-top: 20px" ng-if="ctrl.message">{{ctrl.message}}</div>
 
-                        <div ng-if="ctrl.songList">
-                            <div class="table-action">
-                                <label> search: <input name="" placeholder="search" style="border-radius: 10%" ng-model="ctrl.searchValue" /> </label>
-                                <style>
-                                    .sort-cbx {
-                                        justify-self: left;
-                                        border-radius: 10%;
-                                    }
-                                </style>
-                                <select class="sort-cbx" ng-model="ctrl.sortBy">
-                                    <option value="">--Sort--</option>
-                                    <option value="name-asc">Sort by name asc</option>
-                                    <option value="name-desc">Sort by name desc</option>
-                                    <option value="singer-asc">Sort by singer asc</option>
-                                    <option value="singer-desc">Sort by singer desc</option>
-                                    <option value="listens-asc">Sort by listens asc</option>
-                                    <option value="listens-desc">Sort by listens desc</option>
-                                </select>
-                            </div>
-                            <style>
-                                .song-action {
-                                    display: flex;
-                                    justify-content: flex-end;
-                                    align-items: flex-end;
-                                }
-                                .song-action button {
-                                    margin-right: 10px;
-                                }
-                            </style>
-                            <div class="song-table songlisttable" style="min-height: 70vh">
-                                <table>
-                                    <tr>
-                                        <th style="width: 1%"></th>
-                                        <th style="width: 40%">Name</th>
-                                        <th class="w-25">Singer</th>
-                                        <th style="width: 5%">Listens</th>
-                                        <th style="width: 13%">Action</th>
-                                    </tr>
-                                    <tr ng-repeat="s in ctrl.songTable" ng-dblclick="ctrl.form.manageSong.init(s).show()">
-                                        <td>
-                                            <button
+                    <div id="infoTable ">
+                        <h1 class="py-2" style="align-items: center; justify-items: center; display: flex" title="{{ctrl.songList.length}}">{{ctrl.sheet}} <button style="margin-left: 10px" ng-click="ctrl.playSongList()" ng-if="ctrl.songList" class="icon icon-play"></button></h1>
+                        <div style="margin-top: 20px" ng-if="ctrl.message">{{ctrl.message}}</div>
+                        <div class="table-action" ng-if="ctrl.songList">
+                            <label> search: <input name="" placeholder="search" style="border-radius: 10%" ng-model="ctrl.searchValue" /> </label>
+
+                            <select class="sort-cbx" ng-model="ctrl.sortBy">
+                                <option value="">--Sort--</option>
+                                <option value="name-asc">Sort by name asc</option>
+                                <option value="name-desc">Sort by name desc</option>
+                                <option value="singer-asc">Sort by singer asc</option>
+                                <option value="singer-desc">Sort by singer desc</option>
+                                <option value="listens-asc">Sort by listens asc</option>
+                                <option value="listens-desc">Sort by listens desc</option>
+                            </select>
+                        </div>
+                    </div>
+                    <style>
+                        .song-action {
+                            display: flex;
+                            justify-content: flex-end;
+                            align-items: flex-end;
+                        }
+                        .song-action button {
+                            margin-right: 10px;
+                        }
+                    </style>
+
+                    <div class="song-table" ng-if="ctrl.songList">
+                        <table>
+                            <tr>
+                                <th style="width: 1%"></th>
+                                <th style="width: 40%">Name</th>
+                                <th class="w-25">Singer</th>
+                                <th style="width: 5%">Listens</th>
+                                <th style="width: 13%">Action</th>
+                            </tr>
+                            <tr ng-repeat="s in ctrl.songTable" ng-dblclick="ctrl.form.manageSong.init(s).show()">
+                                <td>
+                                    <!-- <button
                                                 ng-click="player.playBtnHandler(s, ctrl.songList)"
                                                 ng-class="{
                                                 'icon icon-play': s.fileId != player.songInfo.fileId || (s.fileId == player.songInfo.fileId && player.audio.paused),
                                                 'icon icon-pause': s.fileId == player.songInfo.fileId && !player.audio.paused
                                              }"
                                                 title="Play"
-                                            ></button>
-                                        </td>
-                                        <td>
-                                            {{s.vname == "" ? s.name : s.vname}}
-                                            <div class="badge rounded-pill text-bg-secondary" ng-if="isSyncedLRC(s.lyric)">Lyric</div>
-                                            <div class="badge rounded-pill text-bg-secondary" ng-if="isSyncedLRC(s.lyric_vn)">Vietsub</div>
-                                            <div class="badge rounded-pill text-bg-secondary" ng-if="isSyncedLRC(s.lyric_en)">Engsub</div>
-                                        </td>
-                                        <td>{{s.vsinger == "" ? s.singer : s.vsinger}}</td>
-                                        <td>{{s.listens}}</td>
-                                        <td>
-                                            <div class="song-action">
-                                                <button
-                                                    ng-if="ctrl.form.managePlaylist.isOpen"
-                                                    ng-click="ctrl.form.managePlaylist.addHandler(s)"
-                                                    ng-class="{
+                                            ></button> -->
+                                    <songplay song="s" songlist="ctrl.songList"> </songplay>
+                                </td>
+                                <td>
+                                    {{s.vname == "" ? s.name : s.vname}}
+                                    <div class="badge rounded-pill text-bg-secondary" ng-if="isSyncedLRC(s.lyric)">Lyric</div>
+                                    <div class="badge rounded-pill text-bg-secondary" ng-if="isSyncedLRC(s.lyric_vn)">Vietsub</div>
+                                    <div class="badge rounded-pill text-bg-secondary" ng-if="isSyncedLRC(s.lyric_en)">Engsub</div>
+                                </td>
+                                <td>{{s.vsinger == "" ? s.singer : s.vsinger}}</td>
+                                <td>{{s.listens}}</td>
+                                <td>
+                                    <div class="song-action">
+                                        <button
+                                            ng-if="ctrl.form.managePlaylist.isOpen"
+                                            ng-click="ctrl.form.managePlaylist.addHandler(s)"
+                                            ng-class="{
                                                         'icon icon-add': !ctrl.form.managePlaylist.isAdded(s),
                                                         'icon icon-remove': ctrl.form.managePlaylist.isAdded(s)
                                                     }"
-                                                    title="PlayList"
-                                                ></button>
-                                                <songfav class="icon" song="s"> </songfav>
-                                                <button class="icon" title="Favorite" ng-if="ctrl.user" ng-class="ctrl.songIsFavCss(s)" ng-click="ctrl.favoriteBtnHandler(s)"></button>
-                                                <!-- <button ng-click="ctrl.form.manageSong.init(s).show()" class="icon icon-select" title="Update"></button> -->
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </div>
-                        </div>
+                                            title="PlayList"
+                                        ></button>
+                                        <songfav song="s" apply-class="icon"> </songfav>
+                                        <!-- <button class="icon" title="Favorite" ng-if="ctrl.user" ng-class="ctrl.songIsFavCss(s)" ng-click="ctrl.favoriteBtnHandler(s)"></button> -->
+                                        <!-- <button ng-click="ctrl.form.manageSong.init(s).show()" class="icon icon-select" title="Update"></button> -->
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
                     </div>
+
                     <style>
                         .modal,
                         .modal-backdrop {
@@ -512,6 +452,40 @@
                         </div>
                     </div>
                 </div>
+                <style>
+                    .playlist-container {
+                        flex: 1;
+                        width: 100%;
+                        padding-top: 10px;
+                        padding-left: 20px;
+                        right: 0;
+                        overflow-x: hidden;
+                        overflow-y: auto;
+                        max-height: 82vh;
+                    }
+                    .playlist-container::-webkit-scrollbar {
+                        width: 0;
+                        /* Ẩn thanh cuộn ngang */
+                        height: 0;
+                        /* Ẩn thanh cuộn dọc */
+                    }
+                    .playlist-container::-webkit-scrollbar-thumb {
+                        background: transparent;
+                        /* Ẩn phần tay cầm của thanh cuộn */
+                    }
+                    .playlist-container::-webkit-scrollbar-track {
+                        background: transparent;
+                        /* Ẩn phần nền của thanh cuộn */
+                    }
+                    .playlist-top {
+                        position: sticky;
+                        top: 0;
+                        /* Định vị tiêu đề bảng cố định khi cuộn */
+                        z-index: 1;
+                        /* Đảm bảo tiêu đề nằm trên nội dung */
+                        fill: inherit;
+                    }
+                </style>
                 <div class="col-sm-4 playlist-container" ng-if="ctrl.user">
                     <div class="playlist-top">
                         <h3>Playlist</h3>
@@ -519,7 +493,8 @@
                     </div>
                     <div class="managePlaylistForm" ng-if="ctrl.form.managePlaylist.isOpen">
                         <h3>{{ctrl.form.managePlaylist.playlist ? 'Update' : 'Create'}} Playlist</h3>
-                        <button ng-click="ctrl.playPlaylistHandler(ctrl.form.managePlaylist.getPlaylist())" ng-if="ctrl.form.managePlaylist.songList.length > 0" class="icon icon-play"></button>
+                        <songplay songlist="ctrl.form.managePlaylist.songList"> </songplay>
+                        <!-- <button ng-click="ctrl.playPlaylistHandler(ctrl.form.managePlaylist.getPlaylist())" ng-if="ctrl.form.managePlaylist.songList.length > 0" class="icon icon-play"></button> -->
                         <div>
                             <table>
                                 <tr>
@@ -545,27 +520,22 @@
                                 </tr>
                                 <tr ng-repeat="s in ctrl.form.managePlaylist.songList">
                                     <td>
-                                        <button
+                                        <songplay song="s" songlist="ctrl.form.managePlaylist.songList"></songplay>
+                                        <!-- <button
                                             ng-click="player.playBtnHandler(s, ctrl.form.managePlaylist.songList)"
                                             ng-class="{
                                             'icon icon-play': s.fileId != player.songInfo.fileId || (s.fileId == player.songInfo.fileId && player.audio.paused),
                                             'icon icon-pause': s.fileId == player.songInfo.fileId && !player.audio.paused
                                         }"
                                             title="Play"
-                                        ></button>
+                                        ></button> -->
                                     </td>
                                     <td>{{s.vname == "" ? s.name : s.vname}}</td>
                                     <td>{{s.vsinger == "" ? s.singer : s.vsinger}}</td>
                                     <td>
                                         <div class="song-action">
                                             <button ng-click="ctrl.form.managePlaylist.remove(s)" class="icon icon-remove" title="Remove"></button>
-
-                                            <!-- <button
-                                                ng-click="ctrl.favoriteBtnHandler(s)"
-                                                                                    ng-class="{{ctrl.songIsFavCss(player.songInfo)}}"
-
-                                                title="Favorite"
-                                            ></button> -->
+                                            <songfav song="s" apply-class="icon"></songfav>
                                         </div>
                                     </td>
                                 </tr>
@@ -593,7 +563,7 @@
                                 <th style="width: 24%">Action</th>
                             </tr>
                             <tr ng-repeat="p in ctrl.user.playlist" ng-if="ctrl.user.playlist" ng-dblclick="ctrl.selectPlaylistBtnHandler(p)">
-                                <td><button ng-click="ctrl.playPlaylistHandler(p)" class="icon icon-play"></button></td>
+                                <td><songplay songlist="ctrl.user.playlist.songList"> </songplay></td>
                                 <td>{{p.name}}</td>
                                 <td>{{p.description}}</td>
                                 <td>{{p.songList.length}}</td>
@@ -610,11 +580,17 @@
             </div>
         </div>
         <style>
+            #player-pro {
+                border-top: 1px solid rgba(242, 225, 225, 0.811);
+                background-color: transparent;
+                z-index: 1;
+                height: var(--player-pro-h);
+            }
             #player-pro img {
                 border-radius: 6px;
             }
         </style>
-        <div id="player-pro" class="container-fluid fixed-bottom px-2" style="background-color: #333; z-index: 1" --n-g-if="player.playlist.default.length > 0">
+        <div id="player-pro" class="container-fluid fixed-bottom px-2">
             <audio id="playerAudio" autoplay playsinline hidden>Your browser does not support the audio element.</audio>
             <div>
                 <div class="row p-2">
@@ -622,7 +598,7 @@
                         <div>
                             <div class="d-flex align-items-center mx-1">
                                 <div class="flex-shrink-0">
-                                    <img ng-src="{{  player.metadata.coverImg}}" style="width: 60px; height: 60px" class="align-self-center mr-3" alt="..." />
+                                    <img ng-src="{{ player.metadata.coverImg}}" style="width: 60px; height: 60px" class="align-self-center mr-3" alt="..." />
                                 </div>
                                 <div class="ms-2 align-items-center">
                                     <div class="text-truncate fs-5" style="max-width: 450px">
@@ -708,13 +684,18 @@
                             ></button>
                             <button class="player-icon i-player-prev mx-2 my-1" ng-click="player.prev()"></button>
                             <button
-                                class="mx-2 my-1"
+                                class="mx-2 my-1 player-icon"
                                 ng-class="{
-                                    'player-icon i-player-play': !player.isPlaying,
-                                    'player-icon i-player-pause i-selected': player.isPlaying
+                                    'icon-loading': player.isLoading,
+                                    'i-player-play': !player.isPlaying && !player.isLoading,
+                                    'i-player-pause i-selected': player.isPlaying && !player.isLoading,
+                                
                                 }"
-                                ng-click="player.playBtnHandler()"
+                                ng-click="player.playToggle()"
                             ></button>
+
+                            <!-- <songplay song="player.songInfo" apply-class="mx-2 my-1 player-icon i-player-play"> </songplay> -->
+
                             <button class="player-icon i-player-next mx-2 my-1" ng-click="player.next() "></button>
                             <button
                                 class="mx-2 my-1"
@@ -753,10 +734,11 @@
                         <div class="ml-2 mx-1"><button id="playlistBtn" class="player-icon i-player-playlist"></button></div>
                         <div class="ml-2 mx-1"><button class="player-icon i-player-fullscreen" id="fullScreebBtn" ng-click="player.showFc()"></button></div>
                         <div class="ml-2 mx-1">
-                            <button class="player-icon" title="Favorite" style="scale: 0.9" ng-if="player.songInfo" ng-class="{{ctrl.songIsFavCss(player.songInfo)}}" ng-click="ctrl.favoriteBtnHandler(player.songInfo)"></button>
+                            <songfav class="d-block" song="player.songInfo" apply-class="player-icon" ng-if="player.songInfo"> </songfav>
+                            <!-- <button class="player-icon" title="Favorite" style="scale: 0.9" ng-if="player.songInfo" ng-class="{{ctrl.songIsFavCss(player.songInfo)}}" ng-click="ctrl.favoriteBtnHandler(player.songInfo)"></button> -->
                         </div>
                         <div class="ml-2 mx-1">
-                            <button class="player-icon icon-copy-link" title="Favorite" ng-if="player.songInfo" ng-click="ctrl.copyShareLink(player.songInfo)"></button>
+                            <button class="player-icon icon-copy-link" ng-if="player.songInfo" ng-click="ctrl.copyShareLink(player.songInfo)"></button>
                         </div>
                     </div>
                 </div>
@@ -772,7 +754,8 @@
                 height: 100vh;
                 padding: 2%;
                 /* background-color: var(--player-fc-color); */
-                background-color: #3b3b3b;
+                /* background-color: #3b3b3b; */
+                background-color: transparent;
                 color: white;
                 font-size: 24px;
                 display: none;
@@ -782,7 +765,7 @@
                 z-index: 1000; /* Ensure it appears on top */
             }
 
-            #player-fc .bg-cover {
+            .bg-cover {
                 position: absolute;
                 top: 0;
                 left: 0;
@@ -826,7 +809,7 @@
             }
         </style>
         <div id="player-fc">
-            <div class="bg-cover" style="background-image: url({{player.metadata.defaultCoverSrc}});"></div>
+            <!-- <div class="bg-cover" style="background-image: url({{player.metadata.defaultCoverSrc}});"></div> -->
             <div class="row w-100" style="height: 85%">
                 <div class="col-sm-4 d-flex justify-content-end align-items-end p-4">
                     <div class="">
@@ -880,14 +863,15 @@
                                 ng-click="player.config.isRandom = !player.config.isRandom"
                             ></button>
                             <button class="player-icon i-player-prev mx-4" ng-click="player.prev()"></button>
-                            <button
+                            <!-- <button
                                 class="mx-4"
                                 ng-class="{
                                     'player-icon i-player-play': !player.isPlaying,
                                     'player-icon i-player-pause i-selected': player.isPlaying
                                 }"
                                 ng-click="player.playBtnHandler()"
-                            ></button>
+                            ></button> -->
+                            <songplay song="player.songInfo" apply-class="mx-4 player-icon i-player-play"></songplay>
                             <button class="player-icon i-player-next mx-4" ng-click="player.next() "></button>
                             <button
                                 class="mx-4 player-icon"
@@ -900,15 +884,16 @@
                             ></button>
                         </div>
                         <!-- setting  -->
-                        <div class="col-sm-4 play-icons text-white align-items-center d-flex justify-content-end">
-                            <div class="ml-e">
-                                <button class="player-icon icon-copy-link" title="Copy share link" ng-if="player.songInfo" ng-click="ctrl.copyShareLink(player.songInfo)"></button>
+                        <div class="playersetting col-sm-4 play-icons text-white align-items-center d-flex justify-content-end">
+                            <div class="mx-2">
+                                <button class="player-icon icon-copy-link" title="Copy share link" style="scale: 0.78" ng-if="player.songInfo" ng-click="ctrl.copyShareLink(player.songInfo)"></button>
                             </div>
-                            <div class="mx-3">
-                                <button class="player-icon" title="Favorite" style="scale: 0.9" ng-if="player.songInfo" ng-class="{{ctrl.songIsFavCss(player.songInfo)}}" ng-click="ctrl.favoriteBtnHandler(player.songInfo)"></button>
+                            <div class="mx-2">
+                                <songfav song="player.songInfo" apply-class="player-icon" class="d-block" apply-style="scale: 0.8;" ng-if="player.songInfo"> </songfav>
+                                <!-- <button class="player-icon" title="Favorite" style="scale: 0.9" ng-if="player.songInfo" ng-class="{{ctrl.songIsFavCss(player.songInfo)}}" ng-click="ctrl.favoriteBtnHandler(player.songInfo)"></button> -->
                             </div>
-                            <div class="mx-3"><button class="player-icon i-player-setting" id="settingBtn-fc"></button></div>
-                            <div class="mx-3">
+                            <div class="mx-2"><button class="player-icon i-player-setting" id="settingBtn-fc"></button></div>
+                            <div class="mx-2">
                                 <button
                                     ng-class="{
                                         'player-icon i-player-speaker': !player.metadata.volume.isMuted,
@@ -973,14 +958,15 @@
                             <!-- <td>{{i + 1}}</td> -->
                             <td>
                                 <div class="song-action">
-                                    <button
+                                    <songplay song="s"> </songplay>
+                                    <!-- <button
                                         ng-click="player.playBtnHandler(s)"
                                         ng-class="{
                                             'icon icon-play': s.fileId != player.songInfo.fileId || (s.fileId == player.songInfo.fileId && player.audio.paused),
                                             'icon icon-pause': s.fileId == player.songInfo.fileId && !player.audio.paused
                                         }"
                                         title="Play"
-                                    ></button>
+                                    ></button> -->
                                     <!-- <button
                                         ng-click="ctrl.favoriteBtnHandler(s)"
                                         ng-class="{
@@ -1090,9 +1076,12 @@
                 const spkPopoverfc = configPopover("#speakerBtn-fc", "#speakerPopover");
                 const stgPopoverfc = configPopover("#settingBtn-fc", "#settingPopover", { trigger: "click hover" });
                 const playlistPropoverfc = configPopover("#playlistBtn-fc", "#playlistPopover", { trigger: "click hover" });
+
+                const getid = document.getElementById;
             });
 
             function configPopover(btnSelector, contentSelector, opt = {}) {
+                console.log(arguments);
                 const content = document.querySelector(contentSelector);
                 const btn = document.querySelector(btnSelector);
                 const popover = new bootstrap.Popover(btn, {
@@ -1485,6 +1474,9 @@
                      */
                     $http.delete = function (url, config) {};
                 }
+                get qs() {
+                    return (this.document || document).querySelector;
+                }
                 showToastNotification(message, delay = 3000) {
                     const toastElement = document.createElement("div");
                     toastElement.classList.add("toast", "align-items-center", "text-white", "bg-primary", "border-0");
@@ -1551,6 +1543,83 @@
              */
 
             class MusicAppController extends ControllerHepler {
+                static registerDirective(app) {
+                    const createButton = /** @param {DirectiveOptions} options  @returns {($rootScope, $compile) => DirectiveOptions}*/ (options) => {
+                        return ($rootScope, $compile) => {
+                            const directive = {
+                                restrict: options.restrict || "E",
+                                scope: options.scope || false,
+                                // controller: ($scope) => {
+                                //     $scope.ctrl = $rootScope.MusicAppController;
+                                //     $scope.player = $rootScope.PlayerController;
+                                //     if (options.controller) {
+                                //         options.controller(...arguments);
+                                //     }
+                                // },
+                                link: (scope, element, attrs, ctrl) => {
+                                    if (!element.hasClass("d-block")) {
+                                        element.addClass("d-flex");
+                                    }
+
+                                    const $btn = element.find("button").eq(0);
+                                    $btn.addClass("inDirective");
+                                    $btn.addClass(attrs["applyClass"] || "icon");
+                                    applyStyle($btn, attrs["applyStyle"] || "");
+                                    if (options.link) {
+                                        options.link(scope, element, attrs, ctrl);
+                                    }
+                                    element.append($btn);
+                                    $compile($btn)(scope);
+                                },
+                            };
+
+                            return {
+                                ...options,
+                                ...directive,
+                            };
+                        };
+                    };
+                    const applyStyle = /** @param {JQLite} element @param {string} styleString */ (element, styleString) => {
+                        const styles = styleString.split(";").map((style) => style.trim());
+                        const css_ = {};
+                        styles.forEach((style) => {
+                            const [property, value] = style.split(":").map((str) => str.trim());
+                            css_[property] = value;
+                        });
+
+                        element.css(css_);
+                    };
+
+                    app.directive(
+                        "songfav",
+                        createButton({
+                            template: `
+                                <button class="icon-fav" title="Favorite"></button>
+                            `,
+                            link: (scope, element, attrs, ctrl) => {
+                                const $btn = element.find("button").eq(0);
+                                $btn.attr("ng-class", `ctrl.songIsFavCss(${attrs.song})`);
+                                $btn.attr("ng-click", `ctrl.favoriteBtnHandler(${attrs.song})`);
+                            },
+                        }),
+                    );
+
+                    app.directive(
+                        "songplay",
+                        createButton({
+                            template: `
+                        <button title="Play"
+                            ng-click="player.playBtnHandler(song, songlist)"
+                            ng-class="ctrl.songIsPlayingCss(song)"
+                        ></button>`,
+                            link: (scope, element, attrs, ctrl) => {
+                                const $btn = element.find("button").eq(0);
+                                $btn.attr("ng-class", `ctrl.songIsPlayingCss(${attrs.song})`);
+                                $btn.attr("ng-click", `player.playBtnHandler(${attrs.song}, ${attrs.songlist || undefined})`);
+                            },
+                        }),
+                    );
+                }
                 static get controllerAs() {
                     return "ctrl";
                 }
@@ -1558,13 +1627,16 @@
                 static get controllerName() {
                     return MusicAppController.name;
                 }
-                /** @param {DirectiveOptions} params @returns {DirectiveOptions} */
 
                 constructor($scope, $sce, $timeout, $http, DataService, AuthService, $rootScope) {
                     super($scope);
                     $rootScope.MusicAppController = this;
 
                     const ctrl = this;
+                    this.elem = {
+                        header: document.getElementById("header"),
+                        container: document.getElementById("container"),
+                    };
                     $scope.ctrl = ctrl;
                     cfg.ins = ctrl;
                     this.$sce = $sce;
@@ -1586,7 +1658,7 @@
                     this.keyList = [];
                     /** @type {SongInfo[]} */
                     this.songList = undefined;
-                    const player = new PlayerController($scope, $http);
+                    const player = new PlayerController($scope, $http, $rootScope);
 
                     player.DataService = DataService;
                     player.MSService = this.MSService;
@@ -1753,7 +1825,7 @@
                     $scope.loading = true;
                     const loadingPromise = [
                         this.loadAllDrvAK(),
-                        googleGetLocation()
+                        this.googleGetLocation()
                             .then((l) => (this.location = l))
                             .catch((e) => {
                                 console.log(e);
@@ -2009,11 +2081,23 @@
                 }
                 songIsFavCss(song) {
                     return {
+                        "": this.user,
                         "icon-unfav": this.user?.favorite && this.user?.favorite.includes(song.fileId) && !song.isLoadingFav,
                         "icon-loading": song.isLoadingFav,
                         "icon-fav": !this.user?.favorite || (!this.user?.favorite.includes(song.fileId) && !song.isLoadingFav),
                     };
                 }
+                songIsPlayingCss(song) {
+                    // may more watcher
+                    if (!song) return { "icon-play": true };
+                    const songIsPlaying = song?.fileId === this.player.songInfo?.fileId;
+                    return {
+                        "icon-loading": this.player.isLoading && songIsPlaying,
+                        "icon-play": !songIsPlaying || (songIsPlaying && !this.player.isPlaying && !this.player.isLoading),
+                        "icon-pause": !this.player.isLoading && songIsPlaying && this.player.isPlaying,
+                    };
+                }
+
                 selectKeyA_() {
                     if (this.keyList) {
                         this.selectKeyA_.lastKeyIdx = ((this.selectKeyA_.lastAudioIndex ?? -1) + 1) % this.keyList.length;
@@ -2067,8 +2151,9 @@
             }
 
             class PlayerController extends ControllerHepler {
-                constructor($scope, $http) {
+                constructor($scope, $http, $rootScope) {
                     super($scope);
+                    $rootScope.PlayerController = this;
                     this.elem = {
                         playerBot: document.getElementById("player-pro"),
                         playerFC: document.getElementById("player-fc"),
@@ -2181,7 +2266,7 @@
                     };
                     this.audioObjectURLs = [];
                     this.isPlaying = false;
-
+                    this.isLoading = false;
                     this.document = document;
                     // this.document.addEventListener("keydown", (event) => {
                     //     if (["ArrowLeft", "ArrowRight", " "].includes(event.key)) {
@@ -2499,6 +2584,7 @@
                  * @param {Blob} [blob]
                  */
                 refresh(songInfo, blob) {
+                    this.isLoading = true;
                     const currentIndex = this.cache.refreshPlayIndex + 1;
                     this.cache.refreshPlayIndex = currentIndex;
 
@@ -2531,6 +2617,7 @@
                         }
 
                         this.metadataFromBlob(blob);
+                        this.isLoading = false;
                     } else {
                         clearTimeout(this.refresh.loadSongAudioTimer);
                         this.refresh.loadSongAudioTimer = setTimeout(() => {
@@ -2542,6 +2629,14 @@
                             });
                         }, 2000);
                     }
+                }
+                playToggle() {
+                    if (!this.isLoading) {
+                        this.audio.paused ? this.audio.play() : this.audio.pause();
+                    } else {
+                        this.log("song is loading");
+                    }
+                    return this;
                 }
                 /**
                  * @param {SongInfo} songInfo
@@ -2583,7 +2678,7 @@
                 }
 
                 resetFcBg() {
-                    const bgCover = this.document.querySelector("#player-fc .bg-cover");
+                    // const bgCover = this.document.querySelect    or(".bg-cover");
                     // bgCover.hidden = true;
                     // const pfc = this.document.querySelector("#player-fc");
                     // pfc.style.backgroundColor = "var(--player-fc-color)";
@@ -2596,11 +2691,11 @@
                             this.metadata.extension = mimeTypeToExt(blob.type);
                             if (picture) {
                                 this.metadata.coverSrc = `data:${picture.format};base64,${arrayBufferToBase64(picture.data)}`;
-                                const bgCover = this.document.querySelector("#player-fc .bg-cover");
-                                const pfc = this.document.querySelector("#player-fc");
+                                this.document.querySelectorAll(".bg-cover").forEach((element) => (element.style.backgroundImage = `url(${this.metadata.coverSrc})`));
+                                // const pfc = this.document.querySelector("#player-fc");
                                 // bgCover.hidden = false;
-                                bgCover.style.backgroundImage = `url(${this.metadata.coverSrc})`;
-                                pfc.style.backgroundColor = "#3b3b3b";
+                                // bgCover.style.backgroundImage = `url(${this.metadata.coverSrc})`;
+                                // pfc.style.backgroundColor = "#3b3b3b";
                                 this.apply();
                             } else {
                                 this.resetFcBg();
@@ -2631,10 +2726,12 @@
                 }
                 hideFc() {
                     this.closeBootstrapPopovers();
+                    document.querySelectorAll("#header, #container, #player-pro").forEach((element) => (element.hidden = false));
                     document.getElementById("player-fc").style.display = "none";
                 }
                 showFc() {
                     this.closeBootstrapPopovers();
+                    document.querySelectorAll("#header, #container, #player-pro").forEach((element) => (element.hidden = true));
                     document.getElementById("player-fc").style.display = "block";
                 }
             }
@@ -2643,14 +2740,13 @@
                 constructor($http) {
                     super();
                     this.$http = $http;
-                    const deployment_id = "AKfycbz1FHLLdtpW5hba-4NlD0l-tqqBpdZ4EbvYuRAC2GfTU5g_RR6pHgti3trJ0nWkwoVOFA";
-                    this.rpcServer = this.host || "https://script.google.com/macros/s/AKfycbz1FHLLdtpW5hba-4NlD0l-tqqBpdZ4EbvYuRAC2GfTU5g_RR6pHgti3trJ0nWkwoVOFA/exec";
+                    this.rpcServer = this.host || "https://script.google.com/macros/s/AKfycbyU__zRkoR1drKWRZGROuO4CCW43wDbIpyIcspQnnLiD-YTA-aVcxlgjHN-HBc_6LxWMw/exec";
                 }
 
                 query(methodName, params) {
                     let prm;
-                    if (isAppsScript) {
-                        prm = appsScriptRunAsync("simulateJSONRpcCall", [methodName, JSON.parse(angular.toJson(params)), AuthService.getAuthToken()]);
+                    if (this.isAppsScript) {
+                        prm = this.appsScriptRunAsync("simulateJSONRpcCall", [methodName, JSON.parse(angular.toJson(params)), AuthService.getAuthToken()]);
                     } else {
                         prm = this.$http
                             .post(this.rpcServer, {
@@ -2825,7 +2921,6 @@
                  */
                 getAudioSource(fileId) {
                     if (true) {
-                        // if (isAppsScript) {
                         return fetch("https://www.googleapis.com/drive/v3/files/" + fileId + "?alt=media&key=" + this.selectKeyA_()).then((response) => response.blob());
                     } else {
                         return this.query("getAudio", [fileId]).then((result) => {
@@ -2847,7 +2942,19 @@
             app.service(AuthService.name, ControllerHepler.injectOf(AuthService));
             app.service(MusicSourceService.name, ControllerHepler.injectOf(MusicSourceService));
             app.controller(MusicAppController.controllerName, ControllerHepler.injectOf(MusicAppController));
+
+            MusicAppController.registerDirective(app);
         </script>
+        <style>
+            .inDriective {
+                position: absolute;
+                top: 0;
+                left: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        </style>
         <script>
             "use strict";
             // utils

@@ -97,4 +97,17 @@ class JSONRPCServer extends WebApp.JSONRPCServer {
         const songs = getAllSongAndId(sheetName)
         return SongService.instance.updateSingleSongs(songs)
     }
+
+    admin_processSheet(sheetName, session) {
+        const u = UsersService.instance.getUser(session.user.username);
+        if (u.role != ROLE.ADMIN) {
+            throw new Error('Require Admin Role');
+        }
+        const manager = new SongFileManager(sheetName)
+        if (manager.validateClass()) {
+            manager.process({ update: true })
+            manager.flush()
+            return SongService.instance.updateSingleSongs(manager.getAllSongs())
+        }
+    }
 }

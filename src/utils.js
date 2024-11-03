@@ -8,6 +8,51 @@ function extractFileId(url) {
   return null
 }
 
+function clearRevision(fd) {
+  const folder = fd || DriveApp.getFolderById('1xkWWdtJ8pqYTTXECP8ZvOEUXKxUZTPGm')
+  let files = folder.getFiles()
+  let fds = folder.getFolders()
+  while (files.hasNext()) {
+    let file = files.next()
+    if (!isAudioMimeType(file.getMimeType())) continue
+    if (file.getOwner().getEmail() != Session.getActiveUser().getEmail()) continue
+    let id = file.getId()
+    var revisions = Drive.Revisions.list(id)
+
+    let c = {
+      max: 0, rvs: {}
+    }
+    revisions.revisions.forEach(function (revision) {
+      if (c.rvs.id == undefined) {
+        return c = {
+          max: new Date(revision.modifiedTime).getTime(),
+          rvs: revision
+        }
+      }
+      try {
+        if (new Date(revision.modifiedTime).getTime() < c.max) {
+          Drive.Revisions.remove(id, revision.id);
+          console.log(id, revisions.revisions.length, 'delete', revision.id)
+        } else {
+          Drive.Revisions.remove(id, c.rvs.id);
+          console.log(id, revisions.revisions.length, 'delete', c.rvs.id)
+
+          c = {
+            max: new Date(revision.modifiedTime).getTime(),
+            rvs: revision
+          }
+        }
+      } catch (e) {
+        console.log(revision, e)
+      }
+    });
+  }
+  while (fds.hasNext()) {
+    let fd = fds.next()
+    clearRevision(fd)
+  }
+
+}
 function isDriveId(id) {
   return /^[a-zA-Z0-9-_]{33}$/.test(id)
 }
@@ -18,7 +63,7 @@ function containOne(stra, strtest) {
 }
 
 function isAudioMimeType(mimeType) {
-  return mimeType.startsWith('audio') || mimeType == 'application/x-flac'
+  return mimeType.startsWith('audio') || mimeType == 'application/x-flac' || mimeType == 'audio/x-flac'
 }
 
 function selectDriveAPIKey() {
@@ -45,16 +90,19 @@ function instanceOf(constructor, args) {
 }
 
 
-Array.prototype.popFilter = function (_q) {
-  let r = []
-  for (const e of this) {
-    if (_q(e)) {
-      r.push(e)
-      this.splice(this.indexOf(e), 1)
-      return e
+/**
+ * @template T
+ * @param {T[]} array
+ * @param {(element: T) => boolean} condition
+ * @returns {T | undefined}
+ */
+function popAndRemove(array, condition) {
+  for (const element of array) {
+    if (condition(element)) {
+      array.splice(array.indexOf(element), 1);
+      return element;
     }
   }
-
 }
 
 /* Source: https://gist.github.com/erickoledadevrel/6b1e9e2796e3c21f669f */
@@ -207,4 +255,66 @@ function chineseNameParse() {
       }
     }
   }
+}
+
+function mimeToExt(mime) {
+  const mimeToExtMap = {
+    'audio/mpeg': 'mp3',
+    'audio/mp4': 'm4a',
+    'audio/x-m4a': 'm4a',
+    'audio/wav': 'wav',
+    'audio/x-wav': 'wav',
+    'audio/ogg': 'ogg',
+    'audio/webm': 'webm',
+    'audio/flac': 'flac',
+    'audio/x-flac': 'flac',
+    'application/x-flac': 'flac',
+    'audio/aac': 'aac',
+    'audio/x-aiff': 'aiff',
+    'audio/basic': 'au',
+    'audio/midi': 'mid',
+    'audio/x-midi': 'mid',
+    'audio/x-ms-wma': 'wma',
+    'audio/x-matroska': 'mka',
+    'audio/vnd.rn-realaudio': 'ra',
+    'audio/vnd.wave': 'wav',
+    'audio/3gpp': '3gp',
+    'audio/3gpp2': '3g2',
+    'audio/ac3': 'ac3',
+    'audio/aiff': 'aiff',
+    'audio/amr': 'amr',
+    'audio/ape': 'ape',
+  }
+
+
+  return mimeToExtMap[mime]
+}
+
+function isHaveExt(/** @type {string} */ filename) {
+  const extList = ['mp3', 'm4a', 'wav', 'ogg', 'webm', 'flac', 'aac', 'aiff', 'au', 'mid', 'wma', 'mka', 'ra', 'wav', '3gp', '3g2', 'ac3', 'aiff', 'amr', 'ape', 'flac']
+  const ext = filename.split('.').pop()
+  return extList.includes(ext)
+}
+
+function addExtToFileName(folder = DriveApp.getFolderById(soundCollectioFolderId)) {
+  console.log(`addExtToFileName: ${folder.getName()}`)
+  const filesIterator = folder.getFiles()
+  while (filesIterator.hasNext()) {
+    const file = filesIterator.next()
+    const mimeType = file.getMimeType()
+    if (isAudioMimeType(mimeType)
+      && !isHaveExt(file.getName())
+      && mimeToExt(mimeType)) {
+      const oldName = file.getName()
+      const newName = `${oldName}.${mimeToExt(mimeType)}`
+      file.setName(newName)
+      console.log(`${file.getId()} :: ${oldName} => ${newName}`)
+    }
+  }
+
+  const folderIterator = folder.getFolders()
+  while (folderIterator.hasNext()) {
+    addExtToFileName(folderIterator.next())
+  }
+
 }

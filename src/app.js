@@ -46,8 +46,8 @@ function updateSongSingle() {
   const songs = getAllSongAndId(ss.getActiveSheet().getName())
   SongService.instance.updateSingleSongs(songs)
 }
-function process() {
-  let manager = new SongFileManager(SpreadsheetApp.getActiveSheet().getName())
+function process(sheetName) {
+  let manager = new SongFileManager(sheetName || SpreadsheetApp.getActiveSheet().getName())
   if (manager.validateClass()) {
     manager.process({ update: true })
     manager.flush()

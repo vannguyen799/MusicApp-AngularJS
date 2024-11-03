@@ -1,5 +1,5 @@
 /** @type {typeof IWebApp} */
-globalThis.WebApp = WebApp
+globalThis.WebApp
 
 /**
  * @namespace IWebApp

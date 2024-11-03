@@ -225,6 +225,11 @@
                     </button>
                     <!-- Navbar content with collapse -->
                     <div class="collapse navbar-collapse" id="navbarNav">
+                        <style>
+                            #navbarNav li {
+                                background-color: transparent;
+                            }
+                        </style>
                         <ul class="navbar-nav me-auto mb-2 mb-lg-0" style="background-color: transparent">
                             <li class="nav-item mx-1 text-truncate">
                                 <button class="nav-link" ng-click="ctrl.selectSheetBtnHandler('')">All Song</button>
@@ -280,6 +285,7 @@
                             width: 25%;
                             height: 80px;
                             /* background-color: var(--bg-color); */
+                            background-color: transparent;
                             color: var(--txt-color);
                             border: 1px solid var(--txt-color);
                         }
@@ -863,15 +869,16 @@
                                 ng-click="player.config.isRandom = !player.config.isRandom"
                             ></button>
                             <button class="player-icon i-player-prev mx-4" ng-click="player.prev()"></button>
-                            <!-- <button
-                                class="mx-4"
+                            <button
+                                class="mx-4 player-icon"
                                 ng-class="{
-                                    'player-icon i-player-play': !player.isPlaying,
-                                    'player-icon i-player-pause i-selected': player.isPlaying
+                                    'icon-loading': player.isLoading,
+                                    'i-player-play': !player.isPlaying && !player.isLoading,
+                                    'i-player-pause i-selected': player.isPlaying && !player.isLoading,                                
                                 }"
-                                ng-click="player.playBtnHandler()"
-                            ></button> -->
-                            <songplay song="player.songInfo" apply-class="mx-4 player-icon i-player-play"></songplay>
+                                ng-click="player.playToggle()"
+                            ></button>
+                            <!-- <songplay song="player.songInfo" apply-class="mx-4 player-icon i-player-play"></songplay> -->
                             <button class="player-icon i-player-next mx-4" ng-click="player.next() "></button>
                             <button
                                 class="mx-4 player-icon"
@@ -1081,7 +1088,7 @@
             });
 
             function configPopover(btnSelector, contentSelector, opt = {}) {
-                console.log(arguments);
+                // console.log(arguments);
                 const content = document.querySelector(contentSelector);
                 const btn = document.querySelector(btnSelector);
                 const popover = new bootstrap.Popover(btn, {
@@ -1830,6 +1837,7 @@
                             .catch((e) => {
                                 console.log(e);
                             }),
+                        this.registerNotificationHandler(),
                     ];
                     $scope.isSyncedLRC = (lrcString) => {
                         return new LyricLRC(lrcString).lyrics.data.length > 5;
@@ -1872,6 +1880,8 @@
                         this.apply();
                     });
                 }
+
+                registerNotificationHandler() {}
 
                 get songTable() {
                     if (!Array.isArray(this.songList)) {
@@ -2196,6 +2206,7 @@
                             this.timing.speed = 1;
                         },
                     };
+
                     /** @type {HTMLAudioElement} */
                     this.audio = document.getElementById("playerAudio");
                     this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -2334,43 +2345,40 @@
                     }
                 }
 
-                genNotification() {
-                    if ("Notification" in window) {
-                        Notification.requestPermission().then((permission) => {
-                            if (permission === "granted") {
-                                // Create and display the notification
-                                const notification = new Notification("Music App", {
-                                    body: this.audio.title,
-                                    icon: this.metadata.coverSrc || this.metadata.defaultCoverSrc,
-                                    actions: [
-                                        { action: "prev", title: "Previous" },
-                                        { action: "next", title: "Next" },
-                                        { action: "close", title: "Close" },
-                                    ],
-                                });
-
-                                notification.onshow = () => {
-                                    this.audio.play();
-                                };
-
-                                notification.onclick = () => {
-                                    if (event.action === "prev") {
-                                        this.prev();
-                                    } else if (event.action === "next") {
-                                        this.next();
-                                    } else if (event.action === "close") {
-                                        notification.close;
-                                    } else {
-                                        window.focus();
-                                    }
-                                };
-                                this.cache.notificationInstance = notification;
-                            } else {
-                                this.log("Notification permission denied.");
-                            }
+                showNotification() {
+                    if ("mediaSession" in navigator) {
+                        navigator.mediaSession.metadata = new MediaMetadata({
+                            title: (this.subSongName + " " + this.mainSongName).trim(),
+                            artist: `${this.songInfo.vsinger ? this.songInfo.vsinger + " - " : ""}${this.songInfo.singer}`.trim(),
+                            album: "",
+                            artwork: [{ src: URL.createObjectURL(base64ToBlob(this.metadata.coverImg)) }],
                         });
-                    } else {
-                        this.log("This browser does not support notifications.");
+                        this.log("Registed mediaSession");
+
+                        navigator.mediaSession.setActionHandler("play", () => {
+                            console.log("play song");
+                            this.audio.play();
+                            navigator.mediaSession.playbackState = "playing";
+                        });
+
+                        // Define the pause action
+                        navigator.mediaSession.setActionHandler("pause", () => {
+                            console.log("Pause action triggered");
+                            this.audio.pause();
+                            navigator.mediaSession.playbackState = "paused";
+                        });
+
+                        // Define the next track action
+                        navigator.mediaSession.setActionHandler("nexttrack", () => {
+                            console.log("Next track action triggered");
+                            this.next();
+                        });
+
+                        // Define the previous track action
+                        navigator.mediaSession.setActionHandler("previoustrack", () => {
+                            console.log("Previous track action triggered");
+                            this.prev();
+                        });
                     }
                 }
                 generateAudioEvent() {

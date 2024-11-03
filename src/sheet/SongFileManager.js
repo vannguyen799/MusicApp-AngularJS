@@ -144,61 +144,77 @@ class SongFileManager extends SM.Sheet.SheetManager {
 
     const filesIterator = this.folder.getFiles()
     const allSong = this.getAllSongs({ allowNull: true })
+    console.log('all song count ', allSong.length)
 
     // const processFilename = this.processFileNameColumn.getData()
     while (filesIterator.hasNext()) {
-      let file = filesIterator.next()
-      let mimeType = file.getMimeType()
-      if (!mimeType.startsWith('audio') && !mimeType.includes('application/x-flac')) { continue }
+      const file = filesIterator.next()
+      const fileName = file.getName()
 
-      let fileName = file.getName()
-      if (this.ignoreFile.includes(fileName)) { continue }
+      if (file.isTrashed()
+        || !isAudioMimeType(file.getMimeType())
+        || this.ignoreFile.includes(fileName)) {
+        continue
+      }
 
-      let tmpSinfo = SongInfo.try(fileName)
-      let sinfo = allSong.popFilter((s) => s.fileId == file.getId()) || allSong.popFilter((s) => s.name == tmpSinfo.name && s.singer == tmpSinfo.singer)
-      if (sinfo) {
+      const tempSong = SongInfo.try(fileName)
+      const song = popAndRemove(allSong, (s) => (s.fileId == file.getId()) || (s.name == tempSong.name && s.singer == tempSong.singer))
+      console.log(song?.i, tempSong.fileId, tempSong.name, tempSong.singer, '\n', file.getId(), song?.name, song?.singer)
+      console.log(file.getName())
+      /** @param {SongInfo} song @param {string} fileName @returns {boolean}  */
+      function validFileName(song, fileName) {
+        const fomatedName = song.getFilename()
+        if (fomatedName != fileName && !['', null, ' -  |  - ', undefined].find(f => f == fomatedName)) {
+          return false
+        }
+        return true
+      }
+      if (song) {
         // check file name
-        let fomatName = sinfo.getFilename()
-        if (fomatName != fileName && !['', null, ' -  |  - '].find(f => f == fomatName)) {
-          file.setName(fomatName)
-          console.log(`update name: ${sinfo.i} ${fileName} >>>>> ${fomatName} `)
-          continue
+        if (!validFileName(song, fileName)) {
+          file.setName(song.getFilename())
+          // Drive.Files.update(file.getId(), { name: song.getFilename() })
+          console.log(`update name: ${song.i} ${fileName} >>>>> ${song.getFilename()} `)
         }
         // update status file url
-        let row = sinfo.i + 1
-        if (row > 0) {
-          this.Sheet.getRange(row + this.statusColumn.headerCell.row, this.statusColumn.headerCell.col).setValue('ok')
-          this.Sheet.getRange(row + this.linkUpColum.headerCell.row, this.linkUpColum.headerCell.col).setValue(file.getUrl())
-        } else {
-          this.Sheet.getRange(row + this.statusColumn.headerCell.row, this.statusColumn.headerCell.col).setValue('')
+        if (song.fileId != file.getId()) {
+          let row = song.i + 1
+          if (row > 0) {
+            this.Sheet.getRange(row + this.statusColumn.headerCell.row, this.statusColumn.headerCell.col).setValue('ok')
+            this.Sheet.getRange(row + this.linkUpColum.headerCell.row, this.linkUpColum.headerCell.col).setValue(file.getUrl())
+          } else {
+            this.Sheet.getRange(row + this.statusColumn.headerCell.row, this.statusColumn.headerCell.col).setValue('')
+          }
         }
       } else {
         // update to sheet
-        console.log(`file unprocessed: ${file.getName()}`)
+        console.log(`file unprocessed: ${file.getName()} ${file.getUrl()}`)
         if (update) {
-          console.log(`add to shet: ${tmpSinfo.getFilename()}`)
+          console.log(`add song to shet: ${tempSong.getFilename()}`)
           this.addSong({
-            songName: tmpSinfo.name,
-            singerName: tmpSinfo.singer,
-            vsinger: tmpSinfo.vsinger,
-            vname: tmpSinfo.vname,
+            songName: tempSong.name,
+            singerName: tempSong.singer,
+            vsinger: tempSong.vsinger,
+            vname: tempSong.vname,
             linkUp: file.getUrl(),
             status: 'unprocess'
           })
         }
       }
     }
+    console.log('danger count ' + allSong.length)
+
     for (const s of allSong) {
       console.log(`danger song: ${s.getFilename()}`)
       let row = s.i + 1
       if (row > 0) {
         this.Sheet.getRange(row + this.statusColumn.headerCell.row, this.statusColumn.headerCell.col).setValue('danger')
-        this.Sheet.getRange(row + this.linkUpColum.headerCell.row, this.linkUpColum.headerCell.col).setValue(`danger` + (s.fileId && `${s.fileId}` != '' ? ` https://drive.google.com/file/d/${s.fileId}/view?usp=sharing` : ' '))
+        // this.Sheet.getRange(row + this.linkUpColum.headerCell.row, this.linkUpColum.headerCell.col).setValue(`danger` + (s.fileId && `${s.fileId}` != '' ? ` https://drive.google.com/file/d/${s.fileId}/view?usp=sharing` : ' '))
+        this.Sheet.getRange(row + this.linkUpColum.headerCell.row, this.linkUpColum.headerCell.col).setValue(``)
       } else {
       }
     }
   }
-
   pFileId() {
     console.log('processingName... ' + this.sheetName)
 
@@ -383,105 +399,6 @@ class SongFileManager extends SM.Sheet.SheetManager {
       }
     }
     return false
-  }
-}
-const spliter = 'ǁ'
-
-class SongInfo {
-  /** @param {{[name:string]:string}} */
-  constructor({ name = '', singer = '', vname = '', vsinger = '', linkUp = '', listens = 0, lyric = '', lyric_vn = '', lyric_en = '', status, sheet, i = -1 }) {
-    this.i = parseInt(i)
-    this.singer = singer?.trim() || ''
-    this.name = name.toString().trim()
-    this.vsinger = vsinger?.trim() ?? ''
-    this.vname = vname?.trim() ?? ''
-    // this.linkUp = linkUp
-    this.status = status || ''
-    this.lyric = lyric
-    this.lyric_vn = lyric_vn
-    this.lyric_en = lyric_en
-    this.fileId = extractFileId(linkUp)
-    this.sheet = sheet || 'Others'
-    this.listens = listens || 0
-    this.lyric_vn_translated = undefined
-    this.lyric_en_translated = undefined
-  }
-  getUrl() {
-    return `https://drive.google.com/file/d/${this.fileId}/view?usp=sharing`
-  }
-  getFilename() {
-    if (!(this.vsinger == this.vname == '')) {
-      return `${this.singer} - ${this.name}`
-    } else {
-      return `${this.vsinger} - ${this.vname} ${spliter} ${this.singer} - ${this.name}`
-    }
-  }
-  /** @param {string} filename  */
-  static _removeExt(filename) {
-    const fileExt = ['flac', 'wav', 'mp3', 'ape', 'm4a', 'mp4', 'ogg']
-    for (const ext of fileExt) {
-      if (filename.endsWith(`.${ext}`)) {
-        let tmp = filename.split('.')
-        tmp.pop()
-        filename = tmp.join('.')
-      }
-    }
-    filename = filename.replace('+', ' ')
-
-    return filename.trim()
-  }
-
-  /** @param {string} filename  @returns {SongInfo} */
-  static fromUploadFilename(filename) {
-    filename = this._removeExt(filename)
-
-    /** @param {string} p @param {string} s @returns {string[] | undefined} */
-    function test(p, s) {
-      if (containOne(s, p)) {
-        return s.split(p)
-      }
-      return undefined
-    }
-    let res = test('+-+', filename) || test('-', filename) || test(' - ', filename) || ['', filename]
-
-
-    return new SongInfo({
-      name: res[1],
-      singer: res[0]
-    })
-  }
-
-  static try(fileName) {
-    fileName = this._removeExt(fileName)
-    if (fileName.includes(spliter) || fileName.includes('|') || fileName.includes('   ')) {
-      return this.fromFileName(fileName)
-    } else {
-      return this.fromUploadFilename(fileName)
-    }
-  }
-  /** @param {string} filename  @returns {SongInfo} */
-  static fromFileName(filename) {
-    filename = this._removeExt(filename)
-    let [_vname, _vsinger, _name, _signer] = ['', '', '', '']
-    // fomat singerName - SongName | orignSingerName - originSongName
-    function testSplit(str) {
-      if (filename.includes(str) && filename.indexOf(str) == filename.lastIndexOf(str)) {
-        let vs = filename.split(str)[0].split(' - ')
-        let origin = filename.split(str)[1].split(' - ')
-        return new SongInfo({
-          name: origin[1],
-          singer: origin[0],
-          vname: vs[1],
-          vsinger: vs[0]
-        })
-      }
-      if (!str && (filename.includes(' - ') || filename.indexOf("-") == filename.lastIndexOf('-'))) {
-        return new SongInfo({
-          name: filename.split('-')[1], singer: filename.split('-')[0]
-        })
-      }
-    }
-    return testSplit('ǁ') || testSplit('|') || testSplit("   ") || testSplit()
   }
 }
 

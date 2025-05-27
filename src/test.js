@@ -31,3 +31,14 @@ function testAddFavSong() {
   console.log(b.setSongFavorite(fileId)
   )
 }
+
+let res = []
+let last = {}
+for (const [index, el] of _qEsXpath('//div[contains(@class, "message_")]').entries()) {
+    
+    let name = _qEsXpath(_gXpath(el)  + '//span[contains(@id,"message-username-")]', el)[0]?.textContent || last.name;
+        content = _qEsXpath(_gXpath(el)  + '//div[contains(@id,"message-content-")]', el)[0].textContent;
+    last = { name, content }
+    res.push(last)
+}
+return res

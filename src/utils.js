@@ -318,3 +318,15 @@ function addExtToFileName(folder = DriveApp.getFolderById(soundCollectioFolderId
   }
 
 }
+
+
+const String_ = {
+  
+  substring(str, startIndex, endIndex) {
+    if (startIndex < 0 || endIndex > str.length || startIndex > endIndex) {
+        return ''; 
+    }
+    
+    return str.slice(startIndex, endIndex);
+}
+}

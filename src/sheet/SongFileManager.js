@@ -170,6 +170,7 @@ class SongFileManager extends SM.Sheet.SheetManager {
         return true
       }
       if (song) {
+        song.setFile(file)
         // check file name
         if (!validFileName(song, fileName)) {
           file.setName(song.getFilename())

@@ -4,7 +4,7 @@ class SongInfo {
         return 'ǁ'
     }
 
-    /** @param {{[name:string]:string}} */
+    /** @param {{[name:string]:string | number}} */
     constructor({
         name = '',
         singer = '',
@@ -20,6 +20,11 @@ class SongInfo {
         ext = '',
         mime = ''
     }) {
+        if (vname.startsWith("?")) {
+           vname =  vname.replace('?','_')
+        }
+
+        
         this.i = parseInt(i)
         this.singer = singer?.trim() || ''
         this.name = name.toString().trim()
@@ -42,6 +47,12 @@ class SongInfo {
         return `https://drive.google.com/file/d/${this.fileId}/view?usp=sharing`
     }
 
+    
+    setFile(file) {
+        this._file = file
+        this.ext = mimeToExt(file.getMimeType())
+    }
+
     getFilename() {
         let filename = ''
         if (!(this.vsinger == this.vname == '')) {
@@ -49,12 +60,20 @@ class SongInfo {
         } else {
             filename = `${this.vsinger} - ${this.vname} ${SongInfo.spliter} ${this.singer} - ${this.name}`
         }
-        return this.ext && this.ext != '' ? `${filename}.${this.ext}` : filename
+
+        if (filename.startsWith(' - ')) {
+            filename = filename.slice(3)
+        }
+        if (filename.startsWith('- ')) {
+            filename = filename.slice(2)
+        }
+
+        return (this.ext && this.ext != '' ? `${filename}.${this.ext}` : filename).trim()
     }
     /** @param {string} filename  */
     static _removeExt(filename) {
         const fileExt = ['flac', 'wav', 'mp3', 'ape', 'm4a', 'mp4', 'ogg']
-        const ext_tmp = ''
+        let ext_tmp = ''
         for (const ext of fileExt) {
             if (filename.endsWith(`.${ext}`)) {
                 if (ext_tmp == '') { ext_tmp = ext }

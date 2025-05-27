@@ -99,10 +99,15 @@ class JSONRPCServer extends WebApp.JSONRPCServer {
     }
 
     admin_processSheet(sheetName, session) {
-        const u = UsersService.instance.getUser(session.user.username);
+        try {
+            const u = UsersService.instance.getUser(session.user.username);
         if (u.role != ROLE.ADMIN) {
             throw new Error('Require Admin Role');
         }
         process(sheetName)
+        } catch(e) {
+            return `${sheetName} failed, ${e}`
+        }
+        return `${sheetName} success`
     }
 }

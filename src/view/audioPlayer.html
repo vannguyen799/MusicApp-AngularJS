@@ -940,6 +940,10 @@
             <div id="settingPopover" class="w-75 propover-p">
                 <table>
                     <tr>
+                        <td>preloadRate</td>
+                        <td><input type="number" step="0.1" ng-model="player.config.preloadRate" min="0.1" max="0.9" /></td>
+                    </tr>
+                    <tr>
                         <td>Speed</td>
                         <td><input type="number" step="0.01" ng-model="player.metadata.timing.speed" /></td>
                     </tr>
@@ -2228,6 +2232,7 @@
                         isFav: false,
                         isRandom: true,
                         lyricAutoTranslate: true,
+                        preloadRate: 0.7,
                     };
 
                     this.nextSong = {
@@ -2347,12 +2352,16 @@
 
                 createMediaSession() {
                     if ("mediaSession" in navigator) {
+                        const imgurl = this.metadata.coverImg;
+                        if (navigator.mediaSession.metadata?.artwork[0]?.src.startsWith("blob")) {
+                            URL.revokeObjectURL(navigator.mediaSession.metadata.artwork[0].src);
+                        }
                         navigator.mediaSession.metadata = new MediaMetadata({
-                            title: (this.subSongName + " " + this.mainSongName).trim(),
-                            artist: `${this.songInfo.vsinger ? this.songInfo.vsinger + " - " : ""}${this.songInfo.singer}`.trim(),
+                            title: `${this.songInfo.vname} ${this.songInfo.name}`.trim(),
+                            artist: `${this.songInfo.vsinger} ${this.songInfo.singer}`.trim(),
                             album: "",
                             artwork: [
-                                { src: URL.createObjectURL(base64ToBlob(this.metadata.coverImg)) },
+                                { src: imgurl.startsWith("data") ? URL.createObjectURL(base64ToBlob(imgurl)) : imgurl },
                                 // { src: "https://via.placeholder.com/96", sizes: "96x96", type: "image/png" },
                             ],
                         });
@@ -2398,7 +2407,7 @@
                             this.isPlaying = true;
                         }
                         // prepare for next song current time play 75%
-                        if (!this.refresh.rdn && this.metadata.timing.current / audio.duration > 0.75) {
+                        if (!this.refresh.rdn && this.metadata.timing.current / audio.duration > this.config.preloadRate) {
                             this.refresh.rdn = true;
                             this.prepareNextSong();
                         }
@@ -2559,6 +2568,7 @@
                 setSongInfo(songInfo) {
                     this.songInfo = songInfo;
                     this.metadata.reset();
+                    this.createMediaSession();
                 }
                 prepareNextSong() {
                     const idx = (this.cache.prepareNextSongIndex = this.cache.prepareNextSongIndex + 1 || 1);
@@ -2692,6 +2702,7 @@
                     return jsmediatags.read(blob, {
                         onSuccess: ({ tags }) => {
                             const { picture } = tags;
+                            this.metadata._tags = tags;
                             this.metadata.extension = mimeTypeToExt(blob.type);
                             if (picture) {
                                 this.metadata.coverSrc = `data:${picture.format};base64,${arrayBufferToBase64(picture.data)}`;
@@ -2700,6 +2711,7 @@
                                 // bgCover.hidden = false;
                                 // bgCover.style.backgroundImage = `url(${this.metadata.coverSrc})`;
                                 // pfc.style.backgroundColor = "#3b3b3b";
+                                this.createMediaSession();
                                 this.apply();
                             } else {
                                 this.resetFcBg();
@@ -2743,6 +2755,7 @@
             class Service extends AppsScriptHepler {
                 constructor($http) {
                     super();
+                    // this. enableByPasscors = true; // not impl
                     this.$http = $http;
                     this.rpcServer = this.host || "https://script.google.com/macros/s/AKfycbyU__zRkoR1drKWRZGROuO4CCW43wDbIpyIcspQnnLiD-YTA-aVcxlgjHN-HBc_6LxWMw/exec";
                 }

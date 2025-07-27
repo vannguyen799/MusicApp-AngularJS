@@ -91,6 +91,7 @@ function instanceOf(constructor, args) {
 
 
 /**
+ * pop and remove element from array if condition is true
  * @template T
  * @param {T[]} array
  * @param {(element: T) => boolean} condition
@@ -330,3 +331,4 @@ const String_ = {
     return str.slice(startIndex, endIndex);
 }
 }
+

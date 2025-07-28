@@ -1613,7 +1613,7 @@
                     }
                 }
             }
-             loadingMap = {
+            loadingMap = {
                 name: {
                     history: [],
                     isLoading: false,
@@ -1621,7 +1621,7 @@
                     endTime: 0,
                     duration: 0,
                 }
-             };
+            };
             setIsLoading(isLoading, nameLoading = "main") {
                 this.isLoading = isLoading;
                 // LET SHOW THE CONSOLE LOG LOADING MS
@@ -2337,11 +2337,43 @@
                 };
 
                 this.config = {
-                    loopMode: 0,
-                    isFav: false,
-                    isRandom: true,
-                    lyricAutoTranslate: true,
-                    preloadRate: 0.7,
+                    configKey: "PlayerController.config",
+                    getLocalConfig() {
+                        return getLocalConfig(this.configKey);
+                    },
+                    setLocalConfig(value) {
+                        setLocalConfig(this.configKey, value);
+                    },
+                    get loopMode() {
+                        return this.getLocalConfig().loopMode || 0;
+                    },
+                    set loopMode(value) {
+                        this.setLocalConfig({ loopMode: value });
+                    },
+                    get isFav() {
+                        return this.getLocalConfig().isFav;
+                    },
+                    set isFav(value) {
+                        this.setLocalConfig({ isFav: value });
+                    },
+                    get isRandom() {
+                        return this.getLocalConfig().isRandom || true
+                    },
+                    set isRandom(value) {
+                        this.setLocalConfig({ isRandom: value });
+                    },
+                    get lyricAutoTranslate() {
+                        return this.getLocalConfig().lyricAutoTranslate;
+                    },
+                    set lyricAutoTranslate(value) {
+                        this.setLocalConfig({ lyricAutoTranslate: value });
+                    },
+                    get preloadRate() {
+                        return this.getLocalConfig().preloadRate || 0.7
+                    },
+                    set preloadRate(value) {
+                        this.setLocalConfig({ preloadRate: value });
+                    },
                 };
 
                 this.nextSong = {
@@ -3254,6 +3286,17 @@
                 [array[i], array[j]] = [array[j], array[i]]; // Swap elements
             }
             return array;
+        }
+
+        function getLocalConfig(key) {
+            return JSON.parse(localStorage.getItem(key) || "{}");
+        }
+        function setLocalConfig(keyInLocalStorage, value) {
+            const config = getLocalConfig(keyInLocalStorage);
+            for (const key in value) {
+                config[key] = value[key];
+            }
+            localStorage.setItem(keyInLocalStorage, JSON.stringify(config));
         }
     </script>
 </body>

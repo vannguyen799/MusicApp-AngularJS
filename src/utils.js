@@ -192,7 +192,7 @@ function translate(lrcText) {
 
 
 function chineseNameParse() {
-  const allSongs = SongService.instance.getSongs('Chinese')
+  const allSongs = SongService.getSongs('Chinese')
   const songNameMap = {}
   const singerMap = {}
   for (const song of allSongs) {
@@ -251,7 +251,7 @@ function chineseNameParse() {
         }
       }
       if (updated) {
-        console.log(SongService.instance.updateSong(song)
+        console.log(SongService.updateSong(song)
         )
       }
     }

@@ -44,21 +44,21 @@ function updateFileNameSingle() {
 
 function updateSongSingle() {
   const songs = getAllSongAndId(ss.getActiveSheet().getName())
-  SongService.instance.updateSingleSongs(songs)
+  SongService.updateSingleSongs(songs)
 }
 function process(sheetName) {
   let manager = new SongFileManager(sheetName || SpreadsheetApp.getActiveSheet().getName())
   if (manager.validateClass()) {
     manager.process({ update: true })
     manager.flush()
-    SongService.instance.updateSingleSongs(manager.getAllSongs())
+    SongService.updateSingleSongs(manager.getAllSongs())
   }
 }
 
 function processAll() {
   const sheetNames = getAllSheetName()
   const requests = []
-  const token = AuthService.instance.generateAuthToken({ username: 'admin', role: '0' })
+  const token = AuthService.generateAuthToken({ username: 'admin', role: '0' })
   for (const name of sheetNames) {
     requests.push({
       ...JSONRPCServer.instance.genRPCRequest(JSONRPCServer.prototype.admin_processSheet.name, [name], token),

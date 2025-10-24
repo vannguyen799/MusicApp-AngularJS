@@ -25,7 +25,7 @@ class MusicAppController extends WebApp.Controller {
       }
     }
     if (isDriveId(fileId)) {
-      qSongInfo = SongService.instance.fromFileId(fileId)
+      qSongInfo = SongService.fromFileId(fileId)
     }
 
     return AppServer.renderTemplate('audioPlayer', {

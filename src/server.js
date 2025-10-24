@@ -1,5 +1,4 @@
 'use strict'
-/** @type {IWebApp.WebApp} */
 var AppServer = WebApp.create({
   htmlService: HtmlService,
   scriptApp: ScriptApp,
@@ -61,7 +60,7 @@ function getAllSheetName() {
 function updateSongDb() {
   const sheetNames = getAllSheetName()
   const requests = []
-  const token = AuthService.instance.generateAuthToken({ username: 'admin', role: '0' })
+  const token = AuthService.generateAuthToken({ username: 'admin', role: '0' })
   for (const name of sheetNames) {
     requests.push({
       ...JSONRPCServer.instance.genRPCRequest('admin_dbSingleSheetPush', [name], token),

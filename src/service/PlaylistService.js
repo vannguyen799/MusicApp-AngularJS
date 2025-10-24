@@ -1,17 +1,13 @@
 'use strict'
 class PlaylistService {
+    /** @private */
     constructor() { }
-
-    /** @returns {PlaylistService} */
-    static get instance() {
-        return instanceOf(this)
-    }
 
     /**
      * 
      * @returns {Playlist[]}
      */
-    getPlaylist(user) {
+    static getPlaylist(user) {
         let playlist = db.Users.findOne({
             username: user.username
         }, {
@@ -21,7 +17,7 @@ class PlaylistService {
         return this._parseSongInfo(playlist) || []
     }
 
-    addPlaylist(user, playlist) {
+    static addPlaylist(user, playlist) {
         if (!this.checkPlaylist(playlist)) {
             throw new Error('invalid playlist ' + playlist)
         }
@@ -41,9 +37,9 @@ class PlaylistService {
         })
         return res
     }
-    _parseSongInfo(playlist) {
+    static _parseSongInfo(playlist) {
         if (playlist) {
-            let songs = SongService.instance.getSongs()
+            let songs = SongService.getSongs()
             playlist.songList?.map(fid => {
                 return songs.find(s => s.fileId == fid)
             })
@@ -51,7 +47,7 @@ class PlaylistService {
         return playlist
     }
 
-    removePlaylist(user, playlist) {
+    static removePlaylist(user, playlist) {
         let res = db.Users.updateOne({
             username: user.username,
         }, {
@@ -64,7 +60,7 @@ class PlaylistService {
         return res
     }
 
-    updatePlaylist(user, playlist) {
+    static updatePlaylist(user, playlist) {
         if (!this.checkPlaylist(playlist)) {
             throw new Error('invalid playlist ' + playlist)
         }
@@ -81,7 +77,7 @@ class PlaylistService {
         return res
     }
 
-    checkPlaylist(...pls) {
+    static checkPlaylist(...pls) {
         for (const pl of pls) {
             if (!pl.name || pl.name == '') { return false }
             if (!pl.songList || !Array.isArray(pl.songList)) { return false }

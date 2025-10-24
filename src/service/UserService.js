@@ -1,18 +1,17 @@
 class UsersService {
+
+    /** @private */
     constructor() { }
-    /** @returns {UsersService} */
-    static get instance() {
-        return instanceOf(this)
-    }
+   
     /** @param {UserLike} user  @returns {UserInfo} */
-    getUser(user) {
+    static getUser(user) {
         const u = db.Users.findOne({
             username: user.username
         })
 
         if (u != null) {
             delete u.password
-            u.playlist = PlaylistService.instance._parseSongInfo(u.playlist)
+            u.playlist = PlaylistService._parseSongInfo(u.playlist)
 
             return u
         } else {
@@ -22,7 +21,7 @@ class UsersService {
     }
 
     /** @param {UserLike} user  @returns {DriveFileID[]} */
-    getFavoriteList(user) {
+   static getFavoriteList(user) {
         let u = db.Users.findOne({
             username: user.username
         })
@@ -35,7 +34,7 @@ class UsersService {
     }
 
     /** @param {UserLike} user  @param {DriveFileID[]} filesId  @returns {any} */
-    addFavorite(user, filesId) {
+    static addFavorite(user, filesId) {
         let res = db.Users.updateOne({
             username: user.username,
         }, {
@@ -48,7 +47,7 @@ class UsersService {
     }
 
     /** @param {UserLike} user  @param {DriveFileID[]} filesId  @returns {any} */
-    rmvFavorite(user, filesId) {
+    static rmvFavorite(user, filesId) {
         let res = db.Users.updateOne({
             username: user.username,
         }, {

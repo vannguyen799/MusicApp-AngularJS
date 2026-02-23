@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Music App Vue Player</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.5.18/dist/vue.global.prod.js"></script>
+    <style>
+        :root {
+            --bg: #08111a;
+            --panel: #102236;
+            --panel-soft: #173048;
+            --line: #2a4a69;
+            --text: #e8f0f7;
+            --muted: #9bb3c9;
+            --accent: #26c485;
+            --accent-strong: #1ca26d;
+            --warning: #f8b84e;
+            --danger: #ff6e6e;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        [v-cloak] {
+            display: none;
+        }
+
+        html,
+        body {
+            margin: 0;
+            min-height: 100%;
+            background:
+                radial-gradient(1200px 500px at -5% -10%, #214f6e33 0%, transparent 55%),
+                radial-gradient(900px 550px at 110% 0%, #1ba77f30 0%, transparent 60%),
+                var(--bg);
+            color: var(--text);
+            font-family: "IBM Plex Sans", sans-serif;
+        }
+
+        #app {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 14px;
+        }
+
+        .topbar {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            background: linear-gradient(130deg, #15304a, #0f2235);
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            padding: 14px;
+        }
+
+        .brand {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+
+        .brand span {
+            color: var(--accent);
+            font-weight: 600;
+            font-size: 15px;
+            margin-left: 10px;
+        }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: end;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 170px;
+            flex: 1;
+        }
+
+        .field span {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .field select,
+        .field input,
+        .slider input {
+            width: 100%;
+            background: #08192a;
+            color: var(--text);
+            border: 1px solid #315270;
+            border-radius: 10px;
+            padding: 8px 10px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .field select:focus,
+        .field input:focus,
+        .slider input:focus {
+            border-color: var(--accent);
+        }
+
+        .btn {
+            border: 0;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent), #58d3a2);
+            color: #042818;
+            padding: 9px 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.16s ease;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(360px, 1.2fr) minmax(320px, 0.8fr);
+            gap: 14px;
+            min-height: 0;
+            flex: 1;
+        }
+
+        .panel {
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            background: linear-gradient(170deg, #10263b 0%, #0b1b2b 100%);
+            min-height: 0;
+        }
+
+        .song-panel {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .song-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 14px;
+            border-bottom: 1px solid #24435f;
+        }
+
+        .song-head h2 {
+            margin: 0;
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 18px;
+        }
+
+        .song-head .counter {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .error {
+            margin: 10px 14px 0;
+            border: 1px solid #9d4141;
+            border-radius: 10px;
+            background: #522525;
+            color: #ffd7d7;
+            padding: 8px 10px;
+            font-size: 13px;
+        }
+
+        .table-wrap {
+            overflow: auto;
+            flex: 1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 9px 10px;
+            border-bottom: 1px solid #1f3952;
+            font-size: 13px;
+        }
+
+        th {
+            color: var(--muted);
+            position: sticky;
+            top: 0;
+            background: #0e2235;
+            z-index: 2;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.05em;
+        }
+
+        tbody tr {
+            transition: background-color 0.16s ease;
+        }
+
+        tbody tr:hover {
+            background: #142d43;
+        }
+
+        tbody tr.active {
+            background: #184164;
+        }
+
+        .mini-btn {
+            border: 1px solid #4f7ba0;
+            border-radius: 8px;
+            background: #0c1f2f;
+            color: var(--text);
+            font-size: 12px;
+            min-width: 62px;
+            padding: 6px 8px;
+            cursor: pointer;
+        }
+
+        .empty {
+            color: var(--muted);
+            text-align: center;
+            padding: 24px 14px;
+            font-size: 14px;
+        }
+
+        .player-panel {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            justify-content: space-between;
+        }
+
+        .cover {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            border-radius: 16px;
+            border: 1px solid #315270;
+            display: grid;
+            place-items: center;
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 34px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            overflow: hidden;
+        }
+
+        .meta h3 {
+            margin: 0;
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 22px;
+        }
+
+        .meta p {
+            margin: 5px 0 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .progress {
+            display: grid;
+            grid-template-columns: 48px 1fr 48px;
+            gap: 8px;
+            align-items: center;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .progress input {
+            width: 100%;
+        }
+
+        .transport {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .transport button {
+            border: 1px solid #40688b;
+            border-radius: 999px;
+            background: #0e2538;
+            color: var(--text);
+            font-weight: 600;
+            padding: 8px 12px;
+            min-width: 76px;
+            cursor: pointer;
+        }
+
+        .transport button.active {
+            border-color: var(--warning);
+            color: var(--warning);
+        }
+
+        .transport button.primary {
+            background: linear-gradient(135deg, var(--accent), #5ed7a8);
+            border-color: transparent;
+            color: #05311f;
+            font-weight: 700;
+            min-width: 96px;
+        }
+
+        .sliders {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .slider {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .slider span {
+            color: var(--muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .footnote {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        @media (max-width: 960px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .player-panel {
+                order: -1;
+            }
+
+            .cover {
+                max-width: 320px;
+                margin: 0 auto;
+            }
+
+            .sliders {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" v-cloak>
+        <header class="topbar panel">
+            <div class="brand">Music App <span>Vue Player</span></div>
+            <div class="toolbar">
+                <label class="field">
+                    <span>Category</span>
+                    <select v-model="selectedSheet" :disabled="isLoadingSheets || !categories.length">
+                        <option v-if="!categories.length" value="">No categories</option>
+                        <option v-for="name in categories" :key="name" :value="name">{{ name }}</option>
+                    </select>
+                </label>
+                <label class="field">
+                    <span>Search</span>
+                    <input v-model.trim="searchQuery" type="text" placeholder="Song or singer" />
+                </label>
+                <button class="btn" @click="reloadSongs" :disabled="isLoadingSongs || !selectedSheet">
+                    {{ isLoadingSongs ? 'Loading...' : 'Reload' }}
+                </button>
+            </div>
+        </header>
+
+        <main class="layout">
+            <section class="panel song-panel">
+                <div class="song-head">
+                    <h2>Song List</h2>
+                    <div class="counter">{{ filteredSongs.length }} / {{ songs.length }}</div>
+                </div>
+                <div class="error" v-if="errorMessage">{{ errorMessage }}</div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 82px">Play</th>
+                                <th>Song</th>
+                                <th>Singer</th>
+                                <th style="width: 72px">Listens</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="song in filteredSongs" :key="song.fileId"
+                                :class="{ active: currentSong && currentSong.fileId === song.fileId }">
+                                <td>
+                                    <button class="mini-btn" @click="handleSongButton(song)">
+                                        {{ currentSong && currentSong.fileId === song.fileId && isPlaying ? 'Pause' : 'Play' }}
+                                    </button>
+                                </td>
+                                <td>{{ displaySongName(song) }}</td>
+                                <td>{{ displaySingerName(song) }}</td>
+                                <td>{{ song.listens || 0 }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="empty" v-if="!filteredSongs.length && !isLoadingSongs">No songs match your filter.</div>
+                </div>
+            </section>
+
+            <section class="panel player-panel">
+                <div class="cover" :style="coverStyle">
+                    <span>{{ currentSong ? songInitials(currentSong) : 'AUDIO' }}</span>
+                </div>
+
+                <div class="meta">
+                    <h3>{{ currentSong ? displaySongName(currentSong) : 'Select a song' }}</h3>
+                    <p>{{ currentSong ? displaySingerName(currentSong) : 'Choose a track from the table to start playback.'
+                        }}</p>
+                </div>
+
+                <div class="progress">
+                    <span>{{ formatTime(currentTime) }}</span>
+                    <input type="range" min="0" :max="duration || 0" :value="currentTime" step="0.1" @input="seek" />
+                    <span>{{ formatTime(duration) }}</span>
+                </div>
+
+                <div class="transport">
+                    <button @click="toggleShuffle" :class="{ active: shuffleEnabled }">Shuffle</button>
+                    <button @click="playPrevious">Prev</button>
+                    <button class="primary" @click="togglePlay" :disabled="isBusyAudio">{{ playButtonLabel }}</button>
+                    <button @click="playNext">Next</button>
+                    <button @click="toggleRepeatAll" :class="{ active: repeatAll }">Repeat</button>
+                </div>
+
+                <div class="sliders">
+                    <label class="slider">
+                        <span>Speed {{ playbackRate.toFixed(2) }}x</span>
+                        <input type="range" min="0.75" max="1.5" step="0.05" v-model.number="playbackRate" />
+                    </label>
+                    <label class="slider">
+                        <span>Volume {{ Math.round(volume * 100) }}%</span>
+                        <input type="range" min="0" max="1" step="0.01" v-model.number="volume" />
+                    </label>
+                </div>
+
+                <div class="footnote">
+                    Vue player streams audio from Google Drive via your existing Apps Script JSON-RPC methods.
+                </div>
+            </section>
+        </main>
+
+        <audio ref="audioRef" preload="metadata"></audio>
+    </div>
+
+    <script>
+        "use strict";
+
+        const { createApp, ref, computed, watch, onMounted, onBeforeUnmount } = Vue;
+
+        createApp({
+            setup() {
+                const categories = ref([]);
+                const songs = ref([]);
+                const selectedSheet = ref("");
+                const searchQuery = ref("");
+
+                const currentSong = ref(undefined);
+                const isPlaying = ref(false);
+                const isBusyAudio = ref(false);
+                const currentTime = ref(0);
+                const duration = ref(0);
+                const playbackRate = ref(1);
+                const volume = ref(1);
+                const shuffleEnabled = ref(false);
+                const repeatAll = ref(true);
+
+                const isLoadingSheets = ref(false);
+                const isLoadingSongs = ref(false);
+                const errorMessage = ref("");
+
+                const audioRef = ref(null);
+                const currentObjectUrl = ref("");
+                const accessToken = ref("");
+                const tokenExpiry = ref(0);
+
+                const templateSheet = parseTemplateInput("<?= sheet ?>");
+                const templateSongFileId = parseTemplateInput("<?= qSongFileId ?>");
+                let pendingSongFileId = typeof templateSongFileId === "string" ? templateSongFileId : "";
+
+                const rpcEndpoint = resolveRpcEndpoint();
+
+                const filteredSongs = computed(() => {
+                    const keyword = normalizeText(searchQuery.value);
+                    if (!keyword) {
+                        return songs.value;
+                    }
+                    return songs.value.filter((song) => {
+                        return normalizeText([song.name, song.vname, song.singer, song.vsinger].filter(Boolean).join(" ")).includes(keyword);
+                    });
+                });
+
+                const playButtonLabel = computed(() => {
+                    if (isBusyAudio.value) {
+                        return "Loading...";
+                    }
+                    if (!currentSong.value || !isPlaying.value) {
+                        return "Play";
+                    }
+                    return "Pause";
+                });
+
+                const coverStyle = computed(() => {
+                    const source = currentSong.value ? currentSong.value.fileId || currentSong.value.name || "default" : "default";
+                    const seed = hashCode(source);
+                    const hueA = Math.abs(seed) % 360;
+                    const hueB = (hueA + 42) % 360;
+                    return {
+                        background: `linear-gradient(145deg, hsl(${hueA}, 62%, 42%), hsl(${hueB}, 65%, 30%))`,
+                    };
+                });
+
+                function parseTemplateInput(rawValue) {
+                    if (typeof rawValue !== "string") {
+                        return rawValue;
+                    }
+                    const value = rawValue.trim();
+                    if (!value) {
+                        return "";
+                    }
+                    const scriptlet = /<\?(?:=|!=)?\s*[a-zA-Z_][a-zA-Z0-9_]*\s*\?>/;
+                    if (scriptlet.test(value)) {
+                        return "";
+                    }
+                    if ((value.startsWith("{") && value.endsWith("}")) || (value.startsWith("[") && value.endsWith("]"))) {
+                        try {
+                            return JSON.parse(value);
+                        } catch (error) {
+                            return value;
+                        }
+                    }
+                    return value;
+                }
+
+                function resolveRpcEndpoint() {
+                    const templateHost = parseTemplateInput("<?= host?>");
+                    if (templateHost) {
+                        return templateHost;
+                    }
+                    if (typeof window !== "undefined" && window.location.hostname.includes("script.google.com")) {
+                        return window.location.href.split("?")[0];
+                    }
+                    return "https://script.google.com/macros/s/AKfycbyU__zRkoR1drKWRZGROuO4CCW43wDbIpyIcspQnnLiD-YTA-aVcxlgjHN-HBc_6LxWMw/exec";
+                }
+
+                function normalizeText(value) {
+                    return String(value || "")
+                        .normalize("NFD")
+                        .replace(/[\u0300-\u036f]/g, "")
+                        .replace(/đ/g, "d")
+                        .replace(/Đ/g, "D")
+                        .toLowerCase()
+                        .trim();
+                }
+
+                function hashCode(value) {
+                    let hash = 0;
+                    for (let i = 0; i < value.length; i += 1) {
+                        hash = (hash << 5) - hash + value.charCodeAt(i);
+                        hash |= 0;
+                    }
+                    return hash;
+                }
+
+                function getAuthToken() {
+                    const token = localStorage.getItem("authToken");
+                    if (!token || token === "undefined" || token === "null") {
+                        return undefined;
+                    }
+                    return token;
+                }
+
+                function callAppsScript(functionName, args) {
+                    return new Promise((resolve, reject) => {
+                        if (typeof google === "undefined" || !google.script || !google.script.run) {
+                            reject(new Error("google.script.run unavailable"));
+                            return;
+                        }
+                        let runner = google.script.run.withSuccessHandler(resolve).withFailureHandler(reject);
+                        runner[functionName](...args);
+                    });
+                }
+
+                async function rpc(method, params = []) {
+                    const token = getAuthToken();
+                    if (typeof google !== "undefined" && google.script && google.script.run) {
+                        const data = await callAppsScript("simulateJSONRpcCall", [method, params, token]);
+                        if (data && Object.prototype.hasOwnProperty.call(data, "result")) {
+                            return data.result;
+                        }
+                        if (data && data.error) {
+                            throw new Error(data.error.message || JSON.stringify(data.error));
+                        }
+                        throw new Error(`Invalid Apps Script RPC response for ${method}`);
+                    }
+
+                    const response = await fetch(rpcEndpoint, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            jsonrpc: "2.0",
+                            method,
+                            params,
+                            authToken: token,
+                        }),
+                    });
+
+                    let data;
+                    try {
+                        data = await response.json();
+                    } catch (error) {
+                        throw new Error(`RPC ${method} returned non-JSON data`);
+                    }
+
+                    if (Object.prototype.hasOwnProperty.call(data, "result")) {
+                        return data.result;
+                    }
+                    if (data.error) {
+                        throw new Error(data.error.message || JSON.stringify(data.error));
+                    }
+                    throw new Error(`Invalid RPC response for ${method}`);
+                }
+
+                async function ensureAccessToken(forceRefresh = false) {
+                    if (!forceRefresh && accessToken.value && Date.now() < tokenExpiry.value) {
+                        return accessToken.value;
+                    }
+                    const tokenData = await rpc("getServiceAccount", []);
+                    if (!tokenData || !tokenData.access_token) {
+                        throw new Error("Unable to get service account token");
+                    }
+                    accessToken.value = tokenData.access_token;
+                    tokenExpiry.value = Date.now() + (Number(tokenData.expires_in || 0) * 1000) - 30_000;
+                    return accessToken.value;
+                }
+
+                async function getAudioBlob(fileId, canRetry = true) {
+                    const token = await ensureAccessToken(false);
+                    const response = await fetch(
+                        `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?alt=media`,
+                        { headers: { Authorization: `Bearer ${token}` } }
+                    );
+
+                    if (response.status === 401 && canRetry) {
+                        await ensureAccessToken(true);
+                        return getAudioBlob(fileId, false);
+                    }
+                    if (!response.ok) {
+                        throw new Error(`Drive fetch failed (${response.status})`);
+                    }
+                    return response.blob();
+                }
+
+                async function loadCategories() {
+                    isLoadingSheets.value = true;
+                    errorMessage.value = "";
+                    try {
+                        const result = await rpc("getAllSheetName", []);
+                        categories.value = Array.isArray(result) ? result : [];
+                        if (templateSheet && categories.value.includes(templateSheet)) {
+                            selectedSheet.value = templateSheet;
+                        } else if (!selectedSheet.value && categories.value.length) {
+                            selectedSheet.value = categories.value[0];
+                        }
+                    } catch (error) {
+                        errorMessage.value = `Unable to load categories: ${error.message}`;
+                    } finally {
+                        isLoadingSheets.value = false;
+                    }
+                }
+
+                async function loadSongs() {
+                    if (!selectedSheet.value) {
+                        songs.value = [];
+                        return;
+                    }
+                    isLoadingSongs.value = true;
+                    errorMessage.value = "";
+                    try {
+                        const result = await rpc("getSongs", [selectedSheet.value, false]);
+                        songs.value = Array.isArray(result) ? result : [];
+                        const hasCurrent = currentSong.value && songs.value.some((song) => song.fileId === currentSong.value.fileId);
+                        if (!hasCurrent) {
+                            currentSong.value = undefined;
+                            isPlaying.value = false;
+                            currentTime.value = 0;
+                            duration.value = 0;
+                        }
+                        await tryAutoPlayRequestedSong();
+                    } catch (error) {
+                        songs.value = [];
+                        errorMessage.value = `Unable to load songs: ${error.message}`;
+                    } finally {
+                        isLoadingSongs.value = false;
+                    }
+                }
+
+                async function tryAutoPlayRequestedSong() {
+                    if (!pendingSongFileId) {
+                        return;
+                    }
+                    const song = songs.value.find((item) => item.fileId === pendingSongFileId);
+                    if (!song) {
+                        return;
+                    }
+                    pendingSongFileId = "";
+                    await playSong(song, true);
+                }
+
+                async function playSong(song, autoplay = true) {
+                    if (!song || !song.fileId) {
+                        return;
+                    }
+                    isBusyAudio.value = true;
+                    errorMessage.value = "";
+
+                    try {
+                        const blob = await getAudioBlob(song.fileId);
+                        if (currentObjectUrl.value) {
+                            URL.revokeObjectURL(currentObjectUrl.value);
+                        }
+                        currentObjectUrl.value = URL.createObjectURL(blob);
+
+                        const audio = audioRef.value;
+                        if (!audio) {
+                            throw new Error("Audio element unavailable");
+                        }
+
+                        currentSong.value = song;
+                        audio.src = currentObjectUrl.value;
+                        audio.currentTime = 0;
+                        audio.volume = volume.value;
+                        audio.playbackRate = playbackRate.value;
+                        audio.load();
+
+                        if (autoplay) {
+                            await audio.play();
+                        }
+
+                        rpc("addListens", [song]).catch(() => { });
+                    } catch (error) {
+                        errorMessage.value = `Unable to play this song: ${error.message}`;
+                    } finally {
+                        isBusyAudio.value = false;
+                    }
+                }
+
+                async function handleSongButton(song) {
+                    if (!song) {
+                        return;
+                    }
+                    if (currentSong.value && currentSong.value.fileId === song.fileId) {
+                        await togglePlay();
+                        return;
+                    }
+                    await playSong(song, true);
+                }
+
+                function getCurrentSongIndex() {
+                    if (!currentSong.value) {
+                        return -1;
+                    }
+                    return songs.value.findIndex((song) => song.fileId === currentSong.value.fileId);
+                }
+
+                function pickRandomIndex() {
+                    if (!songs.value.length) {
+                        return -1;
+                    }
+                    if (songs.value.length === 1) {
+                        return 0;
+                    }
+                    const currentIndex = getCurrentSongIndex();
+                    let nextIndex = currentIndex;
+                    while (nextIndex === currentIndex) {
+                        nextIndex = Math.floor(Math.random() * songs.value.length);
+                    }
+                    return nextIndex;
+                }
+
+                async function playNext() {
+                    if (!songs.value.length) {
+                        return;
+                    }
+                    if (!currentSong.value) {
+                        await playSong(songs.value[0], true);
+                        return;
+                    }
+
+                    let nextIndex;
+                    if (shuffleEnabled.value) {
+                        nextIndex = pickRandomIndex();
+                    } else {
+                        const currentIndex = getCurrentSongIndex();
+                        nextIndex = (currentIndex + 1) % songs.value.length;
+                    }
+                    await playSong(songs.value[nextIndex], true);
+                }
+
+                async function playPrevious() {
+                    if (!songs.value.length) {
+                        return;
+                    }
+                    if (!currentSong.value) {
+                        await playSong(songs.value[0], true);
+                        return;
+                    }
+
+                    let prevIndex;
+                    if (shuffleEnabled.value) {
+                        prevIndex = pickRandomIndex();
+                    } else {
+                        const currentIndex = getCurrentSongIndex();
+                        prevIndex = (currentIndex - 1 + songs.value.length) % songs.value.length;
+                    }
+                    await playSong(songs.value[prevIndex], true);
+                }
+
+                async function togglePlay() {
+                    const audio = audioRef.value;
+                    if (!audio) {
+                        return;
+                    }
+
+                    if (!currentSong.value) {
+                        if (songs.value.length) {
+                            await playSong(songs.value[0], true);
+                        }
+                        return;
+                    }
+
+                    if (audio.paused) {
+                        try {
+                            await audio.play();
+                        } catch (error) {
+                            errorMessage.value = `Unable to resume playback: ${error.message}`;
+                        }
+                    } else {
+                        audio.pause();
+                    }
+                }
+
+                function toggleShuffle() {
+                    shuffleEnabled.value = !shuffleEnabled.value;
+                }
+
+                function toggleRepeatAll() {
+                    repeatAll.value = !repeatAll.value;
+                }
+
+                function seek(event) {
+                    const audio = audioRef.value;
+                    if (!audio) {
+                        return;
+                    }
+                    const newTime = Number(event.target.value || 0);
+                    audio.currentTime = newTime;
+                    currentTime.value = newTime;
+                }
+
+                function formatTime(value) {
+                    const total = Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+                    const minutes = Math.floor(total / 60);
+                    const seconds = total % 60;
+                    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+                }
+
+                function displaySongName(song) {
+                    if (!song) {
+                        return "";
+                    }
+                    return song.vname ? `${song.vname} / ${song.name || ""}` : (song.name || "Untitled");
+                }
+
+                function displaySingerName(song) {
+                    if (!song) {
+                        return "";
+                    }
+                    return song.vsinger ? `${song.vsinger} - ${song.singer || ""}` : (song.singer || "Unknown");
+                }
+
+                function songInitials(song) {
+                    const source = (displaySongName(song) || "AUDIO").trim();
+                    const parts = source.split(/\s+/).filter(Boolean).slice(0, 2);
+                    return parts.map((part) => part.charAt(0).toUpperCase()).join("") || "A";
+                }
+
+                function releaseObjectUrl() {
+                    if (currentObjectUrl.value) {
+                        URL.revokeObjectURL(currentObjectUrl.value);
+                        currentObjectUrl.value = "";
+                    }
+                }
+
+                function registerAudioEvents() {
+                    const audio = audioRef.value;
+                    if (!audio) {
+                        return () => { };
+                    }
+
+                    const onPlay = () => {
+                        isPlaying.value = true;
+                    };
+                    const onPause = () => {
+                        isPlaying.value = false;
+                    };
+                    const onTimeUpdate = () => {
+                        currentTime.value = audio.currentTime || 0;
+                    };
+                    const onMetadata = () => {
+                        duration.value = Number.isFinite(audio.duration) ? audio.duration : 0;
+                    };
+                    const onEnded = async () => {
+                        if (repeatAll.value) {
+                            await playNext();
+                        } else {
+                            isPlaying.value = false;
+                        }
+                    };
+
+                    audio.addEventListener("play", onPlay);
+                    audio.addEventListener("pause", onPause);
+                    audio.addEventListener("timeupdate", onTimeUpdate);
+                    audio.addEventListener("loadedmetadata", onMetadata);
+                    audio.addEventListener("ended", onEnded);
+
+                    return () => {
+                        audio.removeEventListener("play", onPlay);
+                        audio.removeEventListener("pause", onPause);
+                        audio.removeEventListener("timeupdate", onTimeUpdate);
+                        audio.removeEventListener("loadedmetadata", onMetadata);
+                        audio.removeEventListener("ended", onEnded);
+                    };
+                }
+
+                let unregisterAudioEvents = () => { };
+
+                watch(selectedSheet, async (next, previous) => {
+                    if (!next || next === previous) {
+                        return;
+                    }
+                    await loadSongs();
+                });
+
+                watch(playbackRate, (value) => {
+                    const audio = audioRef.value;
+                    if (audio) {
+                        audio.playbackRate = value;
+                    }
+                });
+
+                watch(volume, (value) => {
+                    const audio = audioRef.value;
+                    if (audio) {
+                        audio.volume = value;
+                    }
+                });
+
+                async function reloadSongs() {
+                    await loadSongs();
+                }
+
+                onMounted(async () => {
+                    unregisterAudioEvents = registerAudioEvents();
+                    await loadCategories();
+                    if (selectedSheet.value) {
+                        await loadSongs();
+                    }
+                });
+
+                onBeforeUnmount(() => {
+                    unregisterAudioEvents();
+                    releaseObjectUrl();
+                });
+
+                return {
+                    categories,
+                    songs,
+                    selectedSheet,
+                    searchQuery,
+                    currentSong,
+                    isPlaying,
+                    isBusyAudio,
+                    currentTime,
+                    duration,
+                    playbackRate,
+                    volume,
+                    shuffleEnabled,
+                    repeatAll,
+                    isLoadingSheets,
+                    isLoadingSongs,
+                    errorMessage,
+                    audioRef,
+                    filteredSongs,
+                    playButtonLabel,
+                    coverStyle,
+                    handleSongButton,
+                    playNext,
+                    playPrevious,
+                    togglePlay,
+                    toggleShuffle,
+                    toggleRepeatAll,
+                    seek,
+                    formatTime,
+                    displaySongName,
+                    displaySingerName,
+                    songInitials,
+                    reloadSongs,
+                };
+            },
+        }).mount("#app");
+    </script>
+</body>
+
+</html>

@@ -19,6 +19,7 @@ function onOpen() {
     .addItem('processAll', processAll.name)
     // .addItem('play', playSidebar.name)
     .addItem('openWeb', playWeb.name)
+    .addItem('openWebVue', playWebVue.name)
     .addItem('db push', updateSongDb.name)
     .addItem('updateFileNameSingle', updateFileNameSingle.name)
     .addItem('updateSongSingle', updateSongSingle.name)
@@ -83,6 +84,12 @@ function playWeb() {
   return SpreadsheetApp.getUi().showModalDialog(AppServer.renderTemplate('newTab', {
     url: `${testUrl}&sheet=${SpreadsheetApp.getActiveSheet().getName()}`
   }), 'playWeb')
+}
+
+function playWebVue() {
+  return SpreadsheetApp.getUi().showModalDialog(AppServer.renderTemplate('newTab', {
+    url: `${testUrl}&sheet=${SpreadsheetApp.getActiveSheet().getName()}&mode=vue`
+  }), 'playWebVue')
 }
 
 function rmvRow() {

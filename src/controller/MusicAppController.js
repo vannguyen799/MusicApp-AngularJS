@@ -8,6 +8,7 @@ class MusicAppController extends WebApp.Controller {
   index(request) {
     let { mode, sheet, fileId } = request.parameter
     let qSongInfo = undefined
+    const useVuePlayer = mode == 'vue'
     if (getAllSheetName().find(n => n == sheet)) {
       // try {
       //   if (sheet && sheet != '') {
@@ -28,10 +29,11 @@ class MusicAppController extends WebApp.Controller {
       qSongInfo = SongService.fromFileId(fileId)
     }
 
-    return AppServer.renderTemplate('audioPlayer', {
+    return AppServer.renderTemplate(useVuePlayer ? 'audioPlayerVue' : 'audioPlayer', {
       title: 'Music App',
       sheet: sheet || qSongInfo?.sheet || '',
       qSongInfo: qSongInfo,
+      qSongFileId: qSongInfo?.fileId || '',
     })
   }
 }
